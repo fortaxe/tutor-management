@@ -109,7 +109,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onCancel }) =>
           disabled={!!error}
           className="col-span-2 py-4 px-4 bg-brand-600 text-white rounded-xl font-black uppercase tracking-widest hover:bg-brand-700 shadow-lg active:scale-95 transition-all disabled:opacity-50"
         >
-          Capture Member ID
+          Capture Photo
         </button>
       </div>
     </div>

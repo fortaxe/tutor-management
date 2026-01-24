@@ -37,6 +37,13 @@ const GymForm: React.FC<GymFormProps> = ({ gym, onSubmit, onCancel }) => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    
+    if (name === 'ownerPhone') {
+      const cleaned = value.replace(/\D/g, '').slice(0, 10);
+      setFormData(prev => ({ ...prev, [name]: cleaned }));
+      return;
+    }
+
     setFormData(prev => ({ 
       ...prev, 
       [name]: name === 'totalPaidAmount' ? Number(value) : value 
@@ -45,6 +52,10 @@ const GymForm: React.FC<GymFormProps> = ({ gym, onSubmit, onCancel }) => {
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (formData.ownerPhone.length !== 10) {
+      alert("Mobile number must be exactly 10 digits.");
+      return;
+    }
     if (gym) {
       const { password, ...gymOnlyData } = formData;
       onSubmit({ ...gym, ...gymOnlyData });
@@ -79,7 +90,9 @@ const GymForm: React.FC<GymFormProps> = ({ gym, onSubmit, onCancel }) => {
             value={formData.ownerPhone} 
             onChange={handleChange} 
             required 
+            maxLength={10}
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm font-bold" 
+            placeholder="10-digit number"
           />
         </div>
       </div>

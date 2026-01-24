@@ -13,9 +13,19 @@ const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+    setPhone(val);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (phone.length !== 10) {
+      setError('Mobile number must be exactly 10 digits.');
+      return;
+    }
 
     const foundUser = users.find(
       u => u.phone === phone && u.password === password
@@ -55,10 +65,11 @@ const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
               type="tel"
               inputMode="numeric"
               required
+              maxLength={10}
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={handlePhoneChange}
               className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all font-bold"
-              placeholder="Enter mobile number"
+              placeholder="10-digit mobile number"
             />
           </div>
 

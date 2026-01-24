@@ -40,6 +40,12 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, onSubmit, onCancel }) =
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     
+    if (name === 'phone') {
+      const cleaned = value.replace(/\D/g, '').slice(0, 10);
+      setFormData(prev => ({ ...prev, [name]: cleaned }));
+      return;
+    }
+
     if (name === 'feesAmount') {
       // Allow empty string so the user can delete '0' or any value entirely
       if (value === '' || /^\d+$/.test(value)) {
@@ -60,6 +66,11 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, onSubmit, onCancel }) =
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (formData.phone.length !== 10) {
+      alert("Phone number must be exactly 10 digits.");
+      return;
+    }
+
     const submissionData = {
       ...formData,
       feesAmount: Number(formData.feesAmount) || 0,
@@ -104,7 +115,7 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, onSubmit, onCancel }) =
           )}
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
             <span className="text-white text-[10px] font-black uppercase tracking-tighter">
-              {formData.photo ? 'Change Photo' : 'Capture ID'}
+              {formData.photo ? 'Change Photo' : 'Capture Photo'}
             </span>
           </div>
         </div>
@@ -125,7 +136,18 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, onSubmit, onCancel }) =
         </div>
         <div>
           <label htmlFor="phone" className={labelClasses}>Phone Number</label>
-          <input type="tel" name="phone" id="phone" value={formData.phone} onChange={handleChange} required className={inputClasses} placeholder="+91 00000 00000" />
+          <input 
+            type="tel" 
+            inputMode="numeric"
+            name="phone" 
+            id="phone" 
+            value={formData.phone} 
+            onChange={handleChange} 
+            required 
+            maxLength={10}
+            className={inputClasses} 
+            placeholder="10-digit number" 
+          />
         </div>
       </div>
 

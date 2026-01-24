@@ -29,7 +29,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       return;
     }
 
-    // We use a simulated email for Supabase Auth consistency
+    // Map phone to pseudo-email for internal auth
     const email = `${phone}@gymstack.com`;
     
     try {
@@ -40,7 +40,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
       if (authError) {
         if (authError.message === 'Invalid login credentials') {
-           setError('Invalid mobile number or password. If this is your first time, use the "System Recovery" tool below to create the admin account.');
+           setError('Invalid mobile number or password. If you are the Super Admin, ensure you have used the System Recovery tool below.');
+        } else if (authError.message.includes('Email not confirmed')) {
+           setError('Email verification required. Go to Supabase Dashboard > Auth > Providers > Email and disable "Confirm email".');
         } else {
            setError(authError.message);
         }
@@ -48,7 +50,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         onLogin();
       }
     } catch (err) {
-      setError('An unexpected connection error occurred.');
+      setError('Connection failed. Check your internet or Supabase configuration.');
     } finally {
       setIsSubmitting(false);
     }
@@ -71,7 +73,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
             <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4 rounded-r-lg">
-              <p className="text-[10px] text-red-700 font-black uppercase tracking-widest leading-relaxed">{error}</p>
+              <p className="text-[11px] text-red-700 font-black uppercase tracking-widest leading-relaxed">{error}</p>
             </div>
           )}
 

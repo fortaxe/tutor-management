@@ -1,5 +1,5 @@
 {
-  "name": "Gym Management SaaS",
+  "name": "My Gym Member",
   "description": "A simple SaaS platform to manage gym memberships, allowing gym owners to track members, payments, and expirations, with a super admin dashboard to manage gyms.",
   "requestFramePermissions": []
 }

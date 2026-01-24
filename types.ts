@@ -7,8 +7,9 @@ export enum UserRole {
 export interface User {
   id: number;
   email: string;
+  password?: string;
   role: UserRole;
-  gymId?: number; // Only for GYM_OWNER
+  gymId?: number;
 }
 
 export enum GymStatus {
@@ -23,13 +24,25 @@ export enum SubscriptionStatus {
   EXPIRED = 'Expired',
 }
 
+export interface SubscriptionPayment {
+  id: number;
+  amount: number;
+  startDate: string;
+  endDate: string;
+  paymentDate: string;
+  note: string;
+}
+
 export interface Gym {
   id: number;
   name: string;
   ownerEmail: string;
   status: GymStatus;
   subscriptionStatus: SubscriptionStatus;
-  nextPaymentDue: string;
+  subscriptionStartDate: string;
+  subscriptionEndDate: string;
+  totalPaidAmount: number;
+  paymentHistory: SubscriptionPayment[];
 }
 
 export enum PaymentStatus {
@@ -43,8 +56,18 @@ export interface Member {
   name: string;
   email: string;
   phone: string;
-  planStart: string; // ISO string date
+  planStart: string;
   planDurationDays: number;
   feesAmount: number;
   feesStatus: PaymentStatus;
+}
+
+export interface MemberPayment {
+  id: number;
+  memberId: number;
+  memberName: string;
+  gymId: number;
+  amount: number;
+  paymentDate: string;
+  note: string;
 }

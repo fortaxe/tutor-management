@@ -12,8 +12,7 @@ interface StaffManagementProps {
   staff: User[];
   onAddTrainer: (trainerData: Omit<User, 'id' | 'role'>) => void;
   onUpdateTrainer: (trainer: User) => void;
-  // Fix: User.id is defined as string | number in types.ts. Updating prop type to match.
-  onDeleteUser: (userId: number | string) => void;
+  onDeleteUser: (userId: number) => void;
 }
 
 const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrainer, onUpdateTrainer, onDeleteUser }) => {

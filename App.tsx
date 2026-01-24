@@ -16,6 +16,7 @@ const App: React.FC = () => {
   const [gyms, setGyms] = useState<Gym[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [memberPayments, setMemberPayments] = useState<MemberPayment[]>([]);
+  const [staffProfiles, setStaffProfiles] = useState<User[]>([]);
   const [activeView, setActiveView] = useState<string>('dashboard');
 
   // Check for existing session on mount
@@ -46,7 +47,6 @@ const App: React.FC = () => {
         }
       } catch (err: any) {
         console.error('Initialization error:', err);
-        // Only set error if it's not a simple "no session" state
         if (err.message !== 'FetchError' && !err.message?.includes('JWT')) {
            setInitError(err.message);
         }
@@ -64,7 +64,7 @@ const App: React.FC = () => {
 
     const fetchData = async () => {
       try {
-        // Fetch Gyms
+        // 1. Fetch Gyms
         let gymQuery = supabase.from('gyms').select('*');
         if (currentUser.role !== UserRole.SUPER_ADMIN) {
           gymQuery = gymQuery.eq('id', currentUser.gymId);
@@ -84,7 +84,7 @@ const App: React.FC = () => {
         }));
         setGyms(formattedGyms);
 
-        // Fetch Members
+        // 2. Fetch Members
         const { data: membersData } = await supabase.from('members').select('*');
         const formattedMembers = (membersData || []).map(m => ({
           id: m.id,
@@ -100,7 +100,7 @@ const App: React.FC = () => {
         }));
         setMembers(formattedMembers);
 
-        // Fetch Payments
+        // 3. Fetch Payments
         const { data: paymentsData } = await supabase.from('member_payments').select('*');
         setMemberPayments((paymentsData || []).map(p => ({
           id: p.id,
@@ -111,6 +111,21 @@ const App: React.FC = () => {
           paymentDate: p.payment_date,
           note: p.note
         })));
+
+        // 4. Fetch Profiles (Staff) for current gym
+        if (currentUser.gymId) {
+          const { data: profilesData } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('gym_id', currentUser.gymId);
+          
+          setStaffProfiles((profilesData || []).map(p => ({
+            id: p.id,
+            phone: p.phone,
+            role: p.role as UserRole,
+            gymId: p.gym_id
+          })));
+        }
       } catch (err) {
         console.error('Error fetching data:', err);
       }
@@ -224,11 +239,72 @@ const App: React.FC = () => {
             await supabase.from('gyms').update({ status: next }).eq('id', id);
             window.location.reload();
           }}
-          onAddGym={async (data) => {
-            // New Gym Logic...
+          onAddGym={async (gymData, password) => {
+            try {
+              // 1. Create Gym record
+              const { data: newGym, error: gymError } = await supabase.from('gyms').insert({
+                name: gymData.name,
+                owner_phone: gymData.ownerPhone,
+                status: gymData.status,
+                subscription_status: gymData.subscriptionStatus,
+                subscription_start_date: gymData.subscriptionStartDate,
+                subscription_end_date: gymData.subscriptionEndDate,
+                total_paid_amount: gymData.totalPaidAmount
+              }).select().single();
+
+              if (gymError) throw gymError;
+
+              // 2. Create Auth User for the owner
+              if (password) {
+                const { data: authData, error: authError } = await supabase.auth.signUp({
+                  email: phoneToEmail(gymData.ownerPhone),
+                  password: password,
+                });
+
+                if (authError) throw authError;
+
+                if (authData.user) {
+                  // 3. Link Auth User to Profile
+                  const { error: profileError } = await supabase.from('profiles').insert({
+                    id: authData.user.id,
+                    phone: gymData.ownerPhone,
+                    role: UserRole.GYM_OWNER,
+                    gym_id: newGym.id
+                  });
+                  if (profileError) throw profileError;
+                }
+              }
+              
+              alert("Gym and Owner account created successfully!");
+              window.location.reload();
+            } catch (err: any) {
+              console.error(err);
+              alert("Error adding gym: " + err.message);
+            }
           }}
-          onUpdateGym={async (data) => {
-             // Update Gym Logic...
+          onUpdateGym={async (gymData, password) => {
+            try {
+              const { error: gymError } = await supabase.from('gyms').update({
+                name: gymData.name,
+                owner_phone: gymData.ownerPhone,
+                status: gymData.status,
+                subscription_status: gymData.subscriptionStatus,
+                subscription_start_date: gymData.subscriptionStartDate,
+                subscription_end_date: gymData.subscriptionEndDate,
+                total_paid_amount: gymData.totalPaidAmount
+              }).eq('id', gymData.id);
+
+              if (gymError) throw gymError;
+              
+              if (password) {
+                 alert("Gym details updated. Note: Owner password can only be updated by the owner or via Supabase Admin Dashboard.");
+              }
+
+              window.location.reload();
+            } catch (err: any) {
+              console.error(err);
+              alert("Error updating gym: " + err.message);
+            }
           }}
         />
       ) : (
@@ -267,10 +343,33 @@ const App: React.FC = () => {
           {activeView === 'staff' && (
             <StaffManagement 
               gym={currentGym!} 
-              staff={[]} // Logic for fetching profile-based staff
-              onAddTrainer={() => {}}
-              onUpdateTrainer={() => {}}
-              onDeleteUser={() => {}}
+              staff={staffProfiles} 
+              onAddTrainer={async (data) => {
+                try {
+                  const { data: authData, error: authError } = await supabase.auth.signUp({
+                    email: phoneToEmail(data.phone),
+                    password: data.password || 'Trainer123',
+                  });
+                  if (authError) throw authError;
+                  if (authData.user) {
+                    await supabase.from('profiles').insert({
+                      id: authData.user.id,
+                      phone: data.phone,
+                      role: UserRole.TRAINER,
+                      gym_id: currentUser.gymId
+                    });
+                  }
+                  window.location.reload();
+                } catch (err: any) {
+                  alert("Error creating trainer: " + err.message);
+                }
+              }}
+              onUpdateTrainer={() => {}} // Passwords are hard to update for others
+              onDeleteUser={async (id) => {
+                const { error } = await supabase.from('profiles').delete().eq('id', id);
+                if (error) alert(error.message);
+                else window.location.reload();
+              }}
             />
           )}
         </DashboardLayout>

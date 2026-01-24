@@ -16,6 +16,40 @@ const App: React.FC = () => {
   const [memberPayments, setMemberPayments] = useState<MemberPayment[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState<string>('dashboard');
+  const [bootstrapStatus, setBootstrapStatus] = useState<string | null>(null);
+
+  // --- Bootstrap Admin Utility ---
+  const handleBootstrap = async () => {
+    setBootstrapStatus('Creating account...');
+    try {
+      const phone = '9999999999';
+      const email = `${phone}@gymstack.com`;
+      const password = 'admin'; // Default password for bootstrap
+
+      // 1. Create Auth User
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (authError) throw authError;
+
+      if (authData.user) {
+        // 2. Create Profile
+        const { error: profileError } = await supabase.from('profiles').insert([{
+          id: authData.user.id,
+          phone: phone,
+          role: UserRole.SUPER_ADMIN
+        }]);
+
+        if (profileError) throw profileError;
+        
+        setBootstrapStatus('Success! Login with 9999999999 / admin');
+      }
+    } catch (err: any) {
+      setBootstrapStatus(`Error: ${err.message || 'Bootstrap failed'}`);
+    }
+  };
 
   // --- Configuration Check ---
   if (!isSupabaseConfigured) {
@@ -60,6 +94,9 @@ const App: React.FC = () => {
               role: profile.role as UserRole,
               gymId: profile.gym_id
             });
+          } else {
+            // Profile missing despite having Auth session
+            console.warn("Auth session exists but no profile found.");
           }
         }
       } catch (err) {
@@ -196,7 +233,24 @@ const App: React.FC = () => {
     );
   }
 
-  if (!currentUser) return <Login onLogin={() => {}} />;
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <Login onLogin={() => {}} />
+        <div className="fixed bottom-10 left-0 right-0 flex justify-center">
+           <div className="bg-white/80 backdrop-blur-md px-6 py-4 rounded-3xl border border-slate-200 shadow-xl max-w-sm w-full text-center">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">System Recovery</p>
+              <button 
+                onClick={handleBootstrap}
+                className="text-xs font-bold text-brand hover:underline"
+              >
+                {bootstrapStatus || 'Need to initialize first Super Admin? Click here.'}
+              </button>
+           </div>
+        </div>
+      </div>
+    );
+  }
 
   if (currentUser.role === UserRole.SUPER_ADMIN) {
     return (
@@ -243,7 +297,7 @@ const App: React.FC = () => {
       {activeView === 'staff' && (
         <StaffManagement
           gym={currentGym}
-          staff={[]} // You'll need to fetch and filter staff from 'profiles'
+          staff={[]} // Logic needed to fetch profiles where gym_id matches
           onAddTrainer={() => {}}
           onUpdateTrainer={() => {}}
           onDeleteUser={() => {}}

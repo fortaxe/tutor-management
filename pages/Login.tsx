@@ -32,20 +32,26 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     // We use a simulated email for Supabase Auth consistency
     const email = `${phone}@gymstack.com`;
     
-    const { data, error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
+    try {
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
 
-    if (authError) {
-      setError(authError.message === 'Invalid login credentials' 
-        ? 'Invalid mobile number or password.' 
-        : authError.message
-      );
-    } else {
-      onLogin();
+      if (authError) {
+        if (authError.message === 'Invalid login credentials') {
+           setError('Invalid mobile number or password. If this is your first time, use the "System Recovery" tool below to create the admin account.');
+        } else {
+           setError(authError.message);
+        }
+      } else {
+        onLogin();
+      }
+    } catch (err) {
+      setError('An unexpected connection error occurred.');
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
   };
 
   return (
@@ -65,7 +71,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
             <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4 rounded-r-lg">
-              <p className="text-xs text-red-700 font-black uppercase tracking-widest">{error}</p>
+              <p className="text-[10px] text-red-700 font-black uppercase tracking-widest leading-relaxed">{error}</p>
             </div>
           )}
 

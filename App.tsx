@@ -65,11 +65,12 @@ const App: React.FC = () => {
     const fetchData = async () => {
       try {
         // 1. Fetch Gyms
-        let gymQuery = supabase.from('gyms').select('*');
+        let gymQuery = supabase.from('gyms').select('*').order('created_at', { ascending: false });
         if (currentUser.role !== UserRole.SUPER_ADMIN) {
           gymQuery = gymQuery.eq('id', currentUser.gymId);
         }
-        const { data: gymsData } = await gymQuery;
+        const { data: gymsData, error: gymFetchError } = await gymQuery;
+        if (gymFetchError) throw gymFetchError;
         
         const formattedGyms = (gymsData || []).map(g => ({
           id: g.id,
@@ -241,7 +242,7 @@ const App: React.FC = () => {
           }}
           onAddGym={async (gymData, password) => {
             try {
-              // 1. Create Gym record
+              // 1. Create Gym record first
               const { data: newGym, error: gymError } = await supabase.from('gyms').insert({
                 name: gymData.name,
                 owner_phone: gymData.ownerPhone,
@@ -259,13 +260,21 @@ const App: React.FC = () => {
                 const { data: authData, error: authError } = await supabase.auth.signUp({
                   email: phoneToEmail(gymData.ownerPhone),
                   password: password,
+                  options: {
+                    data: {
+                      phone: gymData.ownerPhone,
+                      role: UserRole.GYM_OWNER
+                    }
+                  }
                 });
 
                 if (authError) throw authError;
 
                 if (authData.user) {
                   // 3. Link Auth User to Profile
-                  const { error: profileError } = await supabase.from('profiles').insert({
+                  // If signUp auto-logged us out, the RLS 'Allow_Profile_Insert' policy in SQL 
+                  // will still allow the new user to create their own profile.
+                  const { error: profileError } = await supabase.from('profiles').upsert({
                     id: authData.user.id,
                     phone: gymData.ownerPhone,
                     role: UserRole.GYM_OWNER,
@@ -275,11 +284,11 @@ const App: React.FC = () => {
                 }
               }
               
-              alert("Gym and Owner account created successfully!");
+              alert("Gym and Owner account created successfully! You may need to sign in again if the session reset.");
               window.location.reload();
             } catch (err: any) {
-              console.error(err);
-              alert("Error adding gym: " + err.message);
+              console.error("Full Error Context:", err);
+              alert("Error: " + (err.message || JSON.stringify(err)));
             }
           }}
           onUpdateGym={async (gymData, password) => {
@@ -297,7 +306,7 @@ const App: React.FC = () => {
               if (gymError) throw gymError;
               
               if (password) {
-                 alert("Gym details updated. Note: Owner password can only be updated by the owner or via Supabase Admin Dashboard.");
+                 alert("Gym updated. Note: Password resets should be done through Supabase Auth dashboard for security.");
               }
 
               window.location.reload();
@@ -364,7 +373,7 @@ const App: React.FC = () => {
                   alert("Error creating trainer: " + err.message);
                 }
               }}
-              onUpdateTrainer={() => {}} // Passwords are hard to update for others
+              onUpdateTrainer={() => {}}
               onDeleteUser={async (id) => {
                 const { error } = await supabase.from('profiles').delete().eq('id', id);
                 if (error) alert(error.message);

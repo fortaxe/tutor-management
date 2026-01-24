@@ -39,25 +39,29 @@ const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col justify-center items-center p-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8 border border-gray-100">
-        <div className="text-center mb-8">
-          <div className="inline-flex p-3 bg-brand-50 rounded-full mb-4">
-            <DumbbellIcon className="h-10 w-10 text-brand-600" />
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-6 relative overflow-hidden">
+      {/* Decorative Blur Elements */}
+      <div className="absolute top-0 -left-10 w-72 h-72 bg-brand/10 rounded-full blur-3xl -z-10 animate-pulse"></div>
+      <div className="absolute bottom-0 -right-10 w-96 h-96 bg-blue-100 rounded-full blur-3xl -z-10"></div>
+
+      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-10 border border-slate-100">
+        <div className="text-center mb-10">
+          <div className="inline-flex p-4 bg-charcoal rounded-2xl mb-6 shadow-xl shadow-charcoal/20">
+            <DumbbellIcon className="h-10 w-10 text-brand" />
           </div>
-          <h1 className="text-3xl font-extrabold text-gray-900">My Gym Members</h1>
-          <p className="text-gray-500 mt-2 font-medium">Management Portal Login</p>
+          <h1 className="text-4xl font-black text-slate-950 tracking-tight mb-2 uppercase">Gym <span className="text-brand">Stack</span></h1>
+          <p className="text-slate-500 font-medium text-sm">Professional Membership Management</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
-              <p className="text-sm text-red-700 font-medium">{error}</p>
+            <div className="bg-orange-50 border-l-4 border-orange-500 p-4 mb-4 rounded-r-lg">
+              <p className="text-sm text-orange-700 font-semibold">{error}</p>
             </div>
           )}
 
-          <div>
-            <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-1">
+          <div className="space-y-2">
+            <label htmlFor="phone" className="block text-xs font-bold text-slate-600 uppercase tracking-widest ml-1">
               Mobile Number
             </label>
             <input
@@ -68,14 +72,14 @@ const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
               maxLength={10}
               value={phone}
               onChange={handlePhoneChange}
-              className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all font-bold"
-              placeholder="10-digit mobile number"
+              className="appearance-none block w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all font-bold text-slate-900"
+              placeholder="0000000000"
             />
           </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-1">
-              Password
+          <div className="space-y-2">
+            <label htmlFor="password" className="block text-xs font-bold text-slate-600 uppercase tracking-widest ml-1">
+              Secret Password
             </label>
             <input
               id="password"
@@ -83,33 +87,37 @@ const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+              className="appearance-none block w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all text-slate-900"
               placeholder="••••••••"
             />
           </div>
 
-          <div>
+          <div className="pt-2">
             <button
               type="submit"
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-black uppercase tracking-widest text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 transition-colors"
+              className="w-full flex justify-center py-4 px-6 border border-transparent rounded-2xl shadow-lg shadow-brand/20 text-sm font-black uppercase tracking-widest text-charcoal bg-brand hover:bg-brand-600 hover:scale-[1.02] active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand"
             >
-              Sign In
+              Unlock Dashboard
             </button>
           </div>
         </form>
 
-        <div className="mt-8 pt-6 border-t border-gray-100 text-center">
-          <p className="text-xs text-gray-400 uppercase tracking-widest font-bold mb-3">Demo Credentials</p>
-          <div className="grid grid-cols-2 gap-4 text-xs">
-            <div className="p-2 bg-gray-50 rounded border border-gray-100">
-              <p className="text-gray-900 font-bold">Super Admin</p>
-              <p className="text-brand-700 font-mono">9999999999</p>
-              <p className="text-gray-500 font-mono">admin</p>
+        <div className="mt-12 pt-8 border-t border-slate-100 text-center">
+          <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] font-black mb-6">Demo Access Credentials</p>
+          <div className="grid grid-cols-1 gap-4">
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between group hover:border-brand/30 transition-colors">
+              <div className="text-left">
+                <p className="text-[11px] text-slate-400 font-bold uppercase mb-1">Super Admin</p>
+                <p className="text-sm text-slate-900 font-black">9999999999</p>
+              </div>
+              <p className="text-xs text-brand font-mono font-bold px-3 py-1 bg-brand/10 rounded-lg">admin</p>
             </div>
-            <div className="p-2 bg-gray-50 rounded border border-gray-100">
-              <p className="text-gray-900 font-bold">Gym Owner</p>
-              <p className="text-brand-700 font-mono">8888888888</p>
-              <p className="text-gray-500 font-mono">owner</p>
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between group hover:border-brand/30 transition-colors">
+              <div className="text-left">
+                <p className="text-[11px] text-slate-400 font-bold uppercase mb-1">Gym Owner</p>
+                <p className="text-sm text-slate-900 font-black">8888888888</p>
+              </div>
+              <p className="text-xs text-brand font-mono font-bold px-3 py-1 bg-brand/10 rounded-lg">owner</p>
             </div>
           </div>
         </div>

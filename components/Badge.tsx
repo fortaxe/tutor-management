@@ -2,21 +2,22 @@
 import React from 'react';
 
 interface BadgeProps {
-  color: 'green' | 'yellow' | 'red' | 'blue' | 'gray';
+  color: 'green' | 'yellow' | 'red' | 'blue' | 'gray' | 'orange';
   children: React.ReactNode;
 }
 
 const Badge: React.FC<BadgeProps> = ({ color, children }) => {
   const colorClasses = {
-    green: 'bg-green-100 text-green-800',
-    yellow: 'bg-yellow-100 text-yellow-800',
-    red: 'bg-red-100 text-red-800',
-    blue: 'bg-blue-100 text-blue-800',
-    gray: 'bg-gray-100 text-gray-800',
+    green: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+    yellow: 'bg-yellow-50 text-yellow-700 border-yellow-100',
+    red: 'bg-red-50 text-red-700 border-red-100',
+    blue: 'bg-blue-50 text-blue-700 border-blue-100',
+    gray: 'bg-slate-100 text-slate-600 border-slate-200',
+    orange: 'bg-orange-50 text-orange-700 border-orange-100',
   };
 
   return (
-    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${colorClasses[color]}`}>
+    <span className={`px-2.5 py-0.5 inline-flex text-[10px] leading-5 font-black uppercase tracking-widest rounded-lg border shadow-sm ${colorClasses[color]}`}>
       {children}
     </span>
   );

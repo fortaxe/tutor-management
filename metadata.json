@@ -1,6 +1,6 @@
 {
-  "name": "My Gym Members",
-  "description": "A simple SaaS platform to manage gym memberships, allowing gym owners to track members, payments, and expirations, with a super admin dashboard to manage gyms.",
+  "name": "Gym Stack",
+  "description": "A premium SaaS platform to manage gym memberships, allowing gym owners to track members, payments, and expirations, with a super admin dashboard to manage gyms.",
   "requestFramePermissions": [
     "camera"
   ]

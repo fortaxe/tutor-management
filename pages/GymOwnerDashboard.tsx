@@ -40,13 +40,13 @@ const MemberAvatar: React.FC<{ member: Member }> = ({ member }) => {
       <img 
         src={member.photo} 
         alt={member.name} 
-        className="h-10 w-10 rounded-full object-cover border border-gray-200"
+        className="h-11 w-11 rounded-2xl object-cover border border-slate-200"
       />
     );
   }
   
   return (
-    <div className="h-10 w-10 rounded-full bg-brand-50 border border-brand-100 flex items-center justify-center text-brand-600 font-black text-xs">
+    <div className="h-11 w-11 rounded-2xl bg-brand/10 border border-brand/20 flex items-center justify-center text-brand-700 font-black text-xs">
       {member.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)}
     </div>
   );
@@ -57,38 +57,40 @@ const MemberRow: React.FC<{ member: Member, onEdit: (member: Member) => void, on
   const isExpired = remainingDays < 0;
 
   return (
-    <tr className="hover:bg-gray-50/50 transition-colors">
-      <td className="px-6 py-4 whitespace-nowrap">
+    <tr className="hover:bg-slate-50 transition-colors group">
+      <td className="px-8 py-5 whitespace-nowrap">
         <div className="flex items-center">
           <MemberAvatar member={member} />
           <div className="ml-4">
-            <div className="text-sm font-bold text-gray-900">{member.name}</div>
-            <div className="text-[10px] text-gray-500 truncate max-w-[150px]">{member.email}</div>
+            <div className="text-sm font-bold text-slate-900 group-hover:text-brand transition-colors">{member.name}</div>
+            <div className="text-[11px] font-medium text-slate-400 truncate max-w-[150px]">{member.email}</div>
           </div>
         </div>
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">{member.phone}</td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm">
-         <div className="font-bold text-gray-700">{endDate.toLocaleDateString()}</div>
-         <div className="text-[10px] text-gray-400 uppercase font-bold tracking-tighter">Expiry</div>
+      <td className="px-8 py-5 whitespace-nowrap text-sm text-slate-500 font-bold">{member.phone}</td>
+      <td className="px-8 py-5 whitespace-nowrap text-sm">
+         <div className="font-bold text-slate-700">{endDate.toLocaleDateString()}</div>
+         <div className="text-[10px] text-slate-400 uppercase font-black tracking-widest mt-0.5">Expires</div>
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm">
+      <td className="px-8 py-5 whitespace-nowrap text-sm">
         {isExpired ? (
           <Badge color="red">Expired</Badge>
         ) : (
-          <span className={`text-sm font-bold ${remainingDays <= 7 ? 'text-red-600' : 'text-brand-600'}`}>
-            {remainingDays}d left
+          <span className={`text-sm font-black ${remainingDays <= 7 ? 'text-orange-600' : 'text-brand-600'}`}>
+            {remainingDays} Days Left
           </span>
         )}
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm">
+      <td className="px-8 py-5 whitespace-nowrap text-sm">
         <button onClick={() => onToggleFeeStatus(member)} className="focus:outline-none hover:opacity-80 transition-opacity">
-          {member.feesStatus === PaymentStatus.PAID ? <Badge color="green">Paid</Badge> : <Badge color="yellow">Unpaid</Badge>}
+          {member.feesStatus === PaymentStatus.PAID ? <Badge color="green">Settled</Badge> : <Badge color="yellow">Pending</Badge>}
         </button>
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-        <button onClick={() => onEdit(member)} className="p-1 text-brand-600 hover:text-brand-900 transition-colors"><EditIcon className="w-5 h-5"/></button>
-        <button onClick={() => onDelete(member.id)} className="p-1 text-red-600 hover:text-red-900 transition-colors"><TrashIcon className="w-5 h-5"/></button>
+      <td className="px-8 py-5 whitespace-nowrap text-right text-sm font-medium">
+        <div className="flex items-center justify-end space-x-3 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button onClick={() => onEdit(member)} className="p-2 bg-slate-100 text-slate-600 hover:bg-brand hover:text-white rounded-xl transition-all shadow-sm"><EditIcon className="w-4 h-4"/></button>
+          <button onClick={() => onDelete(member.id)} className="p-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-xl transition-all shadow-sm"><TrashIcon className="w-4 h-4"/></button>
+        </div>
       </td>
     </tr>
   );
@@ -131,7 +133,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
       const q = searchQuery.toLowerCase();
       baseList = baseList.filter(m => 
         m.name.toLowerCase().includes(q) ||
-        m.email.toLowerCase().includes(q) ||
+        m.email?.toLowerCase().includes(q) ||
         m.phone.includes(q)
       );
     }
@@ -164,97 +166,101 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
   }, [onUpdateMember]);
 
   const tabClasses = (tabName: Tab) => `
-    flex-1 text-center py-2.5 px-2 text-xs font-bold transition-all duration-200 uppercase tracking-widest
-    ${activeTab === tabName ? 'bg-brand-600 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-100'}
+    flex-1 text-center py-3.5 px-4 text-[11px] font-black transition-all duration-300 uppercase tracking-[0.15em]
+    ${activeTab === tabName ? 'bg-charcoal text-white shadow-xl shadow-charcoal/20 z-10' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}
   `;
 
   return (
-    <div className="animate-in fade-in duration-500">
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center">
-          <div className="bg-green-50 p-3 rounded-xl border border-green-100"><UserGroupIcon className="h-6 w-6 text-green-600"/></div>
-          <div className="ml-4">
-            <p className="text-[10px] font-bold text-gray-400 uppercase">Active</p>
-            <p className="text-xl font-black text-gray-900">{stats.activeMembers}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div className="bg-white p-7 rounded-3xl shadow-sm border border-slate-100 flex items-center group hover:shadow-xl hover:shadow-brand/5 transition-all">
+          <div className="bg-brand/10 p-4 rounded-2xl border border-brand/20 group-hover:bg-brand group-hover:text-white transition-all"><UserGroupIcon className="h-7 w-7 text-brand group-hover:text-white"/></div>
+          <div className="ml-5">
+            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">Active Now</p>
+            <p className="text-3xl font-black text-slate-950">{stats.activeMembers}</p>
           </div>
         </div>
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center">
-          <div className="bg-red-50 p-3 rounded-xl border border-red-100"><ClockIcon className="h-6 w-6 text-red-600"/></div>
-          <div className="ml-4">
-            <p className="text-[10px] font-bold text-gray-400 uppercase">Expired</p>
-            <p className="text-xl font-black text-gray-900">{stats.expiredMembers}</p>
+        <div className="bg-white p-7 rounded-3xl shadow-sm border border-slate-100 flex items-center group hover:shadow-xl hover:shadow-orange/5 transition-all">
+          <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100 group-hover:bg-orange-500 group-hover:text-white transition-all"><ClockIcon className="h-7 w-7 text-orange-500 group-hover:text-white"/></div>
+          <div className="ml-5">
+            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">Membership Expired</p>
+            <p className="text-3xl font-black text-slate-950">{stats.expiredMembers}</p>
           </div>
         </div>
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center">
-          <div className="bg-yellow-50 p-3 rounded-xl border border-yellow-100"><ExclamationTriangleIcon className="h-6 w-6 text-yellow-600"/></div>
-          <div className="ml-4">
-            <p className="text-[10px] font-bold text-gray-400 uppercase">Pending Dues</p>
-            <p className="text-xl font-black text-gray-900">{stats.duesPending}</p>
+        <div className="bg-white p-7 rounded-3xl shadow-sm border border-slate-100 flex items-center group hover:shadow-xl hover:shadow-yellow/5 transition-all">
+          <div className="bg-yellow-50 p-4 rounded-2xl border border-yellow-100 group-hover:bg-yellow-500 group-hover:text-white transition-all"><ExclamationTriangleIcon className="h-7 w-7 text-yellow-500 group-hover:text-white"/></div>
+          <div className="ml-5">
+            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">Fee Pending</p>
+            <p className="text-3xl font-black text-slate-950">{stats.duesPending}</p>
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-4 sm:p-6 border-b border-gray-100 space-y-4">
-          <div className="flex flex-col lg:flex-row justify-between lg:items-center space-y-4 lg:space-y-0">
-            <div className="flex bg-gray-100 p-1 rounded-xl w-full lg:max-w-md overflow-hidden border border-gray-200">
-              <button onClick={() => setActiveTab('members')} className={`${tabClasses('members')} rounded-lg`}>All</button>
-              <button onClick={() => setActiveTab('expiry')} className={`${tabClasses('expiry')} rounded-lg`}>Expiry</button>
-              <button onClick={() => setActiveTab('dues')} className={`${tabClasses('dues')} rounded-lg`}>Dues</button>
+      <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200/60 overflow-hidden">
+        <div className="p-8 lg:p-10 space-y-8">
+          <div className="flex flex-col xl:flex-row justify-between xl:items-center space-y-6 xl:space-y-0">
+            <div className="flex bg-slate-100/80 p-1.5 rounded-2xl w-full xl:max-w-md overflow-hidden border border-slate-200/50">
+              <button onClick={() => setActiveTab('members')} className={`${tabClasses('members')} rounded-xl`}>All Members</button>
+              <button onClick={() => setActiveTab('expiry')} className={`${tabClasses('expiry')} rounded-xl`}>Expiring Soon</button>
+              <button onClick={() => setActiveTab('dues')} className={`${tabClasses('dues')} rounded-xl`}>Due Fees</button>
             </div>
-            <button 
-              onClick={() => handleOpenModal()} 
-              className="w-full lg:w-auto flex justify-center items-center px-6 py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 transition-all shadow-md active:scale-95"
-            >
-              <PlusIcon className="w-5 h-5 mr-2" /> Add Member
-            </button>
-          </div>
-
-          {/* Search Bar */}
-          <div className="relative w-full max-w-lg">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <SearchIcon className="h-5 w-5 text-gray-400" />
+            
+            <div className="flex flex-col sm:flex-row gap-4">
+               {/* Search Bar */}
+              <div className="relative w-full sm:w-80">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <SearchIcon className="h-5 w-5 text-slate-400" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Quick Search..."
+                  className="block w-full pl-11 pr-4 py-4 border border-slate-200 bg-slate-50/50 rounded-2xl leading-5 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-brand/5 focus:border-brand focus:bg-white transition-all sm:text-sm font-semibold"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <button 
+                onClick={() => handleOpenModal()} 
+                className="flex items-center justify-center px-8 py-4 bg-brand text-charcoal rounded-2xl font-black uppercase tracking-widest hover:bg-brand-400 transition-all shadow-xl shadow-brand/20 active:scale-95 text-xs"
+              >
+                <PlusIcon className="w-5 h-5 mr-3" /> New Member
+              </button>
             </div>
-            <input
-              type="text"
-              placeholder="Search by name, email, or phone..."
-              className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all sm:text-sm shadow-sm"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
           </div>
         </div>
 
         {activeTab === 'expiry' && (
-          <div className="px-6 py-4 bg-brand-50/50 flex flex-wrap items-center gap-2 border-b border-brand-100">
-             <span className="text-[10px] font-bold text-brand-700 uppercase mr-1">Filter timeframe:</span>
-             {[7, 15, 30].map(days => (
-                 <button 
-                    key={days} 
-                    onClick={() => setExpiryFilter(days)} 
-                    className={`px-4 py-1 text-xs font-bold rounded-full border transition-all ${expiryFilter === days ? 'bg-brand-600 text-white border-brand-600' : 'bg-white text-brand-600 border-brand-200'}`}
-                  >
-                     {days} Days
-                 </button>
-             ))}
+          <div className="px-10 py-5 bg-brand/5 flex flex-wrap items-center gap-4 border-y border-brand/10">
+             <span className="text-[11px] font-black text-brand-800 uppercase tracking-widest">Expiration Timeframe</span>
+             <div className="flex gap-2">
+               {[7, 15, 30].map(days => (
+                   <button 
+                      key={days} 
+                      onClick={() => setExpiryFilter(days)} 
+                      className={`px-5 py-2 text-xs font-bold rounded-xl border transition-all ${expiryFilter === days ? 'bg-brand text-charcoal border-brand shadow-md shadow-brand/10' : 'bg-white text-brand border-brand/20 hover:border-brand'}`}
+                    >
+                       {days} Days
+                   </button>
+               ))}
+             </div>
           </div>
         )}
 
         {/* Desktop Table */}
         <div className="hidden lg:block overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-100">
-            <thead className="bg-gray-50/50">
+          <table className="min-w-full divide-y divide-slate-100">
+            <thead className="bg-slate-50/50">
               <tr>
-                <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Member</th>
-                <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Contact</th>
-                <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Expiry Date</th>
-                <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
-                <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Fees</th>
-                <th className="relative px-6 py-4 text-right"><span className="sr-only">Actions</span></th>
+                <th className="px-10 py-5 text-left text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Profile</th>
+                <th className="px-10 py-5 text-left text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Contact</th>
+                <th className="px-10 py-5 text-left text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Expiration</th>
+                <th className="px-10 py-5 text-left text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Timeline</th>
+                <th className="px-10 py-5 text-left text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Payment</th>
+                <th className="relative px-10 py-5 text-right"><span className="sr-only">Actions</span></th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-50">
+            <tbody className="bg-white divide-y divide-slate-50">
               {filteredMembers.map(member => (
                 <MemberRow key={member.id} member={member} onEdit={handleOpenModal} onDelete={onDeleteMember} onToggleFeeStatus={handleToggleFeeStatus} />
               ))}
@@ -263,36 +269,36 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
         </div>
 
         {/* Mobile Member List */}
-        <div className="lg:hidden divide-y divide-gray-50">
+        <div className="lg:hidden divide-y divide-slate-50">
           {filteredMembers.map(member => {
             const { endDate, remainingDays } = getPlanDates(member);
             const isExpired = remainingDays < 0;
             return (
-              <div key={member.id} className="p-4 space-y-3">
+              <div key={member.id} className="p-6 space-y-4 hover:bg-slate-50 transition-colors">
                 <div className="flex justify-between items-start">
                   <div className="flex items-center">
                     <MemberAvatar member={member} />
-                    <div className="ml-3">
-                      <h4 className="font-bold text-gray-900">{member.name}</h4>
-                      <p className="text-xs text-gray-500 font-medium">{member.phone}</p>
+                    <div className="ml-4">
+                      <h4 className="font-bold text-slate-950">{member.name}</h4>
+                      <p className="text-xs text-slate-400 font-bold">{member.phone}</p>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end space-y-1">
+                  <div className="flex flex-col items-end space-y-2">
                     <button onClick={() => handleToggleFeeStatus(member)} className="focus:outline-none">
-                      {member.feesStatus === PaymentStatus.PAID ? <Badge color="green">Paid</Badge> : <Badge color="yellow">Unpaid</Badge>}
+                      {member.feesStatus === PaymentStatus.PAID ? <Badge color="green">Settled</Badge> : <Badge color="yellow">Pending</Badge>}
                     </button>
-                    {isExpired ? <Badge color="red">Expired</Badge> : <span className="text-[10px] font-black text-brand-600 uppercase bg-brand-50 px-2 py-0.5 rounded">{remainingDays}d left</span>}
+                    {isExpired ? <Badge color="red">Expired</Badge> : <span className="text-[11px] font-black text-brand-700 uppercase bg-brand/10 px-3 py-1 rounded-lg">{remainingDays}d Left</span>}
                   </div>
                 </div>
                 
-                <div className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-lg border border-gray-100">
+                <div className="flex justify-between items-center py-4 px-5 bg-slate-50 rounded-2xl border border-slate-100">
                   <div className="text-xs">
-                    <span className="text-gray-400 font-bold uppercase text-[9px]">Expires:</span> 
-                    <span className="ml-2 font-bold text-gray-700">{endDate.toLocaleDateString()}</span>
+                    <span className="text-slate-400 font-black uppercase text-[10px] tracking-widest block mb-0.5">End Date</span> 
+                    <span className="font-black text-slate-800 tracking-tight">{endDate.toLocaleDateString()}</span>
                   </div>
                   <div className="flex space-x-3">
-                    <button onClick={() => handleOpenModal(member)} className="text-brand-600 p-1"><EditIcon className="w-5 h-5"/></button>
-                    <button onClick={() => onDeleteMember(member.id)} className="text-red-600 p-1"><TrashIcon className="w-5 h-5"/></button>
+                    <button onClick={() => handleOpenModal(member)} className="bg-white text-slate-600 p-3 rounded-xl border border-slate-200 shadow-sm active:scale-95 transition-all"><EditIcon className="w-5 h-5"/></button>
+                    <button onClick={() => onDeleteMember(member.id)} className="bg-red-50 text-red-600 p-3 rounded-xl border border-red-100 shadow-sm active:scale-95 transition-all"><TrashIcon className="w-5 h-5"/></button>
                   </div>
                 </div>
               </div>
@@ -301,23 +307,26 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
         </div>
 
         {filteredMembers.length === 0 && (
-          <div className="text-center py-16 text-gray-400">
+          <div className="text-center py-24 text-slate-300">
             {searchQuery ? (
-              <>
-                <SearchIcon className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                <p className="font-bold">No members match "{searchQuery}"</p>
-              </>
+              <div className="max-w-xs mx-auto">
+                <SearchIcon className="w-16 h-16 mx-auto mb-6 opacity-20" />
+                <p className="font-black uppercase tracking-widest text-xs mb-2">No Results Found</p>
+                <p className="text-slate-400 text-sm">We couldn't find any members matching "<span className="text-slate-900">{searchQuery}</span>"</p>
+              </div>
             ) : (
-              <>
-                <UserGroupIcon className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                <p className="font-bold">No members found.</p>
-              </>
+              <div className="max-w-xs mx-auto">
+                <UserGroupIcon className="w-16 h-16 mx-auto mb-6 opacity-20" />
+                <p className="font-black uppercase tracking-widest text-xs mb-2">Club Empty</p>
+                <p className="text-slate-400 text-sm">Start your growth by registering your first member.</p>
+                <button onClick={() => handleOpenModal()} className="mt-6 text-brand font-black uppercase text-[11px] tracking-widest py-3 px-6 bg-brand/5 rounded-xl hover:bg-brand/10 transition-colors">Register Member</button>
+              </div>
             )}
           </div>
         )}
       </div>
       
-      <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingMember ? 'Update Member Profile' : 'Register New Member'}>
+      <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingMember ? 'Update Profile' : 'Member Registration'}>
           <MemberForm member={editingMember} onSubmit={handleFormSubmit} onCancel={handleCloseModal} />
       </Modal>
     </div>

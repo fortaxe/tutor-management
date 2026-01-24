@@ -32,21 +32,22 @@ const App: React.FC = () => {
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
-            .single();
+            .maybeSingle(); // Changed from .single() to avoid "Cannot coerce" error
           
-          if (profileError) {
-            console.error("Profile fetch error:", profileError);
-            // If profile fails but session exists, we might have an RLS issue or missing profile
-            // Let's sign out to be safe and allow fresh login
-            await supabase.auth.signOut();
-            setCurrentUser(null);
-          } else if (profile) {
+          if (profileError) throw profileError;
+
+          if (profile) {
             setCurrentUser({
               id: profile.id,
               phone: profile.phone,
               role: profile.role as UserRole,
               gymId: profile.gym_id
             });
+          } else {
+            // If profile is missing but user exists, they might be an orphan.
+            // For now, logout to allow a clean retry after SQL fix.
+            await supabase.auth.signOut();
+            setCurrentUser(null);
           }
         }
       } catch (err: any) {
@@ -90,20 +91,9 @@ const App: React.FC = () => {
         setGyms(formattedGyms);
 
         // 2. Fetch Members
-        const { data: membersData } = await supabase.from('members').select('*');
-        const formattedMembers = (membersData || []).map(m => ({
-          id: m.id,
-          gymId: m.gym_id,
-          name: m.name,
-          email: m.email,
-          phone: m.phone,
-          planStart: m.plan_start,
-          plan_duration_days: m.plan_duration_days,
-          fees_amount: m.fees_amount,
-          fees_status: m.fees_status as PaymentStatus,
-          photo: m.photo_url
-        }));
-        // Note: The mapping here needs to match type Member interface exactly
+        const { data: membersData, error: membersFetchError } = await supabase.from('members').select('*');
+        if (membersFetchError) throw membersFetchError;
+
         setMembers((membersData || []).map(m => ({
           id: m.id,
           gymId: m.gym_id,
@@ -163,7 +153,7 @@ const App: React.FC = () => {
       .from('profiles')
       .select('*')
       .eq('id', data.user.id)
-      .single();
+      .maybeSingle(); // Changed from .single() to handle missing profiles gracefully
 
     if (profileError) throw profileError;
 
@@ -175,6 +165,20 @@ const App: React.FC = () => {
         gymId: profile.gym_id
       });
       setActiveView('dashboard');
+    } else {
+      // Fallback: Use metadata if profile row is not yet synchronized
+      const meta = data.user.user_metadata;
+      if (meta && meta.role) {
+         setCurrentUser({
+           id: data.user.id,
+           phone: phone,
+           role: meta.role as UserRole,
+           gymId: meta.gym_id ? Number(meta.gym_id) : undefined
+         });
+         setActiveView('dashboard');
+      } else {
+         throw new Error("Profile not found. Please contact support.");
+      }
     }
   };
 
@@ -273,7 +277,7 @@ const App: React.FC = () => {
 
               if (gymError) throw gymError;
 
-              // 2. Create Auth User with role in metadata
+              // 2. Create Auth User with role AND gym_id in metadata for trigger
               if (password) {
                 const { data: authData, error: authError } = await supabase.auth.signUp({
                   email: phoneToEmail(gymData.ownerPhone),
@@ -281,7 +285,8 @@ const App: React.FC = () => {
                   options: {
                     data: {
                       role: UserRole.GYM_OWNER,
-                      phone: gymData.ownerPhone
+                      phone: gymData.ownerPhone,
+                      gym_id: newGym.id
                     }
                   }
                 });
@@ -289,22 +294,21 @@ const App: React.FC = () => {
                 if (authError) throw authError;
 
                 if (authData.user) {
-                  // 3. Link Profile
-                  const { error: profileError } = await supabase.from('profiles').upsert({
+                  // Explicitly upsert profile as a backup, though trigger will now handle it.
+                  await supabase.from('profiles').upsert({
                     id: authData.user.id,
                     phone: gymData.ownerPhone,
                     role: UserRole.GYM_OWNER,
                     gym_id: newGym.id
                   });
-                  if (profileError) throw profileError;
                 }
               }
               
               alert("Gym and Owner account created successfully!");
               window.location.reload();
             } catch (err: any) {
-              console.error(err);
-              alert("Error adding gym: " + err.message);
+              console.error("Super Admin Action Error:", err);
+              alert("Error adding gym: " + (err.message || "Failed to create account."));
             }
           }}
           onUpdateGym={async (gymData, password) => {
@@ -372,13 +376,14 @@ const App: React.FC = () => {
                     options: {
                       data: {
                         role: UserRole.TRAINER,
-                        phone: data.phone
+                        phone: data.phone,
+                        gym_id: currentUser.gymId
                       }
                     }
                   });
                   if (authError) throw authError;
                   if (authData.user) {
-                    await supabase.from('profiles').insert({
+                    await supabase.from('profiles').upsert({
                       id: authData.user.id,
                       phone: data.phone,
                       role: UserRole.TRAINER,

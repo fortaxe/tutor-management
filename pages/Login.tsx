@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { User } from '../types';
-import UserGroupIcon from '../components/icons/UserGroupIcon';
+import DumbbellIcon from '../components/icons/DumbbellIcon';
 
 interface LoginProps {
   users: User[];
@@ -33,9 +33,9 @@ const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
       <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8 border border-gray-100">
         <div className="text-center mb-8">
           <div className="inline-flex p-3 bg-brand-50 rounded-full mb-4">
-            <UserGroupIcon className="h-10 w-10 text-brand-600" />
+            <DumbbellIcon className="h-10 w-10 text-brand-600" />
           </div>
-          <h1 className="text-3xl font-extrabold text-gray-900">My Gym Member</h1>
+          <h1 className="text-3xl font-extrabold text-gray-900">My Gym Members</h1>
           <p className="text-gray-500 mt-2 font-medium">Management Portal Login</p>
         </div>
 

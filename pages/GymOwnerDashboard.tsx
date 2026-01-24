@@ -34,6 +34,24 @@ const getPlanDates = (member: Member) => {
   return { startDate, endDate, remainingDays };
 };
 
+const MemberAvatar: React.FC<{ member: Member }> = ({ member }) => {
+  if (member.photo) {
+    return (
+      <img 
+        src={member.photo} 
+        alt={member.name} 
+        className="h-10 w-10 rounded-full object-cover border border-gray-200"
+      />
+    );
+  }
+  
+  return (
+    <div className="h-10 w-10 rounded-full bg-brand-50 border border-brand-100 flex items-center justify-center text-brand-600 font-black text-xs">
+      {member.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)}
+    </div>
+  );
+};
+
 const MemberRow: React.FC<{ member: Member, onEdit: (member: Member) => void, onDelete: (id: number) => void, onToggleFeeStatus: (member: Member) => void }> = ({ member, onEdit, onDelete, onToggleFeeStatus }) => {
   const { endDate, remainingDays } = getPlanDates(member);
   const isExpired = remainingDays < 0;
@@ -41,8 +59,13 @@ const MemberRow: React.FC<{ member: Member, onEdit: (member: Member) => void, on
   return (
     <tr className="hover:bg-gray-50/50 transition-colors">
       <td className="px-6 py-4 whitespace-nowrap">
-        <div className="text-sm font-bold text-gray-900">{member.name}</div>
-        <div className="text-[10px] text-gray-500 truncate max-w-[150px]">{member.email}</div>
+        <div className="flex items-center">
+          <MemberAvatar member={member} />
+          <div className="ml-4">
+            <div className="text-sm font-bold text-gray-900">{member.name}</div>
+            <div className="text-[10px] text-gray-500 truncate max-w-[150px]">{member.email}</div>
+          </div>
+        </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">{member.phone}</td>
       <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -247,9 +270,12 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
             return (
               <div key={member.id} className="p-4 space-y-3">
                 <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-bold text-gray-900">{member.name}</h4>
-                    <p className="text-xs text-gray-500 font-medium">{member.phone}</p>
+                  <div className="flex items-center">
+                    <MemberAvatar member={member} />
+                    <div className="ml-3">
+                      <h4 className="font-bold text-gray-900">{member.name}</h4>
+                      <p className="text-xs text-gray-500 font-medium">{member.phone}</p>
+                    </div>
                   </div>
                   <div className="flex flex-col items-end space-y-1">
                     <button onClick={() => handleToggleFeeStatus(member)} className="focus:outline-none">

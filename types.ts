@@ -60,6 +60,7 @@ export interface Member {
   planDurationDays: number;
   feesAmount: number;
   feesStatus: PaymentStatus;
+  photo?: string; // Base64 encoded image
 }
 
 export interface MemberPayment {

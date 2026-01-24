@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Member, PaymentStatus } from '../types';
+import CameraCapture from './CameraCapture';
 
 interface MemberFormProps {
   member?: Member | null;
@@ -9,6 +10,7 @@ interface MemberFormProps {
 }
 
 const MemberForm: React.FC<MemberFormProps> = ({ member, onSubmit, onCancel }) => {
+  const [showCamera, setShowCamera] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -17,6 +19,7 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, onSubmit, onCancel }) =
     planDurationDays: 30,
     feesAmount: 0,
     feesStatus: PaymentStatus.UNPAID,
+    photo: undefined as string | undefined,
   });
 
   useEffect(() => {
@@ -29,6 +32,7 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, onSubmit, onCancel }) =
         planDurationDays: member.planDurationDays,
         feesAmount: member.feesAmount,
         feesStatus: member.feesStatus,
+        photo: member.photo,
       });
     }
   }, [member]);
@@ -39,6 +43,11 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, onSubmit, onCancel }) =
     setFormData(prev => ({ ...prev, [name]: isNumberField ? Number(value) : value }));
   };
   
+  const handlePhotoCapture = (imageData: string) => {
+    setFormData(prev => ({ ...prev, photo: imageData }));
+    setShowCamera(false);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (member) {
@@ -51,8 +60,44 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, onSubmit, onCancel }) =
   const inputClasses = "mt-1 block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all sm:text-sm";
   const labelClasses = "block text-xs font-black text-gray-500 uppercase tracking-widest ml-1";
 
+  if (showCamera) {
+    return (
+      <div className="py-4">
+        <h4 className="text-center font-black text-gray-900 uppercase tracking-widest mb-6">Capture Member Photo</h4>
+        <CameraCapture onCapture={handlePhotoCapture} onCancel={() => setShowCamera(false)} />
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Photo Capture Section */}
+      <div className="flex flex-col items-center pb-4 border-b border-gray-50">
+        <div 
+          onClick={() => setShowCamera(true)}
+          className="relative h-24 w-24 rounded-full border-2 border-dashed border-brand-200 bg-brand-50 flex items-center justify-center cursor-pointer hover:bg-brand-100 transition-colors group overflow-hidden"
+        >
+          {formData.photo ? (
+            <img src={formData.photo} alt="Member preview" className="h-full w-full object-cover" />
+          ) : (
+            <div className="text-center p-2">
+              <svg className="w-8 h-8 mx-auto text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+          )}
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+            <span className="text-white text-[10px] font-black uppercase tracking-tighter">
+              {formData.photo ? 'Change' : 'Capture'}
+            </span>
+          </div>
+        </div>
+        <p className="mt-2 text-[10px] font-black text-brand-600 uppercase tracking-widest">
+          Member ID Validation Photo
+        </p>
+      </div>
+
       <div>
         <label htmlFor="name" className={labelClasses}>Full Name</label>
         <input type="text" name="name" id="name" value={formData.name} onChange={handleChange} required className={inputClasses} placeholder="Enter full name" />

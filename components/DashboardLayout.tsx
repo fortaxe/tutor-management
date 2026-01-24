@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { User, UserRole } from '../types';
-import UserGroupIcon from './icons/UserGroupIcon';
+import DumbbellIcon from './icons/DumbbellIcon';
 
 interface DashboardLayoutProps {
   user: User;
@@ -34,8 +34,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       {/* Mobile Header */}
       <div className="lg:hidden bg-gray-800 text-white p-4 flex justify-between items-center sticky top-0 z-40 shadow-md">
         <div className="flex items-center space-x-2">
-          <UserGroupIcon className="h-6 w-6 text-brand-400" />
-          <h1 className="text-xl font-bold">My Gym Member</h1>
+          <DumbbellIcon className="h-6 w-6 text-brand-400" />
+          <h1 className="text-xl font-bold">My Gym Members</h1>
         </div>
         <button 
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -59,8 +59,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       `}>
         <div>
           <div className="hidden lg:flex items-center space-x-2 mb-10">
-            <UserGroupIcon className="h-8 w-8 text-brand-400" />
-            <h1 className="text-2xl font-bold">My Gym Member</h1>
+            <DumbbellIcon className="h-8 w-8 text-brand-400" />
+            <h1 className="text-2xl font-bold">My Gym Members</h1>
           </div>
           
           <nav className="space-y-1">

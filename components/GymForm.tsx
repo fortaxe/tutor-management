@@ -58,12 +58,16 @@ const GymForm: React.FC<GymFormProps> = ({ gym, onSubmit, onCancel }) => {
       return;
     }
     
+    // Separate password from gym data
     const { password, ...gymOnlyData } = formData;
+    
+    // Ensure paymentHistory is included to satisfy Gym or Omit<Gym, 'id'> type
     if (gym) {
-      // For updates, password is only passed if the user typed something
-      onSubmit({ ...gym, ...gymOnlyData }, password.trim() || undefined);
+      // For updates, merge existing gym data with form changes
+      onSubmit({ ...gym, ...gymOnlyData } as Gym, password.trim() || undefined);
     } else {
-      onSubmit(gymOnlyData, password);
+      // For new gyms, initialize paymentHistory as an empty array
+      onSubmit({ ...gymOnlyData, paymentHistory: [] } as Omit<Gym, 'id'>, password);
     }
   };
 

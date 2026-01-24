@@ -93,28 +93,27 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
               <p className="text-lg font-black text-slate-950 tracking-tight">{member.phone}</p>
             </div>
 
-            <div className="flex justify-between items-center pt-4 border-t border-slate-50">
-               <div className="bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                  <span className="text-[10px] text-slate-400 font-bold mr-2 uppercase">PIN:</span>
-                  <span className="text-xs font-mono font-bold text-slate-700">••••••</span>
-               </div>
+            <div className="flex justify-end items-center pt-4 border-t border-slate-50">
                {member.role !== UserRole.GYM_OWNER && (
                  <div className="flex space-x-2">
                    <button 
                     onClick={() => handleOpenModal(member)}
-                    className="p-2 text-slate-300 hover:text-brand hover:bg-brand/5 rounded-xl transition-all"
+                    className="p-2 text-slate-400 hover:text-brand hover:bg-brand/5 rounded-xl transition-all flex items-center gap-1 text-[10px] font-bold uppercase"
                     title="Edit Credentials"
                    >
-                     <EditIcon className="w-5 h-5" />
+                     <EditIcon className="w-4 h-4" /> Edit
                    </button>
                    <button 
                     onClick={() => onDeleteUser(member.id)}
-                    className="p-2 text-red-200 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                    className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all flex items-center gap-1 text-[10px] font-bold uppercase"
                     title="Remove Account"
                    >
-                     <TrashIcon className="w-5 h-5" />
+                     <TrashIcon className="w-4 h-4" /> Remove
                    </button>
                  </div>
+               )}
+               {member.role === UserRole.GYM_OWNER && (
+                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest italic">Primary Account</span>
                )}
             </div>
           </div>

@@ -88,7 +88,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         <div className="mt-auto pt-6 border-t border-gray-700">
           <div className="mb-4 px-2">
             <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">Account</p>
-            <p className="font-bold text-white truncate text-xs">{user.email}</p>
+            <p className="font-bold text-white truncate text-xs">{user.phone}</p>
           </div>
           <button
             onClick={onLogout}

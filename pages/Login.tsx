@@ -9,7 +9,7 @@ interface LoginProps {
 }
 
 const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
-  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
@@ -18,13 +18,13 @@ const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
     setError('');
 
     const foundUser = users.find(
-      u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+      u => u.phone === phone && u.password === password
     );
 
     if (foundUser) {
       onLogin(foundUser);
     } else {
-      setError('Invalid email or password. Please try again.');
+      setError('Invalid mobile number or password. Please try again.');
     }
   };
 
@@ -47,17 +47,18 @@ const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
           )}
 
           <div>
-            <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-1">
-              Email Address
+            <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-1">
+              Mobile Number
             </label>
             <input
-              id="email"
-              type="email"
+              id="phone"
+              type="tel"
+              inputMode="numeric"
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
-              placeholder="admin@gymsaas.com"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all font-bold"
+              placeholder="Enter mobile number"
             />
           </div>
 
@@ -79,7 +80,7 @@ const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
           <div>
             <button
               type="submit"
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 transition-colors"
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-black uppercase tracking-widest text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 transition-colors"
             >
               Sign In
             </button>
@@ -91,13 +92,13 @@ const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
           <div className="grid grid-cols-2 gap-4 text-xs">
             <div className="p-2 bg-gray-50 rounded border border-gray-100">
               <p className="text-gray-900 font-bold">Super Admin</p>
-              <p className="text-gray-600 truncate">admin@gymsaas.com</p>
-              <p className="text-brand-600 font-mono">admin</p>
+              <p className="text-brand-700 font-mono">9999999999</p>
+              <p className="text-gray-500 font-mono">admin</p>
             </div>
             <div className="p-2 bg-gray-50 rounded border border-gray-100">
               <p className="text-gray-900 font-bold">Gym Owner</p>
-              <p className="text-gray-600 truncate">owner@powerhouse.com</p>
-              <p className="text-brand-600 font-mono">owner</p>
+              <p className="text-brand-700 font-mono">8888888888</p>
+              <p className="text-gray-500 font-mono">owner</p>
             </div>
           </div>
         </div>

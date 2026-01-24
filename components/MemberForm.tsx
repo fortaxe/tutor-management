@@ -17,7 +17,7 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, onSubmit, onCancel }) =
     phone: '',
     planStart: new Date().toISOString().split('T')[0],
     planDurationDays: 30,
-    feesAmount: 0,
+    feesAmount: '' as string, // Always handle as string in form for better input experience
     feesStatus: PaymentStatus.UNPAID,
     photo: undefined as string | undefined,
   });
@@ -26,11 +26,11 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, onSubmit, onCancel }) =
     if (member) {
       setFormData({
         name: member.name,
-        email: member.email,
+        email: member.email || '',
         phone: member.phone,
         planStart: member.planStart,
         planDurationDays: member.planDurationDays,
-        feesAmount: member.feesAmount,
+        feesAmount: member.feesAmount.toString(),
         feesStatus: member.feesStatus,
         photo: member.photo,
       });
@@ -39,7 +39,16 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, onSubmit, onCancel }) =
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    const isNumberField = ['planDurationDays', 'feesAmount'].includes(name);
+    
+    if (name === 'feesAmount') {
+      // Allow empty string so the user can delete '0' or any value entirely
+      if (value === '' || /^\d+$/.test(value)) {
+        setFormData(prev => ({ ...prev, [name]: value }));
+      }
+      return;
+    }
+
+    const isNumberField = ['planDurationDays'].includes(name);
     setFormData(prev => ({ ...prev, [name]: isNumberField ? Number(value) : value }));
   };
   
@@ -50,10 +59,17 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, onSubmit, onCancel }) =
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const submissionData = {
+      ...formData,
+      feesAmount: Number(formData.feesAmount) || 0,
+      email: formData.email.trim() || undefined,
+    };
+
     if (member) {
-        onSubmit({ ...member, ...formData });
+        onSubmit({ ...member, ...submissionData } as Member);
     } else {
-        onSubmit({ ...formData, gymId: 0 }); // gymId will be set in parent
+        onSubmit({ ...submissionData, gymId: 0 } as Omit<Member, 'id'>);
     }
   };
 
@@ -71,7 +87,6 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, onSubmit, onCancel }) =
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Photo Capture Section */}
       <div className="flex flex-col items-center pb-4 border-b border-gray-50">
         <div 
           onClick={() => setShowCamera(true)}
@@ -89,12 +104,12 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, onSubmit, onCancel }) =
           )}
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
             <span className="text-white text-[10px] font-black uppercase tracking-tighter">
-              {formData.photo ? 'Change' : 'Capture'}
+              {formData.photo ? 'Change Photo' : 'Capture ID'}
             </span>
           </div>
         </div>
         <p className="mt-2 text-[10px] font-black text-brand-600 uppercase tracking-widest">
-          Member ID Validation Photo
+          Validation Photo
         </p>
       </div>
 
@@ -105,8 +120,8 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, onSubmit, onCancel }) =
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div>
-          <label htmlFor="email" className={labelClasses}>Email Address</label>
-          <input type="email" name="email" id="email" value={formData.email} onChange={handleChange} required className={inputClasses} placeholder="email@example.com" />
+          <label htmlFor="email" className={labelClasses}>Email (Optional)</label>
+          <input type="email" name="email" id="email" value={formData.email} onChange={handleChange} className={inputClasses} placeholder="Optional" />
         </div>
         <div>
           <label htmlFor="phone" className={labelClasses}>Phone Number</label>
@@ -135,7 +150,17 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, onSubmit, onCancel }) =
           <label htmlFor="feesAmount" className={labelClasses}>Fees Amount (INR)</label>
           <div className="relative">
             <span className="absolute left-4 top-4 text-gray-400 font-bold">₹</span>
-            <input type="number" name="feesAmount" id="feesAmount" value={formData.feesAmount} onChange={handleChange} required className={`${inputClasses} pl-8`} />
+            <input 
+              type="text" 
+              inputMode="numeric"
+              name="feesAmount" 
+              id="feesAmount" 
+              value={formData.feesAmount} 
+              onChange={handleChange} 
+              required 
+              className={`${inputClasses} pl-8`} 
+              placeholder="Enter amount"
+            />
           </div>
         </div>
         <div>
@@ -149,8 +174,8 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, onSubmit, onCancel }) =
 
       <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-6 border-t border-gray-100">
         <button type="button" onClick={onCancel} className="w-full sm:w-auto px-6 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition-colors">Cancel</button>
-        <button type="submit" className="w-full sm:w-auto px-8 py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 shadow-lg active:scale-95 transition-all">
-          {member ? 'Save Changes' : 'Register Member'}
+        <button type="submit" className="w-full sm:w-auto px-8 py-3 bg-brand-600 text-white rounded-xl font-black uppercase tracking-widest hover:bg-brand-700 shadow-lg active:scale-95 transition-all">
+          {member ? 'Save Profile' : 'Register Member'}
         </button>
       </div>
     </form>

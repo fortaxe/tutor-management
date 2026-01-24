@@ -2,15 +2,15 @@
 import { User, Gym, Member, UserRole, GymStatus, SubscriptionStatus, PaymentStatus, MemberPayment } from './types';
 
 export const USERS: User[] = [
-  { id: 1, email: 'admin@gymsaas.com', password: 'admin', role: UserRole.SUPER_ADMIN },
-  { id: 2, email: 'owner@powerhouse.com', password: 'owner', role: UserRole.GYM_OWNER, gymId: 1 },
+  { id: 1, phone: '9999999999', password: 'admin', role: UserRole.SUPER_ADMIN },
+  { id: 2, phone: '8888888888', password: 'owner', role: UserRole.GYM_OWNER, gymId: 1 },
 ];
 
 export const GYMS: Gym[] = [
   {
     id: 1,
     name: 'Powerhouse Fitness',
-    ownerEmail: 'owner@powerhouse.com',
+    ownerPhone: '8888888888',
     status: GymStatus.ACTIVE,
     subscriptionStatus: SubscriptionStatus.ACTIVE,
     subscriptionStartDate: '2024-07-15',
@@ -30,7 +30,7 @@ export const GYMS: Gym[] = [
   {
     id: 2,
     name: 'Iron Temple Gym',
-    ownerEmail: 'manager@irontemple.com',
+    ownerPhone: '7777777777',
     status: GymStatus.ACTIVE,
     subscriptionStatus: SubscriptionStatus.PENDING,
     subscriptionStartDate: '2024-06-25',
@@ -66,22 +66,9 @@ export const MEMBERS: Member[] = [
     feesAmount: 4000,
     feesStatus: PaymentStatus.PAID,
   },
-  {
-    id: 7,
-    gymId: 2,
-    name: 'George Costanza',
-    email: 'george@email.com',
-    phone: '789-012-3456',
-    planStart: formatDate(new Date()),
-    planDurationDays: 30,
-    feesAmount: 1200,
-    feesStatus: PaymentStatus.PAID,
-  },
 ];
 
 export const MEMBER_PAYMENTS: MemberPayment[] = [
   { id: 1, memberId: 1, memberName: 'Alice Johnson', gymId: 1, amount: 1500, paymentDate: formatDate(new Date(today.getFullYear(), today.getMonth(), 5)), note: 'Monthly Fee - Jan' },
   { id: 2, memberId: 2, memberName: 'Bob Williams', gymId: 1, amount: 4000, paymentDate: formatDate(new Date(today.getFullYear(), today.getMonth() - 1, 15)), note: 'Quarterly Renewal' },
-  { id: 3, memberId: 3, memberName: 'Charlie Brown', gymId: 1, amount: 1500, paymentDate: formatDate(new Date(today.getFullYear(), today.getMonth() - 2, 10)), note: 'Joining Fee' },
-  { id: 4, memberId: 4, memberName: 'Diana Prince', gymId: 1, amount: 1500, paymentDate: formatDate(new Date(today.getFullYear(), today.getMonth() - 1, 20)), note: 'Monthly Fee' },
 ];

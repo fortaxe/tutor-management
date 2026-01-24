@@ -11,7 +11,7 @@ interface GymFormProps {
 const GymForm: React.FC<GymFormProps> = ({ gym, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
     name: '',
-    ownerEmail: '',
+    ownerPhone: '',
     password: '',
     status: GymStatus.ACTIVE,
     subscriptionStatus: SubscriptionStatus.PENDING,
@@ -25,7 +25,7 @@ const GymForm: React.FC<GymFormProps> = ({ gym, onSubmit, onCancel }) => {
       setFormData(prev => ({
         ...prev,
         name: gym.name,
-        ownerEmail: gym.ownerEmail,
+        ownerPhone: gym.ownerPhone,
         status: gym.status,
         subscriptionStatus: gym.subscriptionStatus,
         subscriptionStartDate: gym.subscriptionStartDate,
@@ -70,15 +70,16 @@ const GymForm: React.FC<GymFormProps> = ({ gym, onSubmit, onCancel }) => {
           />
         </div>
         <div>
-          <label htmlFor="ownerEmail" className="block text-sm font-medium text-gray-700">Owner Email</label>
+          <label htmlFor="ownerPhone" className="block text-sm font-medium text-gray-700">Owner Mobile Number</label>
           <input 
-            type="email" 
-            name="ownerEmail" 
-            id="ownerEmail" 
-            value={formData.ownerEmail} 
+            type="tel" 
+            inputMode="numeric"
+            name="ownerPhone" 
+            id="ownerPhone" 
+            value={formData.ownerPhone} 
             onChange={handleChange} 
             required 
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm" 
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm font-bold" 
           />
         </div>
       </div>

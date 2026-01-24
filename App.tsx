@@ -44,7 +44,7 @@ const App: React.FC = () => {
 
     const newUser: User = {
       id: Date.now() + 1,
-      email: gymData.ownerEmail,
+      phone: gymData.ownerPhone,
       password: password || 'gym123',
       role: UserRole.GYM_OWNER,
       gymId: newGymId,
@@ -65,7 +65,6 @@ const App: React.FC = () => {
       { ...newMember, id }
     ]);
     
-    // Auto-record payment if added as PAID
     if (newMember.feesStatus === PaymentStatus.PAID) {
       const p: MemberPayment = {
         id: Date.now() + 1,
@@ -84,7 +83,6 @@ const App: React.FC = () => {
     setMembers(prevMembers => {
       const oldMember = prevMembers.find(m => m.id === updatedMember.id);
       
-      // If status changed to PAID, record a transaction
       if (oldMember && oldMember.feesStatus === PaymentStatus.UNPAID && updatedMember.feesStatus === PaymentStatus.PAID) {
         const p: MemberPayment = {
           id: Date.now(),
@@ -112,8 +110,6 @@ const App: React.FC = () => {
     return <Login users={users} onLogin={handleLogin} />;
   }
 
-  // Super Admin view is currently single-page based on current layout, 
-  // but we use DashboardLayout to maintain the same structure.
   if (currentUser.role === UserRole.SUPER_ADMIN) {
     return (
       <SuperAdminDashboard

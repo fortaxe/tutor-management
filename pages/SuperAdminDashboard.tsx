@@ -47,7 +47,7 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
   const filteredGyms = useMemo(() => {
     return gyms.filter(gym => 
       gym.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      gym.ownerEmail.toLowerCase().includes(searchQuery.toLowerCase())
+      gym.ownerPhone.includes(searchQuery)
     );
   }, [gyms, searchQuery]);
 
@@ -178,7 +178,7 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
             </div>
             <input
               type="text"
-              placeholder="Search gym name or owner email..."
+              placeholder="Search gym name or owner mobile..."
               className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent sm:text-sm transition-all"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -203,7 +203,7 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
                 <tr key={gym.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-bold text-gray-900">{gym.name}</div>
-                    <div className="text-xs text-gray-500">{gym.ownerEmail}</div>
+                    <div className="text-xs text-gray-500 font-bold">{gym.ownerPhone}</div>
                     <div className="text-[10px] text-brand-600 font-bold mt-1 px-1.5 py-0.5 bg-brand-50 inline-block rounded uppercase tracking-tighter">
                       {gym.memberCount} members
                     </div>
@@ -260,7 +260,7 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
               <div className="flex justify-between items-start">
                 <div>
                   <h4 className="font-bold text-gray-900">{gym.name}</h4>
-                  <p className="text-xs text-gray-500">{gym.ownerEmail}</p>
+                  <p className="text-xs text-gray-500 font-bold">{gym.ownerPhone}</p>
                 </div>
                 <div className="flex flex-col items-end space-y-1">
                   {gymStatusBadge(gym.status)}

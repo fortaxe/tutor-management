@@ -6,7 +6,7 @@ export enum UserRole {
 
 export interface User {
   id: number;
-  email: string;
+  phone: string; // Changed from email to phone
   password?: string;
   role: UserRole;
   gymId?: number;
@@ -36,7 +36,7 @@ export interface SubscriptionPayment {
 export interface Gym {
   id: number;
   name: string;
-  ownerEmail: string;
+  ownerPhone: string; // Changed from ownerEmail to ownerPhone
   status: GymStatus;
   subscriptionStatus: SubscriptionStatus;
   subscriptionStartDate: string;
@@ -54,7 +54,7 @@ export interface Member {
   id: number;
   gymId: number;
   name: string;
-  email: string;
+  email?: string;
   phone: string;
   planStart: string;
   planDurationDays: number;

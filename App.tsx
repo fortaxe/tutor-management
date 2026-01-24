@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Gym, Member, UserRole, GymStatus, MemberPayment, PaymentStatus, SubscriptionStatus } from './types';
 import { supabase, phoneToEmail } from './lib/supabase';
 import Login from './pages/Login';
@@ -12,6 +12,7 @@ import DashboardLayout from './components/DashboardLayout';
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initError, setInitError] = useState<string | null>(null);
   const [gyms, setGyms] = useState<Gym[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [memberPayments, setMemberPayments] = useState<MemberPayment[]>([]);
@@ -20,25 +21,40 @@ const App: React.FC = () => {
   // Check for existing session on mount
   useEffect(() => {
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
+      try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        if (profile) {
-          setCurrentUser({
-            id: profile.id,
-            phone: profile.phone,
-            role: profile.role as UserRole,
-            gymId: profile.gym_id
-          });
+        if (sessionError) throw sessionError;
+
+        if (session) {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (profileError) throw profileError;
+
+          if (profile) {
+            setCurrentUser({
+              id: profile.id,
+              phone: profile.phone,
+              role: profile.role as UserRole,
+              gymId: profile.gym_id
+            });
+          }
         }
+      } catch (err: any) {
+        console.error('Initialization error:', err);
+        // Only set error if it's not a simple "no session" state
+        if (err.message !== 'FetchError' && !err.message?.includes('JWT')) {
+           setInitError(err.message);
+        }
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
+    
     checkUser();
   }, []);
 
@@ -47,54 +63,57 @@ const App: React.FC = () => {
     if (!currentUser) return;
 
     const fetchData = async () => {
-      // Fetch Gyms
-      let gymQuery = supabase.from('gyms').select('*');
-      if (currentUser.role !== UserRole.SUPER_ADMIN) {
-        gymQuery = gymQuery.eq('id', currentUser.gymId);
+      try {
+        // Fetch Gyms
+        let gymQuery = supabase.from('gyms').select('*');
+        if (currentUser.role !== UserRole.SUPER_ADMIN) {
+          gymQuery = gymQuery.eq('id', currentUser.gymId);
+        }
+        const { data: gymsData } = await gymQuery;
+        
+        const formattedGyms = (gymsData || []).map(g => ({
+          id: g.id,
+          name: g.name,
+          ownerPhone: g.owner_phone,
+          status: g.status as GymStatus,
+          subscriptionStatus: g.subscription_status as SubscriptionStatus,
+          subscriptionStartDate: g.subscription_start_date,
+          subscriptionEndDate: g.subscription_end_date,
+          totalPaidAmount: g.total_paid_amount,
+          paymentHistory: []
+        }));
+        setGyms(formattedGyms);
+
+        // Fetch Members
+        const { data: membersData } = await supabase.from('members').select('*');
+        const formattedMembers = (membersData || []).map(m => ({
+          id: m.id,
+          gymId: m.gym_id,
+          name: m.name,
+          email: m.email,
+          phone: m.phone,
+          planStart: m.plan_start,
+          planDurationDays: m.plan_duration_days,
+          feesAmount: m.fees_amount,
+          feesStatus: m.fees_status as PaymentStatus,
+          photo: m.photo_url
+        }));
+        setMembers(formattedMembers);
+
+        // Fetch Payments
+        const { data: paymentsData } = await supabase.from('member_payments').select('*');
+        setMemberPayments((paymentsData || []).map(p => ({
+          id: p.id,
+          memberId: p.member_id,
+          memberName: p.member_name,
+          gymId: p.gym_id,
+          amount: p.amount,
+          paymentDate: p.payment_date,
+          note: p.note
+        })));
+      } catch (err) {
+        console.error('Error fetching data:', err);
       }
-      const { data: gymsData } = await gymQuery;
-      
-      // Transform DB snake_case to CamelCase for the UI
-      const formattedGyms = (gymsData || []).map(g => ({
-        id: g.id,
-        name: g.name,
-        ownerPhone: g.owner_phone,
-        status: g.status as GymStatus,
-        subscriptionStatus: g.subscription_status as SubscriptionStatus,
-        subscriptionStartDate: g.subscription_start_date,
-        subscriptionEndDate: g.subscription_end_date,
-        totalPaidAmount: g.total_paid_amount,
-        paymentHistory: [] // History fetched separately if needed
-      }));
-      setGyms(formattedGyms);
-
-      // Fetch Members
-      const { data: membersData } = await supabase.from('members').select('*');
-      const formattedMembers = (membersData || []).map(m => ({
-        id: m.id,
-        gymId: m.gym_id,
-        name: m.name,
-        email: m.email,
-        phone: m.phone,
-        planStart: m.plan_start,
-        planDurationDays: m.plan_duration_days,
-        feesAmount: m.fees_amount,
-        feesStatus: m.fees_status as PaymentStatus,
-        photo: m.photo_url
-      }));
-      setMembers(formattedMembers);
-
-      // Fetch Payments
-      const { data: paymentsData } = await supabase.from('member_payments').select('*');
-      setMemberPayments((paymentsData || []).map(p => ({
-        id: p.id,
-        memberId: p.member_id,
-        memberName: p.member_name,
-        gymId: p.gym_id,
-        amount: p.amount,
-        paymentDate: p.payment_date,
-        note: p.note
-      })));
     };
 
     fetchData();
@@ -155,7 +174,7 @@ const App: React.FC = () => {
       });
     }
     
-    window.location.reload(); // Refresh to update state
+    window.location.reload();
   };
 
   const handleDeleteMember = async (id: number) => {
@@ -165,7 +184,26 @@ const App: React.FC = () => {
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand"></div>
+      <div className="flex flex-col items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand mb-4"></div>
+        <p className="text-slate-400 font-bold animate-pulse uppercase tracking-widest text-xs">Loading Gym Stack...</p>
+      </div>
+    </div>
+  );
+
+  if (initError) return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
+      <div className="max-w-md w-full bg-white p-8 rounded-3xl shadow-xl border border-red-100 text-center">
+        <div className="text-red-500 text-5xl mb-4">⚠️</div>
+        <h2 className="text-xl font-black text-slate-900 mb-2 uppercase">Connection Error</h2>
+        <p className="text-slate-500 text-sm mb-6">{initError}</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest"
+        >
+          Try Again
+        </button>
+      </div>
     </div>
   );
 

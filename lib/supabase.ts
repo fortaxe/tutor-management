@@ -1,13 +1,20 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// Access environment variables using import.meta.env for Vite or process.env for other builders
-// Fix: Casting import.meta to any to resolve TS error when 'env' is not defined on the ImportMeta interface.
-const supabaseUrl = ((import.meta as any).env?.VITE_SUPABASE_URL as string) || '';
-// Fix: Casting import.meta to any to resolve TS error when 'env' is not defined on the ImportMeta interface.
-const supabaseKey = ((import.meta as any).env?.VITE_SUPABASE_ANON_KEY as string) || '';
+// Access environment variables using import.meta.env for Vite
+const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL;
+const supabaseKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+if (!supabaseUrl || !supabaseKey) {
+  console.error(
+    'Supabase Configuration Missing! Check your Environment Variables.\n' +
+    'Expected: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY'
+  );
+}
+
+// Initialize with empty strings as fallback to prevent immediate crash, 
+// though it will still fail on actual requests.
+export const supabase = createClient(supabaseUrl || '', supabaseKey || '');
 
 /**
  * Helper to convert phone to a dummy email for Supabase Auth

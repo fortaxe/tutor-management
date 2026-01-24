@@ -16,51 +16,32 @@ const App: React.FC = () => {
   const [memberPayments, setMemberPayments] = useState<MemberPayment[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState<string>('dashboard');
-  const [bootstrapStatus, setBootstrapStatus] = useState<string | null>(null);
 
-  const handleBootstrap = async () => {
-    setBootstrapStatus('Starting setup...');
-    try {
-      const phone = '9999999999';
-      const email = `${phone}@gymstack.com`;
-      const password = 'admin';
+  // --- Configuration Check ---
+  if (!isSupabaseConfigured) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 text-center">
+        <div className="max-w-md w-full bg-slate-800 p-8 rounded-3xl border border-slate-700 shadow-2xl">
+          <div className="w-16 h-16 bg-brand/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <span className="text-3xl">⚙️</span>
+          </div>
+          <h1 className="text-2xl font-black text-white uppercase tracking-tight mb-4">Setup Required</h1>
+          <p className="text-slate-400 text-sm mb-6 leading-relaxed">
+            Please add your Supabase environment variables in Vercel settings:
+          </p>
+          <div className="space-y-3 text-left bg-slate-950 p-4 rounded-xl border border-slate-700 font-mono text-xs mb-6">
+            <p className="text-brand">VITE_SUPABASE_URL</p>
+            <p className="text-brand">VITE_SUPABASE_ANON_KEY</p>
+          </div>
+          <p className="text-slate-500 text-xs italic">
+            App will automatically refresh once configured.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-
-      if (authError) {
-        if (authError.message.includes('already registered')) {
-          setBootstrapStatus('Admin already exists in Auth. Checking profile...');
-          // Check if profile exists
-          const { data: existingProfile } = await supabase.from('profiles').select('*').eq('phone', phone).single();
-          if (!existingProfile) {
-            // This handles a case where Auth exists but profile doesn't
-            const { data: user } = await supabase.auth.getUser();
-            if (user.user) {
-               await supabase.from('profiles').insert([{ id: user.user.id, phone, role: UserRole.SUPER_ADMIN }]);
-            }
-          }
-          setBootstrapStatus('Setup verified. Try logging in.');
-          return;
-        }
-        throw authError;
-      }
-
-      if (authData.user) {
-        await supabase.from('profiles').insert([{
-          id: authData.user.id,
-          phone: phone,
-          role: UserRole.SUPER_ADMIN
-        }]);
-        setBootstrapStatus('Success! Login: 9999999999 / admin');
-      }
-    } catch (err: any) {
-      setBootstrapStatus(`Setup Error: ${err.message}`);
-    }
-  };
-
+  // --- Auth Listener ---
   useEffect(() => {
     const checkUser = async () => {
       try {
@@ -112,6 +93,7 @@ const App: React.FC = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // --- Data Fetching ---
   const fetchData = useCallback(async () => {
     if (!currentUser) return;
 
@@ -119,57 +101,16 @@ const App: React.FC = () => {
       if (currentUser.role === UserRole.SUPER_ADMIN) {
         const { data: gymsData } = await supabase.from('gyms').select('*').order('created_at', { ascending: false });
         const { data: membersData } = await supabase.from('members').select('*');
-        
-        // Map snake_case to camelCase for the UI
-        setGyms(gymsData?.map(g => ({
-          ...g,
-          ownerPhone: g.owner_phone,
-          subscriptionStatus: g.subscription_status,
-          subscriptionStartDate: g.subscription_start_date,
-          subscriptionEndDate: g.subscription_end_date,
-          totalPaidAmount: g.total_paid_amount,
-          paymentHistory: g.payment_history || []
-        })) || []);
-        
-        setMembers(membersData?.map(m => ({
-          ...m,
-          gymId: m.gym_id,
-          planStart: m.plan_start,
-          planDurationDays: m.plan_duration_days,
-          feesAmount: m.fees_amount,
-          feesStatus: m.fees_status
-        })) || []);
+        setGyms(gymsData || []);
+        setMembers(membersData || []);
       } else {
         const { data: gymsData } = await supabase.from('gyms').select('*').eq('id', currentUser.gymId);
         const { data: membersData } = await supabase.from('members').select('*').eq('gym_id', currentUser.gymId);
         const { data: paymentsData } = await supabase.from('payments').select('*').eq('gym_id', currentUser.gymId);
         
-        setGyms(gymsData?.map(g => ({
-          ...g,
-          ownerPhone: g.owner_phone,
-          subscriptionStatus: g.subscription_status,
-          subscriptionStartDate: g.subscription_start_date,
-          subscriptionEndDate: g.subscription_end_date,
-          totalPaidAmount: g.total_paid_amount,
-          paymentHistory: g.payment_history || []
-        })) || []);
-
-        setMembers(membersData?.map(m => ({
-          ...m,
-          gymId: m.gym_id,
-          planStart: m.plan_start,
-          planDurationDays: m.plan_duration_days,
-          feesAmount: m.fees_amount,
-          feesStatus: m.fees_status
-        })) || []);
-
-        setMemberPayments(paymentsData?.map(p => ({
-          ...p,
-          memberId: p.member_id,
-          memberName: p.member_name,
-          gymId: p.gym_id,
-          paymentDate: p.payment_date
-        })) || []);
+        setGyms(gymsData || []);
+        setMembers(membersData || []);
+        setMemberPayments(paymentsData || []);
       }
     } catch (err) {
       console.error("Data fetch failed:", err);
@@ -188,15 +129,7 @@ const App: React.FC = () => {
   const addGym = async (gymData: any, password?: string) => {
     const { data: newGym, error: gymError } = await supabase
       .from('gyms')
-      .insert([{ 
-        name: gymData.name,
-        owner_phone: gymData.ownerPhone,
-        status: 'Active', 
-        subscription_status: 'Active',
-        subscription_start_date: gymData.subscriptionStartDate,
-        subscription_end_date: gymData.subscriptionEndDate,
-        total_paid_amount: gymData.totalPaidAmount
-      }])
+      .insert([{ ...gymData, status: 'Active', subscription_status: 'Active' }])
       .select()
       .single();
 
@@ -219,34 +152,15 @@ const App: React.FC = () => {
     }
   };
 
-  const updateGym = async (updatedGym: any) => {
-    await supabase.from('gyms').update({
-      name: updatedGym.name,
-      owner_phone: updatedGym.ownerPhone,
-      status: updatedGym.status,
-      subscription_status: updatedGym.subscriptionStatus,
-      subscription_start_date: updatedGym.subscriptionStartDate,
-      subscription_end_date: updatedGym.subscriptionEndDate,
-      total_paid_amount: updatedGym.totalPaidAmount,
-      payment_history: updatedGym.paymentHistory
-    }).eq('id', updatedGym.id);
+  const updateGym = async (updatedGym: any, password?: string) => {
+    await supabase.from('gyms').update(updatedGym).eq('id', updatedGym.id);
     fetchData();
   };
 
   const addMember = async (newMember: any) => {
     const { data: member, error } = await supabase
       .from('members')
-      .insert([{ 
-        gym_id: currentUser?.gymId,
-        name: newMember.name,
-        email: newMember.email,
-        phone: newMember.phone,
-        plan_start: newMember.planStart,
-        plan_duration_days: newMember.planDurationDays,
-        fees_amount: newMember.feesAmount,
-        fees_status: newMember.feesStatus,
-        photo: newMember.photo
-      }])
+      .insert([{ ...newMember, gym_id: currentUser?.gymId }])
       .select()
       .single();
     
@@ -255,25 +169,16 @@ const App: React.FC = () => {
          gym_id: currentUser?.gymId,
          member_id: member.id,
          member_name: member.name,
-         amount: newMember.feesAmount,
+         amount: member.fees_amount || member.feesAmount,
          payment_date: new Date().toISOString().split('T')[0],
-         note: 'Initial Registration Payment'
+         note: 'Initial Payment'
        }]);
     }
     fetchData();
   };
 
   const updateMember = async (m: any) => {
-    await supabase.from('members').update({
-      name: m.name,
-      email: m.email,
-      phone: m.phone,
-      plan_start: m.planStart,
-      plan_duration_days: m.planDurationDays,
-      fees_amount: m.feesAmount,
-      fees_status: m.feesStatus,
-      photo: m.photo
-    }).eq('id', m.id);
+    await supabase.from('members').update(m).eq('id', m.id);
     fetchData();
   };
 
@@ -282,42 +187,16 @@ const App: React.FC = () => {
     fetchData();
   };
 
-  if (!isSupabaseConfigured) {
-    return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 text-center text-white">
-        <div>
-          <h1 className="text-2xl font-bold mb-4">Configuration Missing</h1>
-          <p className="text-slate-400">Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to environment.</p>
-        </div>
-      </div>
-    );
-  }
-
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
+        <div className="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="font-black text-slate-900 uppercase tracking-widest text-xs">Syncing with Cloud...</p>
       </div>
     );
   }
 
-  if (!currentUser) {
-    return (
-      <div className="min-h-screen bg-slate-50">
-        <Login onLogin={() => {}} />
-        <div className="fixed bottom-10 left-0 right-0 flex justify-center">
-           <div className="bg-white/80 backdrop-blur-md px-6 py-4 rounded-3xl border border-slate-200 shadow-xl max-w-sm w-full text-center">
-              <button 
-                onClick={handleBootstrap}
-                className="text-xs font-bold text-brand hover:underline"
-              >
-                {bootstrapStatus || 'Need to initialize first Super Admin? Click here.'}
-              </button>
-           </div>
-        </div>
-      </div>
-    );
-  }
+  if (!currentUser) return <Login onLogin={() => {}} />;
 
   if (currentUser.role === UserRole.SUPER_ADMIN) {
     return (
@@ -337,7 +216,7 @@ const App: React.FC = () => {
   }
 
   const currentGym = gyms[0];
-  if (!currentGym) return <div className="p-10 text-center font-bold">Gym account not found.</div>;
+  if (!currentGym) return <div className="p-10 text-center font-bold">Gym account not found. Please contact support.</div>;
 
   return (
     <DashboardLayout 
@@ -364,7 +243,7 @@ const App: React.FC = () => {
       {activeView === 'staff' && (
         <StaffManagement
           gym={currentGym}
-          staff={[]} 
+          staff={[]} // You'll need to fetch and filter staff from 'profiles'
           onAddTrainer={() => {}}
           onUpdateTrainer={() => {}}
           onDeleteUser={() => {}}

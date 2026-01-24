@@ -34,9 +34,13 @@ const App: React.FC = () => {
             .eq('id', session.user.id)
             .single();
           
-          if (profileError) throw profileError;
-
-          if (profile) {
+          if (profileError) {
+            console.error("Profile fetch error:", profileError);
+            // If profile fails but session exists, we might have an RLS issue or missing profile
+            // Let's sign out to be safe and allow fresh login
+            await supabase.auth.signOut();
+            setCurrentUser(null);
+          } else if (profile) {
             setCurrentUser({
               id: profile.id,
               phone: profile.phone,
@@ -94,12 +98,24 @@ const App: React.FC = () => {
           email: m.email,
           phone: m.phone,
           planStart: m.plan_start,
+          plan_duration_days: m.plan_duration_days,
+          fees_amount: m.fees_amount,
+          fees_status: m.fees_status as PaymentStatus,
+          photo: m.photo_url
+        }));
+        // Note: The mapping here needs to match type Member interface exactly
+        setMembers((membersData || []).map(m => ({
+          id: m.id,
+          gymId: m.gym_id,
+          name: m.name,
+          email: m.email,
+          phone: m.phone,
+          planStart: m.plan_start,
           planDurationDays: m.plan_duration_days,
           feesAmount: m.fees_amount,
           feesStatus: m.fees_status as PaymentStatus,
           photo: m.photo_url
-        }));
-        setMembers(formattedMembers);
+        })));
 
         // 3. Fetch Payments
         const { data: paymentsData } = await supabase.from('member_payments').select('*');
@@ -143,11 +159,13 @@ const App: React.FC = () => {
 
     if (error) throw error;
 
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', data.user.id)
       .single();
+
+    if (profileError) throw profileError;
 
     if (profile) {
       setCurrentUser({
@@ -242,7 +260,7 @@ const App: React.FC = () => {
           }}
           onAddGym={async (gymData, password) => {
             try {
-              // 1. Create Gym record first
+              // 1. Create Gym record
               const { data: newGym, error: gymError } = await supabase.from('gyms').insert({
                 name: gymData.name,
                 owner_phone: gymData.ownerPhone,
@@ -255,15 +273,15 @@ const App: React.FC = () => {
 
               if (gymError) throw gymError;
 
-              // 2. Create Auth User for the owner
+              // 2. Create Auth User with role in metadata
               if (password) {
                 const { data: authData, error: authError } = await supabase.auth.signUp({
                   email: phoneToEmail(gymData.ownerPhone),
                   password: password,
                   options: {
                     data: {
-                      phone: gymData.ownerPhone,
-                      role: UserRole.GYM_OWNER
+                      role: UserRole.GYM_OWNER,
+                      phone: gymData.ownerPhone
                     }
                   }
                 });
@@ -271,9 +289,7 @@ const App: React.FC = () => {
                 if (authError) throw authError;
 
                 if (authData.user) {
-                  // 3. Link Auth User to Profile
-                  // If signUp auto-logged us out, the RLS 'Allow_Profile_Insert' policy in SQL 
-                  // will still allow the new user to create their own profile.
+                  // 3. Link Profile
                   const { error: profileError } = await supabase.from('profiles').upsert({
                     id: authData.user.id,
                     phone: gymData.ownerPhone,
@@ -284,11 +300,11 @@ const App: React.FC = () => {
                 }
               }
               
-              alert("Gym and Owner account created successfully! You may need to sign in again if the session reset.");
+              alert("Gym and Owner account created successfully!");
               window.location.reload();
             } catch (err: any) {
-              console.error("Full Error Context:", err);
-              alert("Error: " + (err.message || JSON.stringify(err)));
+              console.error(err);
+              alert("Error adding gym: " + err.message);
             }
           }}
           onUpdateGym={async (gymData, password) => {
@@ -304,11 +320,6 @@ const App: React.FC = () => {
               }).eq('id', gymData.id);
 
               if (gymError) throw gymError;
-              
-              if (password) {
-                 alert("Gym updated. Note: Password resets should be done through Supabase Auth dashboard for security.");
-              }
-
               window.location.reload();
             } catch (err: any) {
               console.error(err);
@@ -358,6 +369,12 @@ const App: React.FC = () => {
                   const { data: authData, error: authError } = await supabase.auth.signUp({
                     email: phoneToEmail(data.phone),
                     password: data.password || 'Trainer123',
+                    options: {
+                      data: {
+                        role: UserRole.TRAINER,
+                        phone: data.phone
+                      }
+                    }
                   });
                   if (authError) throw authError;
                   if (authData.user) {

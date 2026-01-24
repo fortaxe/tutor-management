@@ -18,15 +18,17 @@ const getEnv = (key: string): string | undefined => {
   return undefined;
 };
 
-const supabaseUrl = getEnv('VITE_SUPABASE_URL');
-const supabaseAnonKey = getEnv('VITE_SUPABASE_ANON_KEY');
+export const SUPABASE_URL = getEnv('VITE_SUPABASE_URL');
+export const SUPABASE_ANON_KEY = getEnv('VITE_SUPABASE_ANON_KEY');
+export const SUPER_ADMIN_PHONE = getEnv('VITE_SUPER_ADMIN_PHONE') || '9999999999';
+export const SUPER_ADMIN_PASSWORD = getEnv('VITE_SUPER_ADMIN_PASSWORD') || 'admin';
 
-export const isSupabaseConfigured = !!(supabaseUrl && supabaseAnonKey && supabaseUrl.startsWith('http'));
+export const isSupabaseConfigured = !!(SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_URL.startsWith('http'));
 
 // Initialize with dummy values if missing to prevent crash, check isSupabaseConfigured in App.tsx
 export const supabase = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder'
+  SUPABASE_URL || 'https://placeholder.supabase.co',
+  SUPABASE_ANON_KEY || 'placeholder'
 );
 
 if (!isSupabaseConfigured) {

@@ -1,24 +1,23 @@
 
 import React, { useState } from 'react';
-import { User } from '../types';
 import DumbbellIcon from '../components/icons/DumbbellIcon';
 
 interface LoginProps {
-  users: User[];
-  onLogin: (user: User) => void;
+  onLogin: (phone: string, password: string) => Promise<void>;
 }
 
-const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
+const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.replace(/\D/g, '').slice(0, 10);
     setPhone(val);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -27,14 +26,14 @@ const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
       return;
     }
 
-    const foundUser = users.find(
-      u => u.phone === phone && u.password === password
-    );
-
-    if (foundUser) {
-      onLogin(foundUser);
-    } else {
-      setError('Invalid mobile number or password. Please try again.');
+    setIsLoading(true);
+    try {
+      // Fixed: Now calling onLogin with phone and password to match App.tsx implementation
+      await onLogin(phone, password);
+    } catch (err: any) {
+      setError(err.message || 'Invalid mobile number or password. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -72,7 +71,8 @@ const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
               maxLength={10}
               value={phone}
               onChange={handlePhoneChange}
-              className="appearance-none block w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all font-bold text-slate-900"
+              disabled={isLoading}
+              className="appearance-none block w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all font-bold text-slate-900 disabled:opacity-50"
               placeholder="0000000000"
             />
           </div>
@@ -87,7 +87,8 @@ const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="appearance-none block w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all text-slate-900"
+              disabled={isLoading}
+              className="appearance-none block w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all text-slate-900 disabled:opacity-50"
               placeholder="••••••••"
             />
           </div>
@@ -95,9 +96,10 @@ const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
           <div className="pt-2">
             <button
               type="submit"
-              className="w-full flex justify-center py-4 px-6 border border-transparent rounded-2xl shadow-lg shadow-brand/20 text-sm font-black uppercase tracking-widest text-charcoal bg-brand hover:bg-brand-600 hover:scale-[1.02] active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand"
+              disabled={isLoading}
+              className="w-full flex justify-center py-4 px-6 border border-transparent rounded-2xl shadow-lg shadow-brand/20 text-sm font-black uppercase tracking-widest text-charcoal bg-brand hover:bg-brand-600 hover:scale-[1.02] active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand disabled:opacity-50 disabled:scale-100"
             >
-              Unlock Dashboard
+              {isLoading ? 'Verifying...' : 'Unlock Dashboard'}
             </button>
           </div>
         </form>

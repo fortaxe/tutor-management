@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { User, Gym, Member, PaymentStatus } from '../types';
+import { User, Gym, Member, PaymentStatus, UserRole } from '../types';
 import Badge from '../components/Badge';
 import Modal from '../components/Modal';
 import MemberForm from '../components/MemberForm';
@@ -104,6 +104,8 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
   const [expiryFilter, setExpiryFilter] = useState<number>(7);
   const [searchQuery, setSearchQuery] = useState('');
 
+  const isTrainer = user.role === UserRole.TRAINER;
+
   const stats = useMemo(() => {
     const activeMembers = members.filter(m => getPlanDates(m).remainingDays >= 0).length;
     const expiredMembers = members.length - activeMembers;
@@ -173,7 +175,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className={`grid grid-cols-1 ${isTrainer ? 'sm:grid-cols-2' : 'sm:grid-cols-3'} gap-6`}>
         <div className="bg-white p-7 rounded-3xl shadow-sm border border-slate-100 flex items-center group hover:shadow-xl hover:shadow-brand/5 transition-all">
           <div className="bg-brand/10 p-4 rounded-2xl border border-brand/20 group-hover:bg-brand group-hover:text-white transition-all"><UserGroupIcon className="h-7 w-7 text-brand group-hover:text-white"/></div>
           <div className="ml-5">
@@ -188,13 +190,15 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
             <p className="text-3xl font-black text-slate-950">{stats.expiredMembers}</p>
           </div>
         </div>
-        <div className="bg-white p-7 rounded-3xl shadow-sm border border-slate-100 flex items-center group hover:shadow-xl hover:shadow-yellow/5 transition-all">
-          <div className="bg-yellow-50 p-4 rounded-2xl border border-yellow-100 group-hover:bg-yellow-500 group-hover:text-white transition-all"><ExclamationTriangleIcon className="h-7 w-7 text-yellow-500 group-hover:text-white"/></div>
-          <div className="ml-5">
-            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">Fee Pending</p>
-            <p className="text-3xl font-black text-slate-950">{stats.duesPending}</p>
+        {!isTrainer && (
+          <div className="bg-white p-7 rounded-3xl shadow-sm border border-slate-100 flex items-center group hover:shadow-xl hover:shadow-yellow/5 transition-all">
+            <div className="bg-yellow-50 p-4 rounded-2xl border border-yellow-100 group-hover:bg-yellow-500 group-hover:text-white transition-all"><ExclamationTriangleIcon className="h-7 w-7 text-yellow-500 group-hover:text-white"/></div>
+            <div className="ml-5">
+              <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">Fee Pending</p>
+              <p className="text-3xl font-black text-slate-950">{stats.duesPending}</p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200/60 overflow-hidden">

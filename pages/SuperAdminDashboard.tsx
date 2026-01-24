@@ -20,7 +20,7 @@ interface SuperAdminDashboardProps {
   onLogout: () => void;
   onToggleGymStatus: (gymId: number, currentStatus: GymStatus) => void;
   onAddGym: (gymData: Omit<Gym, 'id' | 'paymentHistory'>, password?: string) => void;
-  onUpdateGym: (gym: Gym) => void;
+  onUpdateGym: (gym: Gym, password?: string) => void;
 }
 
 const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ 
@@ -111,7 +111,7 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
 
   const handleGymFormSubmit = (gymData: any, password?: string) => {
     if (selectedGym) {
-      onUpdateGym({ ...selectedGym, ...gymData });
+      onUpdateGym({ ...selectedGym, ...gymData }, password);
     } else {
       onAddGym({ ...gymData, paymentHistory: [] }, password);
     }

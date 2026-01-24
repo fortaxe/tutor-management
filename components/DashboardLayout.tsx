@@ -22,9 +22,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const navItems = user.role === UserRole.GYM_OWNER ? [
+  const isOwner = user.role === UserRole.GYM_OWNER;
+  const isTrainer = user.role === UserRole.TRAINER;
+
+  const navItems = (isOwner || isTrainer) ? [
     { id: 'dashboard', label: 'Members', icon: '👥' },
-    { id: 'earnings', label: 'Earnings', icon: '💰' },
+    ...(isOwner ? [
+      { id: 'staff', label: 'Staff', icon: '🛡️' },
+      { id: 'earnings', label: 'Earnings', icon: '💰' }
+    ] : []),
   ] : [
     { id: 'dashboard', label: 'Gym Ledger', icon: '🏢' },
   ];
@@ -119,7 +125,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           <div className="hidden sm:block">
              <div className="bg-brand/10 px-4 py-1.5 rounded-full border border-brand/20">
                 <span className="text-[11px] font-bold text-brand-700 uppercase tracking-widest">
-                  {user.role === UserRole.SUPER_ADMIN ? 'Platform Administrator' : 'Gym Manager'}
+                  {user.role === UserRole.SUPER_ADMIN ? 'Platform Administrator' : 
+                   user.role === UserRole.GYM_OWNER ? 'Gym Manager' : 'Staff Trainer'}
                 </span>
              </div>
           </div>

@@ -4,6 +4,7 @@ import { User, Gym, Member, UserRole, GymStatus, SubscriptionStatus, PaymentStat
 export const USERS: User[] = [
   { id: 1, phone: '9999999999', password: 'admin', role: UserRole.SUPER_ADMIN },
   { id: 2, phone: '8888888888', password: 'owner', role: UserRole.GYM_OWNER, gymId: 1 },
+  { id: 3, phone: '7777777777', password: 'trainer', role: UserRole.TRAINER, gymId: 1 },
 ];
 
 export const GYMS: Gym[] = [
@@ -49,7 +50,7 @@ export const MEMBERS: Member[] = [
     gymId: 1,
     name: 'Alice Johnson',
     email: 'alice@email.com',
-    phone: '123-456-7890',
+    phone: '1234567890',
     planStart: formatDate(new Date(today.getTime() - 20 * 24 * 60 * 60 * 1000)),
     planDurationDays: 30,
     feesAmount: 1500,
@@ -60,7 +61,7 @@ export const MEMBERS: Member[] = [
     gymId: 1,
     name: 'Bob Williams',
     email: 'bob@email.com',
-    phone: '234-567-8901',
+    phone: '2345678901',
     planStart: formatDate(new Date(today.getTime() - 60 * 24 * 60 * 60 * 1000)),
     planDurationDays: 90,
     feesAmount: 4000,

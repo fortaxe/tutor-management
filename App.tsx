@@ -32,22 +32,31 @@ const App: React.FC = () => {
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
-            .maybeSingle(); // Changed from .single() to avoid "Cannot coerce" error
+            .maybeSingle();
           
           if (profileError) throw profileError;
 
           if (profile) {
             setCurrentUser({
               id: profile.id,
-              phone: profile.phone,
+              phone: profile.phone.startsWith('temp_') ? (session.user.user_metadata.phone || profile.phone) : profile.phone,
               role: profile.role as UserRole,
               gymId: profile.gym_id
             });
           } else {
-            // If profile is missing but user exists, they might be an orphan.
-            // For now, logout to allow a clean retry after SQL fix.
-            await supabase.auth.signOut();
-            setCurrentUser(null);
+            // Fallback: Use metadata if profile is not yet visible (helpful for first-time login)
+            const meta = session.user.user_metadata;
+            if (meta && meta.role) {
+              setCurrentUser({
+                id: session.user.id,
+                phone: meta.phone || '0000000000',
+                role: meta.role as UserRole,
+                gymId: meta.gym_id ? Number(meta.gym_id) : undefined
+              });
+            } else {
+              await supabase.auth.signOut();
+              setCurrentUser(null);
+            }
           }
         }
       } catch (err: any) {
@@ -74,6 +83,7 @@ const App: React.FC = () => {
         if (currentUser.role !== UserRole.SUPER_ADMIN) {
           gymQuery = gymQuery.eq('id', currentUser.gymId);
         }
+        
         const { data: gymsData, error: gymFetchError } = await gymQuery;
         if (gymFetchError) throw gymFetchError;
         
@@ -91,7 +101,12 @@ const App: React.FC = () => {
         setGyms(formattedGyms);
 
         // 2. Fetch Members
-        const { data: membersData, error: membersFetchError } = await supabase.from('members').select('*');
+        let memberQuery = supabase.from('members').select('*');
+        if (currentUser.role !== UserRole.SUPER_ADMIN) {
+          memberQuery = memberQuery.eq('gym_id', currentUser.gymId);
+        }
+        
+        const { data: membersData, error: membersFetchError } = await memberQuery;
         if (membersFetchError) throw membersFetchError;
 
         setMembers((membersData || []).map(m => ({
@@ -108,7 +123,11 @@ const App: React.FC = () => {
         })));
 
         // 3. Fetch Payments
-        const { data: paymentsData } = await supabase.from('member_payments').select('*');
+        let paymentQuery = supabase.from('member_payments').select('*');
+        if (currentUser.role !== UserRole.SUPER_ADMIN) {
+          paymentQuery = paymentQuery.eq('gym_id', currentUser.gymId);
+        }
+        const { data: paymentsData } = await paymentQuery;
         setMemberPayments((paymentsData || []).map(p => ({
           id: p.id,
           memberId: p.member_id,
@@ -120,11 +139,12 @@ const App: React.FC = () => {
         })));
 
         // 4. Fetch Profiles (Staff) for current gym
-        if (currentUser.gymId) {
-          const { data: profilesData } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('gym_id', currentUser.gymId);
+        if (currentUser.gymId || currentUser.role === UserRole.SUPER_ADMIN) {
+          let staffQuery = supabase.from('profiles').select('*');
+          if (currentUser.role !== UserRole.SUPER_ADMIN) {
+            staffQuery = staffQuery.eq('gym_id', currentUser.gymId);
+          }
+          const { data: profilesData } = await staffQuery;
           
           setStaffProfiles((profilesData || []).map(p => ({
             id: p.id,
@@ -149,37 +169,31 @@ const App: React.FC = () => {
 
     if (error) throw error;
 
-    const { data: profile, error: profileError } = await supabase
+    const meta = data.user.user_metadata;
+    const { data: profile } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', data.user.id)
-      .maybeSingle(); // Changed from .single() to handle missing profiles gracefully
-
-    if (profileError) throw profileError;
+      .maybeSingle();
 
     if (profile) {
       setCurrentUser({
         id: profile.id,
-        phone: profile.phone,
+        phone: profile.phone.startsWith('temp_') ? phone : profile.phone,
         role: profile.role as UserRole,
         gymId: profile.gym_id
       });
-      setActiveView('dashboard');
+    } else if (meta && meta.role) {
+      setCurrentUser({
+        id: data.user.id,
+        phone: phone,
+        role: meta.role as UserRole,
+        gymId: meta.gym_id ? Number(meta.gym_id) : undefined
+      });
     } else {
-      // Fallback: Use metadata if profile row is not yet synchronized
-      const meta = data.user.user_metadata;
-      if (meta && meta.role) {
-         setCurrentUser({
-           id: data.user.id,
-           phone: phone,
-           role: meta.role as UserRole,
-           gymId: meta.gym_id ? Number(meta.gym_id) : undefined
-         });
-         setActiveView('dashboard');
-      } else {
-         throw new Error("Profile not found. Please contact support.");
-      }
+      throw new Error("Login successful, but profile synchronization is pending. Please try again in a few seconds.");
     }
+    setActiveView('dashboard');
   };
 
   const handleLogout = async () => {
@@ -264,7 +278,6 @@ const App: React.FC = () => {
           }}
           onAddGym={async (gymData, password) => {
             try {
-              // 1. Create Gym record
               const { data: newGym, error: gymError } = await supabase.from('gyms').insert({
                 name: gymData.name,
                 owner_phone: gymData.ownerPhone,
@@ -277,7 +290,6 @@ const App: React.FC = () => {
 
               if (gymError) throw gymError;
 
-              // 2. Create Auth User with role AND gym_id in metadata for trigger
               if (password) {
                 const { data: authData, error: authError } = await supabase.auth.signUp({
                   email: phoneToEmail(gymData.ownerPhone),
@@ -294,7 +306,7 @@ const App: React.FC = () => {
                 if (authError) throw authError;
 
                 if (authData.user) {
-                  // Explicitly upsert profile as a backup, though trigger will now handle it.
+                  // Profile is created by DB trigger, but manual upsert here handles immediate dashboard access
                   await supabase.from('profiles').upsert({
                     id: authData.user.id,
                     phone: gymData.ownerPhone,

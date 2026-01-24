@@ -6,11 +6,11 @@ export enum UserRole {
 }
 
 export interface User {
-  id: number;
-  phone: string; // Changed from email to phone
+  id: string | number;
+  phone: string;
   password?: string;
   role: UserRole;
-  gymId?: number;
+  gymId?: string | number;
 }
 
 export enum GymStatus {
@@ -26,7 +26,7 @@ export enum SubscriptionStatus {
 }
 
 export interface SubscriptionPayment {
-  id: number;
+  id: string | number;
   amount: number;
   startDate: string;
   endDate: string;
@@ -35,9 +35,9 @@ export interface SubscriptionPayment {
 }
 
 export interface Gym {
-  id: number;
+  id: string | number;
   name: string;
-  ownerPhone: string; // Changed from ownerEmail to ownerPhone
+  ownerPhone: string;
   status: GymStatus;
   subscriptionStatus: SubscriptionStatus;
   subscriptionStartDate: string;
@@ -52,8 +52,8 @@ export enum PaymentStatus {
 }
 
 export interface Member {
-  id: number;
-  gymId: number;
+  id: string | number;
+  gymId: string | number;
   name: string;
   email?: string;
   phone: string;
@@ -61,14 +61,14 @@ export interface Member {
   planDurationDays: number;
   feesAmount: number;
   feesStatus: PaymentStatus;
-  photo?: string; // Base64 encoded image
+  photo?: string;
 }
 
 export interface MemberPayment {
-  id: number;
-  memberId: number;
+  id: string | number;
+  memberId: string | number;
   memberName: string;
-  gymId: number;
+  gymId: string | number;
   amount: number;
   paymentDate: string;
   note: string;

@@ -1,5 +1,5 @@
 
-import { User, Gym, Member, UserRole, GymStatus, SubscriptionStatus, PaymentStatus, MemberPayment } from './types';
+import { User, Gym, Member, UserRole, GymStatus, SubscriptionStatus, PaymentStatus, MemberPayment, MemberType } from './types';
 
 export const USERS: User[] = [
   { id: 1, phone: '9999999999', password: 'admin', role: UserRole.SUPER_ADMIN },
@@ -54,7 +54,9 @@ export const MEMBERS: Member[] = [
     planStart: formatDate(new Date(today.getTime() - 20 * 24 * 60 * 60 * 1000)),
     planDurationDays: 30,
     feesAmount: 1500,
+    paidAmount: 1500,
     feesStatus: PaymentStatus.PAID,
+    memberType: MemberType.SUBSCRIPTION,
   },
   {
     id: 2,
@@ -64,12 +66,14 @@ export const MEMBERS: Member[] = [
     phone: '2345678901',
     planStart: formatDate(new Date(today.getTime() - 60 * 24 * 60 * 60 * 1000)),
     planDurationDays: 90,
-    feesAmount: 4000,
-    feesStatus: PaymentStatus.PAID,
+    feesAmount: 5000,
+    paidAmount: 4000,
+    feesStatus: PaymentStatus.PARTIAL,
+    memberType: MemberType.SUBSCRIPTION,
   },
 ];
 
 export const MEMBER_PAYMENTS: MemberPayment[] = [
-  { id: 1, memberId: 1, memberName: 'Alice Johnson', gymId: 1, amount: 1500, paymentDate: formatDate(new Date(today.getFullYear(), today.getMonth(), 5)), note: 'Monthly Fee - Jan' },
-  { id: 2, memberId: 2, memberName: 'Bob Williams', gymId: 1, amount: 4000, paymentDate: formatDate(new Date(today.getFullYear(), today.getMonth() - 1, 15)), note: 'Quarterly Renewal' },
+  { id: 1, memberId: 1, memberName: 'Alice Johnson', gymId: 1, amount: 1500, paymentDate: formatDate(new Date(today.getFullYear(), today.getMonth(), 5)), note: 'Initial Payment' },
+  { id: 2, memberId: 2, memberName: 'Bob Williams', gymId: 1, amount: 4000, paymentDate: formatDate(new Date(today.getFullYear(), today.getMonth() - 1, 15)), note: 'Initial Partial Payment' },
 ];

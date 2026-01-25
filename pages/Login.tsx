@@ -1,14 +1,12 @@
 
 import React, { useState } from 'react';
-import { User } from '../types';
 import DumbbellIcon from '../components/icons/DumbbellIcon';
 
 interface LoginProps {
-  users: User[];
-  onLogin: (user: User) => void;
+  onLogin: (creds: { phone: string; password: string }) => void;
 }
 
-const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
+const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -27,20 +25,11 @@ const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
       return;
     }
 
-    const foundUser = users.find(
-      u => u.phone === phone && u.password === password
-    );
-
-    if (foundUser) {
-      onLogin(foundUser);
-    } else {
-      setError('Invalid mobile number or password. Please try again.');
-    }
+    onLogin({ phone, password });
   };
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-6 relative overflow-hidden">
-      {/* Decorative Blur Elements */}
       <div className="absolute top-0 -left-10 w-72 h-72 bg-brand/10 rounded-full blur-3xl -z-10 animate-pulse"></div>
       <div className="absolute bottom-0 -right-10 w-96 h-96 bg-blue-100 rounded-full blur-3xl -z-10"></div>
 
@@ -104,21 +93,8 @@ const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
 
         <div className="mt-12 pt-8 border-t border-slate-100 text-center">
           <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] font-black mb-6">Demo Access Credentials</p>
-          <div className="grid grid-cols-1 gap-4">
-             <div className="grid grid-cols-2 gap-2">
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-left">
-                  <p className="text-[9px] text-slate-400 font-bold uppercase mb-1">Owner</p>
-                  <p className="text-xs text-slate-900 font-black">8888888888</p>
-                </div>
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-left">
-                  <p className="text-[9px] text-slate-400 font-bold uppercase mb-1">Trainer</p>
-                  <p className="text-xs text-slate-900 font-black">7777777777</p>
-                </div>
-             </div>
-             <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-left">
-                <p className="text-[9px] text-slate-400 font-bold uppercase mb-1">Super Admin</p>
-                <p className="text-xs text-slate-900 font-black">9999999999</p>
-              </div>
+          <div className="grid grid-cols-1 gap-4 text-xs font-bold text-slate-400 italic">
+             Accounts are now managed via the database.
           </div>
         </div>
       </div>

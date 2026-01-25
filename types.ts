@@ -7,7 +7,7 @@ export enum UserRole {
 
 export interface User {
   id: number;
-  phone: string; // Changed from email to phone
+  phone: string;
   password?: string;
   role: UserRole;
   gymId?: number;
@@ -37,7 +37,7 @@ export interface SubscriptionPayment {
 export interface Gym {
   id: number;
   name: string;
-  ownerPhone: string; // Changed from ownerEmail to ownerPhone
+  ownerPhone: string;
   status: GymStatus;
   subscriptionStatus: SubscriptionStatus;
   subscriptionStartDate: string;
@@ -49,6 +49,12 @@ export interface Gym {
 export enum PaymentStatus {
   PAID = 'Paid',
   UNPAID = 'Unpaid',
+  PARTIAL = 'Partial',
+}
+
+export enum MemberType {
+  SUBSCRIPTION = 'Subscription',
+  DAY_PASS = 'Day Pass',
 }
 
 export interface Member {
@@ -59,8 +65,10 @@ export interface Member {
   phone: string;
   planStart: string;
   planDurationDays: number;
-  feesAmount: number;
+  feesAmount: number; // Total Plan Fee
+  paidAmount: number; // Total Collected Fee
   feesStatus: PaymentStatus;
+  memberType: MemberType;
   photo?: string; // Base64 encoded image
 }
 

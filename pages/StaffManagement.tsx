@@ -6,6 +6,7 @@ import TrashIcon from '../components/icons/TrashIcon';
 import EditIcon from '../components/icons/EditIcon';
 import Modal from '../components/Modal';
 import Badge from '../components/Badge';
+import ExclamationTriangleIcon from '../components/icons/ExclamationTriangleIcon';
 
 interface StaffManagementProps {
   gym: Gym;
@@ -17,6 +18,7 @@ interface StaffManagementProps {
 
 const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrainer, onUpdateTrainer, onDeleteUser }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState<User | null>(null);
   const [formData, setFormData] = useState({ phone: '', password: '' });
 
@@ -31,6 +33,17 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
     setIsModalOpen(true);
   };
 
+  const handleOpenDeleteConfirm = (member: User) => {
+    setEditingStaff(member);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleCloseModals = () => {
+    setIsModalOpen(false);
+    setIsDeleteModalOpen(false);
+    setEditingStaff(null);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.phone.length !== 10) {
@@ -42,7 +55,6 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
       onUpdateTrainer({
         ...editingStaff,
         phone: formData.phone,
-        // Only update password if a new one is provided
         password: formData.password.trim() || editingStaff.password,
       });
     } else {
@@ -54,7 +66,14 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
     }
     
     setFormData({ phone: '', password: '' });
-    setIsModalOpen(false);
+    handleCloseModals();
+  };
+
+  const confirmDeletion = () => {
+    if (editingStaff) {
+      onDeleteUser(editingStaff.id);
+      handleCloseModals();
+    }
   };
 
   return (
@@ -104,7 +123,7 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
                      <EditIcon className="w-4 h-4" /> Edit
                    </button>
                    <button 
-                    onClick={() => onDeleteUser(member.id)}
+                    onClick={() => handleOpenDeleteConfirm(member)}
                     className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all flex items-center gap-1 text-[10px] font-bold uppercase"
                     title="Remove Account"
                    >
@@ -120,7 +139,7 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
         ))}
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingStaff ? "Edit Staff Account" : "Create Staff Account"}>
+      <Modal isOpen={isModalOpen} onClose={handleCloseModals} title={editingStaff ? "Edit Staff Account" : "Create Staff Account"}>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="bg-brand/5 p-4 rounded-2xl border border-brand/10 mb-2">
             <p className="text-xs text-brand-800 font-medium leading-relaxed italic">
@@ -160,7 +179,7 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
           <div className="flex gap-4 pt-4">
             <button 
               type="button" 
-              onClick={() => setIsModalOpen(false)}
+              onClick={handleCloseModals}
               className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-colors"
             >
               Cancel
@@ -173,6 +192,36 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
             </button>
           </div>
         </form>
+      </Modal>
+
+      <Modal 
+        isOpen={isDeleteModalOpen} 
+        onClose={handleCloseModals} 
+        title="Confirm Deletion"
+      >
+        <div className="text-center py-4">
+          <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <ExclamationTriangleIcon className="w-8 h-8 text-red-600" />
+          </div>
+          <h4 className="text-lg font-black text-slate-900 mb-2">Delete Staff Account?</h4>
+          <p className="text-sm text-slate-500 mb-8 px-4 leading-relaxed">
+            Removing the account for <span className="font-bold text-slate-900">{editingStaff?.phone}</span> will immediately revoke their access to this gym dashboard.
+          </p>
+          <div className="flex gap-4">
+            <button 
+              onClick={handleCloseModals}
+              className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-colors"
+            >
+              Cancel
+            </button>
+            <button 
+              onClick={confirmDeletion}
+              className="flex-1 py-4 bg-red-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-red-200 hover:bg-red-700 transition-colors active:scale-95"
+            >
+              Yes, Delete
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

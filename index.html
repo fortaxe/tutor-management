@@ -55,13 +55,28 @@
   "imports": {
     "react": "https://aistudiocdn.com/react@^19.1.1",
     "react/": "https://aistudiocdn.com/react@^19.1.1/",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/"
+    "react-dom": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "@tanstack/react-query": "https://esm.sh/@tanstack/react-query@5",
+    "axios": "https://esm.sh/axios@1.7.9",
+    "zod": "https://esm.sh/zod@3.24.1",
+    "express": "https://esm.sh/express@^5.2.1",
+    "mongoose": "https://esm.sh/mongoose@^9.1.5",
+    "cors": "https://esm.sh/cors@^2.8.6",
+    "@vercel/node": "https://esm.sh/@vercel/node@^5.5.27"
   }
 }
 </script>
 <style>
   body {
     font-family: 'Inter', sans-serif;
+  }
+  .animate-pulse-subtle {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .7; }
   }
 </style>
 </head>

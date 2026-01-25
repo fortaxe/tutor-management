@@ -26,9 +26,9 @@ const GymEarnings: React.FC<GymEarningsProps> = ({ gym, members, payments }) => 
       })
       .reduce((acc, p) => acc + p.amount, 0);
     
+    // Sum of all pending balances
     const pendingDues = members
-      .filter(m => m.feesStatus === PaymentStatus.UNPAID)
-      .reduce((acc, m) => acc + m.feesAmount, 0);
+      .reduce((acc, m) => acc + (m.feesAmount - m.paidAmount), 0);
 
     return { totalEarnings, thisMonthEarnings, pendingDues };
   }, [payments, members, currentMonth, currentYear]);
@@ -63,7 +63,7 @@ const GymEarnings: React.FC<GymEarningsProps> = ({ gym, members, payments }) => 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
         <div className="bg-charcoal p-8 rounded-[2rem] shadow-2xl shadow-charcoal/20 flex flex-col justify-between relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-brand/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-brand/20 transition-all"></div>
-          <p className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Total Value</p>
+          <p className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Total Realized</p>
           <div>
             <span className="text-brand text-2xl font-black mr-1">₹</span>
             <span className="text-4xl font-black text-white tracking-tight">{stats.totalEarnings.toLocaleString()}</span>
@@ -71,7 +71,7 @@ const GymEarnings: React.FC<GymEarningsProps> = ({ gym, members, payments }) => 
         </div>
         
         <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col justify-between relative group hover:shadow-xl hover:shadow-brand/5 transition-all">
-          <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Current Month</p>
+          <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Collected This Month</p>
           <div>
             <span className="text-brand text-2xl font-black mr-1">₹</span>
             <span className="text-4xl font-black text-slate-950 tracking-tight">{stats.thisMonthEarnings.toLocaleString()}</span>
@@ -79,7 +79,7 @@ const GymEarnings: React.FC<GymEarningsProps> = ({ gym, members, payments }) => 
         </div>
 
         <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col justify-between relative group hover:shadow-xl hover:shadow-orange/5 transition-all">
-          <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Awaiting Collection</p>
+          <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Awaiting Balance</p>
           <div>
             <span className="text-orange-500 text-2xl font-black mr-1">₹</span>
             <span className="text-4xl font-black text-slate-950 tracking-tight">{stats.pendingDues.toLocaleString()}</span>

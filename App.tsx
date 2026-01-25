@@ -1,144 +1,192 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { User, Gym, Member, UserRole, GymStatus, MemberPayment, PaymentStatus } from './types';
-import { USERS, GYMS, MEMBERS, MEMBER_PAYMENTS } from './constants';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { User, Gym, Member, UserRole, GymStatus, MemberPayment, PaymentStatus, MemberType } from './types';
 import Login from './pages/Login';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import GymOwnerDashboard from './pages/GymOwnerDashboard';
 import GymEarnings from './pages/GymEarnings';
 import StaffManagement from './pages/StaffManagement';
 import DashboardLayout from './components/DashboardLayout';
+import client from './api/client';
 
-const STORAGE_KEYS = {
-  SESSION: 'gym_mgmt_session',
-  USERS: 'gym_mgmt_users',
-  GYMS: 'gym_mgmt_gyms',
-  MEMBERS: 'gym_mgmt_members',
-  PAYMENTS: 'gym_mgmt_payments',
-};
-
+const STORAGE_KEY = 'gym_mgmt_session';
 const SESSION_EXPIRY_DAYS = 30;
 
 const App: React.FC = () => {
-  // --- Persistent State ---
-  const [users, setUsers] = useState<User[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.USERS);
-    return saved ? JSON.parse(saved) : USERS;
-  });
+  const queryClient = useQueryClient();
+  const [activeView, setActiveView] = useState<string>('dashboard');
 
-  const [gyms, setGyms] = useState<Gym[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.GYMS);
-    return saved ? JSON.parse(saved) : GYMS;
-  });
-
-  const [members, setMembers] = useState<Member[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.MEMBERS);
-    return saved ? JSON.parse(saved) : MEMBERS;
-  });
-
-  const [memberPayments, setMemberPayments] = useState<MemberPayment[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.PAYMENTS);
-    return saved ? JSON.parse(saved) : MEMBER_PAYMENTS;
-  });
-
+  // --- Auth State ---
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.SESSION);
+    const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
         const { user, expiry } = JSON.parse(saved);
         if (Date.now() < expiry) return user;
-        localStorage.removeItem(STORAGE_KEYS.SESSION);
+        localStorage.removeItem(STORAGE_KEY);
       } catch (e) {
-        localStorage.removeItem(STORAGE_KEYS.SESSION);
+        localStorage.removeItem(STORAGE_KEY);
       }
     }
     return null;
   });
 
-  const [activeView, setActiveView] = useState<string>('dashboard');
+  // --- Queries ---
+  const { data: gyms = [], isLoading: gymsLoading } = useQuery({
+    queryKey: ['gyms'],
+    queryFn: async () => {
+      const res = await client.get('/gyms');
+      return res.data;
+    },
+    enabled: currentUser?.role === UserRole.SUPER_ADMIN,
+  });
 
-  // --- Persistence Effects ---
-  useEffect(() => localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users)), [users]);
-  useEffect(() => localStorage.setItem(STORAGE_KEYS.GYMS, JSON.stringify(gyms)), [gyms]);
-  useEffect(() => localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(members)), [members]);
-  useEffect(() => localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(memberPayments)), [memberPayments]);
+  const { data: members = [], isLoading: membersLoading } = useQuery({
+    queryKey: ['members', currentUser?.gymId],
+    queryFn: async () => {
+      const res = await client.get(`/members?gymId=${currentUser?.gymId}`);
+      return res.data;
+    },
+    enabled: !!currentUser?.gymId,
+  });
+
+  const { data: staff = [], isLoading: staffLoading } = useQuery({
+    queryKey: ['staff', currentUser?.gymId],
+    queryFn: async () => {
+      const res = await client.get(`/staff?gymId=${currentUser?.gymId}`);
+      return res.data;
+    },
+    enabled: !!currentUser?.gymId,
+  });
+
+  const { data: payments = [], isLoading: paymentsLoading } = useQuery({
+    queryKey: ['payments', currentUser?.gymId],
+    queryFn: async () => {
+      const res = await client.get(`/payments?gymId=${currentUser?.gymId}`);
+      return res.data;
+    },
+    enabled: !!currentUser?.gymId,
+  });
+
+  // --- Mutations ---
+  const loginMutation = useMutation({
+    mutationFn: async (creds: any) => {
+      const res = await client.post('/auth/login', creds);
+      return res.data;
+    },
+    onSuccess: (user) => {
+      const expiry = Date.now() + SESSION_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ user, expiry }));
+      setCurrentUser(user);
+    }
+  });
+
+  const addGymMutation = useMutation({
+    mutationFn: async ({ gym, password }: any) => {
+      const res = await client.post('/gyms', { ...gym, password });
+      return res.data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['gyms'] })
+  });
+
+  const updateGymMutation = useMutation({
+    mutationFn: async ({ gym, password }: any) => {
+      const res = await client.patch(`/gyms/${gym.id}`, { ...gym, password });
+      return res.data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['gyms'] })
+  });
+
+  const toggleGymStatusMutation = useMutation({
+    mutationFn: async ({ gymId, status }: any) => {
+      const res = await client.patch(`/gyms/${gymId}`, { status });
+      return res.data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['gyms'] })
+  });
+
+  const deleteGymMutation = useMutation({
+    mutationFn: async (gymId: number) => {
+      await client.delete(`/gyms/${gymId}`);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['gyms'] })
+  });
+
+  const addMemberMutation = useMutation({
+    mutationFn: async (member: any) => {
+      const res = await client.post('/members', { ...member, gymId: currentUser?.gymId });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['members'] });
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+    }
+  });
+
+  const updateMemberMutation = useMutation({
+    mutationFn: async (member: any) => {
+      const res = await client.patch(`/members/${member._id}`, member);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['members'] });
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+    }
+  });
+
+  const renewMemberMutation = useMutation({
+    mutationFn: async ({ memberId, renewalData }: any) => {
+      const res = await client.post(`/members/${memberId}/renew`, { renewalData });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['members'] });
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+    }
+  });
+
+  const deleteMemberMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await client.delete(`/members/${id}`);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['members'] })
+  });
+
+  const addStaffMutation = useMutation({
+    mutationFn: async (trainerData: any) => {
+      const res = await client.post('/staff', { ...trainerData, gymId: currentUser?.gymId });
+      return res.data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['staff'] })
+  });
+
+  const updateStaffMutation = useMutation({
+    mutationFn: async (trainer: any) => {
+      const res = await client.patch(`/staff/${trainer._id}`, trainer);
+      return res.data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['staff'] })
+  });
+
+  const deleteStaffMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await client.delete(`/staff/${id}`);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['staff'] })
+  });
 
   // --- Handlers ---
-  const handleLogin = (user: User) => {
-    const expiry = Date.now() + SESSION_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
-    localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify({ user, expiry }));
-    setCurrentUser(user);
-    setActiveView('dashboard');
-  };
-
   const handleLogout = () => {
-    localStorage.removeItem(STORAGE_KEYS.SESSION);
+    localStorage.removeItem(STORAGE_KEY);
     setCurrentUser(null);
+    queryClient.clear();
   };
 
-  const addTrainer = useCallback((trainerData: Omit<User, 'id' | 'role'>) => {
-    const newUser: User = {
-      ...trainerData,
-      id: Date.now(),
-      role: UserRole.TRAINER,
-    };
-    setUsers(prev => [...prev, newUser]);
-  }, []);
+  if (!currentUser) return <Login onLogin={(creds) => loginMutation.mutate(creds)} />;
 
-  const updateTrainer = useCallback((updatedTrainer: User) => {
-    setUsers(prev => prev.map(u => u.id === updatedTrainer.id ? updatedTrainer : u));
-  }, []);
-
-  const deleteUser = useCallback((userId: number) => {
-    setUsers(prev => prev.filter(u => u.id !== userId));
-  }, []);
-
-  const toggleGymStatus = useCallback((gymId: number, currentStatus: GymStatus) => {
-    setGyms(prev => prev.map(gym => gym.id === gymId ? { ...gym, status: currentStatus === GymStatus.ACTIVE ? GymStatus.SUSPENDED : GymStatus.ACTIVE } : gym));
-  }, []);
-
-  const addGym = useCallback((gymData: Omit<Gym, 'id' | 'paymentHistory'>, password?: string) => {
-    const newGymId = Date.now();
-    const newUser: User = { id: Date.now() + 1, phone: gymData.ownerPhone, password: password || 'gym123', role: UserRole.GYM_OWNER, gymId: newGymId };
-    setGyms(prev => [...prev, { ...gymData, id: newGymId, paymentHistory: [] }]);
-    setUsers(prev => [...prev, newUser]);
-  }, []);
-
-  const updateGym = useCallback((updatedGym: Gym, password?: string) => {
-    setGyms(prev => prev.map(g => g.id === updatedGym.id ? updatedGym : g));
-    setUsers(prev => prev.map(u => {
-      if (u.gymId === updatedGym.id && u.role === UserRole.GYM_OWNER) {
-        return {
-          ...u,
-          phone: updatedGym.ownerPhone,
-          ...(password ? { password } : {})
-        };
-      }
-      return u;
-    }));
-  }, []);
-
-  const addMember = useCallback((newMember: Omit<Member, 'id'>) => {
-    const id = Date.now();
-    setMembers(prev => [...prev, { ...newMember, id }]);
-    if (newMember.feesStatus === PaymentStatus.PAID) {
-      setMemberPayments(prev => [...prev, { id: Date.now() + 1, memberId: id, memberName: newMember.name, gymId: newMember.gymId, amount: newMember.feesAmount, paymentDate: new Date().toISOString().split('T')[0], note: 'Initial Payment' }]);
-    }
-  }, []);
-
-  const updateMember = useCallback((updatedMember: Member) => {
-    setMembers(prevMembers => {
-      const oldMember = prevMembers.find(m => m.id === updatedMember.id);
-      if (oldMember && oldMember.feesStatus === PaymentStatus.UNPAID && updatedMember.feesStatus === PaymentStatus.PAID) {
-        setMemberPayments(prev => [...prev, { id: Date.now(), memberId: updatedMember.id, memberName: updatedMember.name, gymId: updatedMember.gymId, amount: updatedMember.feesAmount, paymentDate: new Date().toISOString().split('T')[0], note: 'Fee Collection' }]);
-      }
-      return prevMembers.map(member => member.id === updatedMember.id ? updatedMember : member);
-    });
-  }, []);
-
-  const deleteMember = useCallback((memberId: number) => setMembers(prev => prev.filter(m => m.id !== memberId)), []);
-
-  if (!currentUser) return <Login users={users} onLogin={handleLogin} />;
+  const isTrainer = currentUser.role === UserRole.TRAINER;
+  const currentGym = gyms.find(g => g.id === currentUser.gymId);
 
   if (currentUser.role === UserRole.SUPER_ADMIN) {
     return (
@@ -147,64 +195,60 @@ const App: React.FC = () => {
         gyms={gyms}
         members={members}
         onLogout={handleLogout}
-        onToggleGymStatus={toggleGymStatus}
-        onAddGym={addGym}
-        onUpdateGym={updateGym}
+        onToggleGymStatus={(id, status) => toggleGymStatusMutation.mutate({ gymId: id, status: status === GymStatus.ACTIVE ? GymStatus.SUSPENDED : GymStatus.ACTIVE })}
+        onDeleteGym={(id) => deleteGymMutation.mutate(id)}
+        onAddGym={(gym, password) => addGymMutation.mutate({ gym, password })}
+        onUpdateGym={(gym, password) => updateGymMutation.mutate({ gym, password })}
       />
     );
   }
 
-  if ((currentUser.role === UserRole.GYM_OWNER || currentUser.role === UserRole.TRAINER) && currentUser.gymId) {
-    const currentGym = gyms.find(gym => gym.id === currentUser.gymId);
-    if (!currentGym) return <div>Error: Gym not found.</div>;
-    
-    const gymMembers = members.filter(member => member.gymId === currentUser.gymId);
-    const gymPayments = memberPayments.filter(p => p.gymId === currentUser.gymId);
-    const gymStaff = users.filter(u => u.gymId === currentUser.gymId);
-    
-    const isTrainer = currentUser.role === UserRole.TRAINER;
-    const effectiveView = isTrainer ? 'dashboard' : activeView;
+  const effectiveView = isTrainer ? 'dashboard' : activeView;
 
-    return (
-      <DashboardLayout 
-        user={currentUser} 
-        onLogout={handleLogout} 
-        pageTitle={effectiveView === 'earnings' ? 'Earnings & Reports' : effectiveView === 'staff' ? 'Staff Management' : currentGym.name}
-        activeView={effectiveView}
-        onViewChange={setActiveView}
-      >
-        {effectiveView === 'dashboard' && (
-          <GymOwnerDashboard
-            user={currentUser}
-            gym={currentGym}
-            members={gymMembers}
-            onLogout={handleLogout}
-            onAddMember={addMember}
-            onUpdateMember={updateMember}
-            onDeleteMember={deleteMember}
-          />
-        )}
-        {effectiveView === 'earnings' && !isTrainer && (
-          <GymEarnings 
-            gym={currentGym} 
-            members={gymMembers} 
-            payments={gymPayments} 
-          />
-        )}
-        {effectiveView === 'staff' && !isTrainer && (
-          <StaffManagement
-            gym={currentGym}
-            staff={gymStaff}
-            onAddTrainer={addTrainer}
-            onUpdateTrainer={updateTrainer}
-            onDeleteUser={deleteUser}
-          />
-        )}
-      </DashboardLayout>
-    );
-  }
-
-  return <div>Invalid configuration.</div>;
+  return (
+    <DashboardLayout 
+      user={currentUser} 
+      onLogout={handleLogout} 
+      pageTitle={effectiveView === 'earnings' ? 'Earnings & Reports' : effectiveView === 'staff' ? 'Staff Management' : currentGym?.name || 'Dashboard'}
+      activeView={effectiveView}
+      onViewChange={setActiveView}
+    >
+      {effectiveView === 'dashboard' && (
+        <GymOwnerDashboard
+          user={currentUser}
+          gym={currentGym || { name: 'Loading...' } as Gym}
+          members={members}
+          onLogout={handleLogout}
+          onAddMember={(m) => addMemberMutation.mutate(m)}
+          onUpdateMember={(m) => updateMemberMutation.mutate(m)}
+          onRenewMember={(id, renewalData) => renewMemberMutation.mutate({ memberId: id, renewalData })}
+          onDeleteMember={(id) => deleteMemberMutation.mutate(id)}
+        />
+      )}
+      {effectiveView === 'earnings' && !isTrainer && (
+        <GymEarnings 
+          gym={currentGym || {} as Gym} 
+          members={members} 
+          payments={payments} 
+        />
+      )}
+      {effectiveView === 'staff' && !isTrainer && (
+        <StaffManagement
+          gym={currentGym || {} as Gym}
+          staff={staff}
+          onAddTrainer={(t) => addStaffMutation.mutate(t)}
+          onUpdateTrainer={(t) => updateStaffMutation.mutate(t)}
+          onDeleteUser={(id) => deleteStaffMutation.mutate(id)}
+        />
+      )}
+      {(gymsLoading || membersLoading || staffLoading || paymentsLoading) && (
+        <div className="fixed bottom-4 right-4 bg-white px-4 py-2 rounded-full shadow-lg border border-slate-100 flex items-center space-x-2 animate-pulse-subtle">
+          <div className="w-2 h-2 bg-brand rounded-full"></div>
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Syncing...</span>
+        </div>
+      )}
+    </DashboardLayout>
+  );
 };
 
 export default App;

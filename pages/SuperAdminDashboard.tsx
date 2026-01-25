@@ -12,6 +12,8 @@ import EditIcon from '../components/icons/EditIcon';
 import ClockIcon from '../components/icons/ClockIcon';
 import UserGroupIcon from '../components/icons/UserGroupIcon';
 import SearchIcon from '../components/icons/SearchIcon';
+import TrashIcon from '../components/icons/TrashIcon';
+import ExclamationTriangleIcon from '../components/icons/ExclamationTriangleIcon';
 
 interface SuperAdminDashboardProps {
   user: User;
@@ -19,6 +21,7 @@ interface SuperAdminDashboardProps {
   members: Member[];
   onLogout: () => void;
   onToggleGymStatus: (gymId: number, currentStatus: GymStatus) => void;
+  onDeleteGym: (gymId: number) => void;
   onAddGym: (gymData: Omit<Gym, 'id' | 'paymentHistory'>, password?: string) => void;
   onUpdateGym: (gym: Gym, password?: string) => void;
 }
@@ -29,10 +32,11 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
   members, 
   onLogout, 
   onToggleGymStatus,
+  onDeleteGym,
   onAddGym,
   onUpdateGym
 }) => {
-  const [modalType, setModalType] = useState<'add' | 'edit' | 'payment' | 'history' | null>(null);
+  const [modalType, setModalType] = useState<'add' | 'edit' | 'payment' | 'history' | 'delete' | null>(null);
   const [selectedGym, setSelectedGym] = useState<Gym | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -104,6 +108,11 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
     setModalType('history');
   };
 
+  const handleOpenDeleteConfirm = (gym: Gym) => {
+    setSelectedGym(gym);
+    setModalType('delete');
+  };
+
   const handleCloseModal = () => {
     setModalType(null);
     setSelectedGym(null);
@@ -136,6 +145,13 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
       onUpdateGym(updatedGym);
     }
     handleCloseModal();
+  };
+
+  const confirmDeletion = () => {
+    if (selectedGym) {
+      onDeleteGym(selectedGym.id);
+      handleCloseModal();
+    }
   };
 
   return (
@@ -171,7 +187,6 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
             </button>
           </div>
 
-          {/* Search Bar */}
           <div className="relative w-full max-w-md">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <SearchIcon className="h-5 w-5 text-gray-400" />
@@ -186,7 +201,6 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
           </div>
         </div>
 
-        {/* Desktop Table View */}
         <div className="hidden lg:block overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -246,6 +260,13 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
                     >
                       {gym.status === GymStatus.ACTIVE ? 'Suspend' : 'Activate'}
                     </button>
+                    <button 
+                      onClick={() => handleOpenDeleteConfirm(gym)} 
+                      className="text-red-400 hover:text-red-600 transition-colors"
+                      title="Delete Gym"
+                    >
+                      <TrashIcon className="w-5 h-5 inline" />
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -253,7 +274,6 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
           </table>
         </div>
 
-        {/* Mobile List/Card View */}
         <div className="lg:hidden divide-y divide-gray-100">
           {gymsWithMemberCount.map((gym) => (
             <div key={gym.id} className="p-4 space-y-3">
@@ -298,6 +318,12 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
                       className="p-1.5 bg-gray-100 text-gray-600 rounded-md border border-gray-200"
                     >
                       <EditIcon className="w-5 h-5" />
+                    </button>
+                    <button 
+                      onClick={() => handleOpenDeleteConfirm(gym)}
+                      className="p-1.5 bg-red-50 text-red-600 rounded-md border border-red-100"
+                    >
+                      <TrashIcon className="w-5 h-5" />
                     </button>
                   </div>
               </div>
@@ -366,6 +392,36 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
             </button>
         </div>
         <PaymentHistory history={selectedGym?.paymentHistory || []} />
+      </Modal>
+
+      <Modal 
+        isOpen={modalType === 'delete'} 
+        onClose={handleCloseModal} 
+        title="Confirm Deletion"
+      >
+        <div className="text-center py-4">
+          <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <ExclamationTriangleIcon className="w-8 h-8 text-red-600" />
+          </div>
+          <h4 className="text-lg font-black text-slate-900 mb-2">Are you absolutely sure?</h4>
+          <p className="text-sm text-slate-500 mb-8 px-4 leading-relaxed">
+            Deleting <span className="font-bold text-slate-900">{selectedGym?.name}</span> will permanently remove all associated members, trainers, and payment records. This action cannot be undone.
+          </p>
+          <div className="flex gap-4">
+            <button 
+              onClick={handleCloseModal}
+              className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-colors"
+            >
+              No, Keep It
+            </button>
+            <button 
+              onClick={confirmDeletion}
+              className="flex-1 py-4 bg-red-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-red-200 hover:bg-red-700 transition-colors active:scale-95"
+            >
+              Yes, Delete
+            </button>
+          </div>
+        </div>
       </Modal>
     </DashboardLayout>
   );

@@ -1,6 +1,6 @@
 
 import { z } from 'zod';
-import { UserRole, GymStatus, SubscriptionStatus, PaymentStatus, MemberType } from '../../types';
+import { UserRole, GymStatus, SubscriptionStatus, PaymentStatus, MemberType } from '../../client/types';
 
 export const loginSchema = z.object({
   phone: z.string().length(10),

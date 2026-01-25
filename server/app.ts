@@ -7,7 +7,7 @@ import { Gym } from './models/Gym';
 import { Member } from './models/Member';
 import { MemberPaymentRecord } from './models/MemberPayment';
 import { loginSchema, gymSchemaValidation, memberSchemaValidation } from './validators/schemas';
-import { UserRole, SubscriptionStatus, PaymentStatus, GymStatus } from '../types';
+import { UserRole, SubscriptionStatus, PaymentStatus, GymStatus } from '../client/types';
 
 const app = express();
 app.use(cors());
@@ -46,7 +46,6 @@ app.post('/api/gyms', async (req, res) => {
     const id = Date.now();
     const newGym = await Gym.create({ ...validatedGym, id, paymentHistory: [] });
     
-    // Create owner account
     await User.create({
       phone: validatedGym.ownerPhone,
       password: password || 'gym123',
@@ -94,7 +93,7 @@ app.delete('/api/gyms/:id', async (req, res) => {
   }
 });
 
-// Members (Gym Owner/Trainer Context)
+// Members
 app.get('/api/members', async (req, res) => {
   try {
     const { gymId } = req.query;

@@ -1,6 +1,7 @@
-import React, { useState, useCallback, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { User, Gym, Member, UserRole, GymStatus, MemberPayment, PaymentStatus, MemberType } from './types';
+import { User, Gym, UserRole, GymStatus } from './types';
 import Login from './pages/Login';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import GymOwnerDashboard from './pages/GymOwnerDashboard';
@@ -16,7 +17,6 @@ const App: React.FC = () => {
   const queryClient = useQueryClient();
   const [activeView, setActiveView] = useState<string>('dashboard');
 
-  // --- Auth State ---
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -31,7 +31,6 @@ const App: React.FC = () => {
     return null;
   });
 
-  // --- Queries ---
   const { data: gyms = [], isLoading: gymsLoading } = useQuery({
     queryKey: ['gyms'],
     queryFn: async () => {
@@ -68,7 +67,6 @@ const App: React.FC = () => {
     enabled: !!currentUser?.gymId,
   });
 
-  // --- Mutations ---
   const loginMutation = useMutation({
     mutationFn: async (creds: any) => {
       const res = await client.post('/auth/login', creds);
@@ -135,7 +133,6 @@ const App: React.FC = () => {
   });
 
   const renewMemberMutation = useMutation({
-    // Using any for variable type to handle potential ID format mismatches between mock and server data
     mutationFn: async ({ memberId, renewalData }: any) => {
       const res = await client.post(`/members/${memberId}/renew`, { renewalData });
       return res.data;
@@ -147,8 +144,7 @@ const App: React.FC = () => {
   });
 
   const deleteMemberMutation = useMutation({
-    // Changed id type from string to any to prevent number vs string assignment errors
-    mutationFn: async (id: any) => {
+    mutationFn: async (id: string) => {
       await client.delete(`/members/${id}`);
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['members'] })
@@ -171,14 +167,12 @@ const App: React.FC = () => {
   });
 
   const deleteStaffMutation = useMutation({
-    // Changed id type from string to any to prevent number vs string assignment errors
-    mutationFn: async (id: any) => {
+    mutationFn: async (id: string) => {
       await client.delete(`/staff/${id}`);
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['staff'] })
   });
 
-  // --- Handlers ---
   const handleLogout = () => {
     localStorage.removeItem(STORAGE_KEY);
     setCurrentUser(null);

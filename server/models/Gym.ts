@@ -1,6 +1,6 @@
 
 import mongoose from 'mongoose';
-import { GymStatus, SubscriptionStatus } from '../../types';
+import { GymStatus, SubscriptionStatus } from '../../client/types';
 
 const gymSchema = new mongoose.Schema({
   id: { type: Number, required: true, unique: true },

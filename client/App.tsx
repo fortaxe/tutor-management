@@ -1,14 +1,13 @@
-
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { User, Gym, UserRole, GymStatus } from './types';
+import { User, Gym, Member, UserRole, GymStatus, MemberPayment, PaymentStatus, MemberType } from './types';
 import Login from './pages/Login';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import GymOwnerDashboard from './pages/GymOwnerDashboard';
 import GymEarnings from './pages/GymEarnings';
 import StaffManagement from './pages/StaffManagement';
 import DashboardLayout from './components/DashboardLayout';
-import client from './api/client';
+import client from './lib/client';
 
 const STORAGE_KEY = 'gym_mgmt_session';
 const SESSION_EXPIRY_DAYS = 30;
@@ -17,6 +16,7 @@ const App: React.FC = () => {
   const queryClient = useQueryClient();
   const [activeView, setActiveView] = useState<string>('dashboard');
 
+  // --- Auth State ---
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -31,6 +31,7 @@ const App: React.FC = () => {
     return null;
   });
 
+  // --- Queries ---
   const { data: gyms = [], isLoading: gymsLoading } = useQuery({
     queryKey: ['gyms'],
     queryFn: async () => {
@@ -67,6 +68,7 @@ const App: React.FC = () => {
     enabled: !!currentUser?.gymId,
   });
 
+  // --- Mutations ---
   const loginMutation = useMutation({
     mutationFn: async (creds: any) => {
       const res = await client.post('/auth/login', creds);
@@ -133,6 +135,7 @@ const App: React.FC = () => {
   });
 
   const renewMemberMutation = useMutation({
+    // Using any for variable type to handle potential ID format mismatches between mock and server data
     mutationFn: async ({ memberId, renewalData }: any) => {
       const res = await client.post(`/members/${memberId}/renew`, { renewalData });
       return res.data;
@@ -144,7 +147,8 @@ const App: React.FC = () => {
   });
 
   const deleteMemberMutation = useMutation({
-    mutationFn: async (id: string) => {
+    // Changed id type from string to any to prevent number vs string assignment errors
+    mutationFn: async (id: any) => {
       await client.delete(`/members/${id}`);
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['members'] })
@@ -167,12 +171,14 @@ const App: React.FC = () => {
   });
 
   const deleteStaffMutation = useMutation({
-    mutationFn: async (id: string) => {
+    // Changed id type from string to any to prevent number vs string assignment errors
+    mutationFn: async (id: any) => {
       await client.delete(`/staff/${id}`);
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['staff'] })
   });
 
+  // --- Handlers ---
   const handleLogout = () => {
     localStorage.removeItem(STORAGE_KEY);
     setCurrentUser(null);
@@ -202,9 +208,9 @@ const App: React.FC = () => {
   const effectiveView = isTrainer ? 'dashboard' : activeView;
 
   return (
-    <DashboardLayout 
-      user={currentUser} 
-      onLogout={handleLogout} 
+    <DashboardLayout
+      user={currentUser}
+      onLogout={handleLogout}
       pageTitle={effectiveView === 'earnings' ? 'Earnings & Reports' : effectiveView === 'staff' ? 'Staff Management' : currentGym?.name || 'Dashboard'}
       activeView={effectiveView}
       onViewChange={setActiveView}
@@ -222,10 +228,10 @@ const App: React.FC = () => {
         />
       )}
       {effectiveView === 'earnings' && !isTrainer && (
-        <GymEarnings 
-          gym={currentGym || {} as Gym} 
-          members={members} 
-          payments={payments} 
+        <GymEarnings
+          gym={currentGym || {} as Gym}
+          members={members}
+          payments={payments}
         />
       )}
       {effectiveView === 'staff' && !isTrainer && (

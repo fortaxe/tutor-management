@@ -1,6 +1,6 @@
 
 import { z } from 'zod';
-import { UserRole, GymStatus, SubscriptionStatus, PaymentStatus, MemberType } from '../../client/types';
+import { UserRole, GymStatus, SubscriptionStatus, PaymentStatus, MemberType } from '../types';
 
 export const loginSchema = z.object({
   phone: z.string().length(10),
@@ -22,9 +22,9 @@ export const memberSchemaValidation = z.object({
   phone: z.string().length(10),
   email: z.string().email().optional().or(z.literal('')),
   planStart: z.string(),
-  planDurationDays: z.number(),
-  feesAmount: z.number(),
-  paidAmount: z.number(),
+  planDurationDays: z.coerce.number(),
+  feesAmount: z.coerce.number(),
+  paidAmount: z.coerce.number(),
   feesStatus: z.nativeEnum(PaymentStatus),
   memberType: z.nativeEnum(MemberType),
   photo: z.string().optional(),

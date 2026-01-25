@@ -65,11 +65,11 @@ export interface Member {
   phone: string;
   planStart: string;
   planDurationDays: number;
-  feesAmount: number;
-  paidAmount: number;
+  feesAmount: number; // Total Plan Fee
+  paidAmount: number; // Total Collected Fee
   feesStatus: PaymentStatus;
   memberType: MemberType;
-  photo?: string;
+  photo?: string; // Base64 encoded image
 }
 
 export interface MemberPayment {

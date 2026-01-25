@@ -28,6 +28,17 @@ export const GYMS: Gym[] = [
       }
     ],
   },
+  {
+    id: 2,
+    name: 'Iron Temple Gym',
+    ownerPhone: '7777777777',
+    status: GymStatus.ACTIVE,
+    subscriptionStatus: SubscriptionStatus.PENDING,
+    subscriptionStartDate: '2024-06-25',
+    subscriptionEndDate: '2024-07-25',
+    totalPaidAmount: 0,
+    paymentHistory: [],
+  },
 ];
 
 const formatDate = (date: Date) => date.toISOString().split('T')[0];
@@ -47,8 +58,22 @@ export const MEMBERS: Member[] = [
     feesStatus: PaymentStatus.PAID,
     memberType: MemberType.SUBSCRIPTION,
   },
+  {
+    id: 2,
+    gymId: 1,
+    name: 'Bob Williams',
+    email: 'bob@email.com',
+    phone: '2345678901',
+    planStart: formatDate(new Date(today.getTime() - 60 * 24 * 60 * 60 * 1000)),
+    planDurationDays: 90,
+    feesAmount: 5000,
+    paidAmount: 4000,
+    feesStatus: PaymentStatus.PARTIAL,
+    memberType: MemberType.SUBSCRIPTION,
+  },
 ];
 
 export const MEMBER_PAYMENTS: MemberPayment[] = [
   { id: 1, memberId: 1, memberName: 'Alice Johnson', gymId: 1, amount: 1500, paymentDate: formatDate(new Date(today.getFullYear(), today.getMonth(), 5)), note: 'Initial Payment' },
+  { id: 2, memberId: 2, memberName: 'Bob Williams', gymId: 1, amount: 4000, paymentDate: formatDate(new Date(today.getFullYear(), today.getMonth() - 1, 15)), note: 'Initial Partial Payment' },
 ];

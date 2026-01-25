@@ -1,6 +1,6 @@
 
 import mongoose from 'mongoose';
-import { UserRole } from '../../client/types';
+import { UserRole } from '../types';
 
 const userSchema = new mongoose.Schema({
   phone: { type: String, required: true, unique: true },

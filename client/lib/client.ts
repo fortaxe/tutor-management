@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const client = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
+  baseURL: import.meta.env.PROD ? 'https://gym-saad-7k29.vercel.app/api' : 'http://localhost:8000/api',
 });
 
 // For local testing if needed, you could add logic to detect environment

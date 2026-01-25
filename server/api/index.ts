@@ -35,6 +35,4 @@ const handler = async (req: VercelRequest, res: VercelResponse) => {
   });
 };
 
-// ... existing code ...
-
 export default handler;

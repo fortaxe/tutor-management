@@ -4,7 +4,8 @@
     "main": "app.ts",
     "scripts": {
         "start": "node dist/api/index.js",
-        "dev": "tsx watch dev.ts"
+        "dev": "tsx watch dev.ts",
+        "build": "echo 'Build handled by Vercel'"
     },
     "dependencies": {
         "@aws-sdk/client-s3": "^3.975.0",

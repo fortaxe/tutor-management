@@ -14,15 +14,18 @@ const handler = async (req: VercelRequest, res: VercelResponse) => {
     return res.status(200).end();
   }
 
+  // Only connect if not already connected
   if (!isConnected) {
     try {
       await connectDB();
       isConnected = true;
     } catch (error) {
+      console.error('Database connection failed:', error);
       return res.status(500).json({ error: 'Database connection failed' });
     }
   }
 
+  // Use the express app as middleware
   return new Promise((resolve, reject) => {
     // @ts-ignore
     app(req, res, (err: any) => {

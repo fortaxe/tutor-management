@@ -8,6 +8,7 @@ import GymEarnings from './pages/GymEarnings';
 import StaffManagement from './pages/StaffManagement';
 import DashboardLayout from './components/DashboardLayout';
 import client from './lib/client';
+import { objectToFormData } from './lib/utils';
 
 const STORAGE_KEY = 'gym_mgmt_session';
 const SESSION_EXPIRY_DAYS = 30;
@@ -112,9 +113,11 @@ const App: React.FC = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['gyms'] })
   });
 
+
   const addMemberMutation = useMutation({
     mutationFn: async (member: any) => {
-      const res = await client.post('/members', { ...member, gymId: currentUser?.gymId });
+      const formData = objectToFormData({ ...member, gymId: currentUser?.gymId });
+      const res = await client.post('/members', formData);
       return res.data;
     },
     onSuccess: () => {
@@ -125,7 +128,10 @@ const App: React.FC = () => {
 
   const updateMemberMutation = useMutation({
     mutationFn: async (member: any) => {
-      const res = await client.patch(`/members/${member._id}`, member);
+      const formData = objectToFormData(member);
+      // We use _id because sending FormData with patches sometimes can be tricky if id is in body, 
+      // but here we use URL param which is fine.
+      const res = await client.patch(`/members/${member._id}`, formData);
       return res.data;
     },
     onSuccess: () => {

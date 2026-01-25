@@ -116,6 +116,8 @@ app.get('/api/members', async (req, res) => {
 app.post('/api/members', upload.single('photo'), async (req, res) => {
   try {
     const memberData = { ...req.body };
+    console.log('Received member data:', memberData);
+    console.log('Received file:', req.file);
     if (req.file) {
       memberData.photo = await uploadToR2(req.file);
     }

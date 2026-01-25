@@ -58,7 +58,8 @@ export enum MemberType {
 }
 
 export interface Member {
-  id: number;
+  _id?: string;
+  id?: number;
   gymId: number;
   name: string;
   email?: string;

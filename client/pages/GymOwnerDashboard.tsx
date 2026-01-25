@@ -19,10 +19,10 @@ interface GymOwnerDashboardProps {
   gym: Gym;
   members: Member[];
   onLogout: () => void;
-  onAddMember: (member: Omit<Member, 'id'>) => void;
+  onAddMember: (member: Omit<Member, 'id' | '_id'>) => void;
   onUpdateMember: (member: Member) => void;
-  onRenewMember: (memberId: number, renewalData: { planStart: string; planDurationDays: number; feesAmount: number; paidAmount: number; feesStatus: PaymentStatus; memberType: MemberType }) => void;
-  onDeleteMember: (memberId: number) => void;
+  onRenewMember: (memberId: string | number, renewalData: { planStart: string; planDurationDays: number; feesAmount: number; paidAmount: number; feesStatus: PaymentStatus; memberType: MemberType }) => void;
+  onDeleteMember: (memberId: string | number) => void;
 }
 
 type Tab = 'members' | 'expiry' | 'dues' | 'passes';
@@ -41,14 +41,14 @@ const getPlanDates = (member: Member) => {
 const MemberAvatar: React.FC<{ member: Member }> = ({ member }) => {
   if (member.photo) {
     return (
-      <img 
-        src={member.photo} 
-        alt={member.name} 
+      <img
+        src={member.photo}
+        alt={member.name}
         className="h-11 w-11 rounded-2xl object-cover border border-slate-200"
       />
     );
   }
-  
+
   return (
     <div className={`h-11 w-11 rounded-2xl border flex items-center justify-center font-black text-xs ${member.memberType === MemberType.DAY_PASS ? 'bg-orange-50 border-orange-200 text-orange-700' : 'bg-brand/10 border-brand/20 text-brand-700'}`}>
       {member.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)}
@@ -56,10 +56,10 @@ const MemberAvatar: React.FC<{ member: Member }> = ({ member }) => {
   );
 };
 
-const MemberRow: React.FC<{ 
-  member: Member, 
-  onEdit: (member: Member) => void, 
-  onDelete: (member: Member) => void, 
+const MemberRow: React.FC<{
+  member: Member,
+  onEdit: (member: Member) => void,
+  onDelete: (member: Member) => void,
   onCollect: (member: Member) => void,
   onRenew: (member: Member) => void
 }> = ({ member, onEdit, onDelete, onCollect, onRenew }) => {
@@ -74,18 +74,18 @@ const MemberRow: React.FC<{
           <MemberAvatar member={member} />
           <div className="ml-4">
             <div className="flex items-center gap-2">
-                <div className="text-sm font-bold text-slate-900 group-hover:text-brand transition-colors">{member.name}</div>
-                {member.memberType === MemberType.DAY_PASS && (
-                    <span className="bg-orange-100 text-orange-700 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-tighter">Pass</span>
-                )}
+              <div className="text-sm font-bold text-slate-900 group-hover:text-brand transition-colors">{member.name}</div>
+              {member.memberType === MemberType.DAY_PASS && (
+                <span className="bg-orange-100 text-orange-700 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-tighter">Pass</span>
+              )}
             </div>
             <div className="text-[11px] font-medium text-slate-400 truncate max-w-[150px]">{member.phone}</div>
           </div>
         </div>
       </td>
       <td className="px-8 py-5 whitespace-nowrap text-sm">
-         <div className="font-bold text-slate-700">{endDate.toLocaleDateString()}</div>
-         <div className="text-[10px] text-slate-400 uppercase font-black tracking-widest mt-0.5">{isExpired ? 'Expired On' : 'Expires'}</div>
+        <div className="font-bold text-slate-700">{endDate.toLocaleDateString()}</div>
+        <div className="text-[10px] text-slate-400 uppercase font-black tracking-widest mt-0.5">{isExpired ? 'Expired On' : 'Expires'}</div>
       </td>
       <td className="px-8 py-5 whitespace-nowrap text-sm">
         {isExpired ? (
@@ -113,15 +113,15 @@ const MemberRow: React.FC<{
       <td className="px-8 py-5 whitespace-nowrap text-right text-sm font-medium">
         <div className="flex items-center justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <button onClick={() => onRenew(member)} className="p-2 bg-slate-900 text-white hover:bg-black rounded-xl transition-all shadow-sm" title="New Plan / Renew">
-             <ArrowPathIcon className="w-4 h-4" />
+            <ArrowPathIcon className="w-4 h-4" />
           </button>
           {balance > 0 && (
             <button onClick={() => onCollect(member)} className="p-2 bg-yellow-50 text-yellow-700 hover:bg-yellow-500 hover:text-white rounded-xl transition-all shadow-sm" title="Collect Balance">
               <span className="font-black text-[10px]">₹+</span>
             </button>
           )}
-          <button onClick={() => onEdit(member)} className="p-2 bg-slate-100 text-slate-600 hover:bg-slate-800 hover:text-white rounded-xl transition-all shadow-sm"><EditIcon className="w-4 h-4"/></button>
-          <button onClick={() => onDelete(member)} className="p-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-xl transition-all shadow-sm"><TrashIcon className="w-4 h-4"/></button>
+          <button onClick={() => onEdit(member)} className="p-2 bg-slate-100 text-slate-600 hover:bg-slate-800 hover:text-white rounded-xl transition-all shadow-sm"><EditIcon className="w-4 h-4" /></button>
+          <button onClick={() => onDelete(member)} className="p-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-xl transition-all shadow-sm"><TrashIcon className="w-4 h-4" /></button>
         </div>
       </td>
     </tr>
@@ -138,7 +138,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [initialType, setInitialType] = useState<MemberType>(MemberType.SUBSCRIPTION);
   const [collectAmount, setCollectAmount] = useState<string>('');
-  
+
   // Renewal State
   const [renewalFormData, setRenewalFormData] = useState({
     type: MemberType.SUBSCRIPTION,
@@ -162,8 +162,8 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
 
   const filteredMembers = useMemo(() => {
     let baseList = members;
-    
-    switch(activeTab) {
+
+    switch (activeTab) {
       case 'expiry':
         baseList = members.filter(m => {
           const { remainingDays } = getPlanDates(m);
@@ -183,7 +183,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      baseList = baseList.filter(m => 
+      baseList = baseList.filter(m =>
         m.name.toLowerCase().includes(q) ||
         m.email?.toLowerCase().includes(q) ||
         m.phone.includes(q)
@@ -208,7 +208,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
   const handleOpenRenewModal = (member: Member) => {
     const { endDate } = getPlanDates(member);
     const today = new Date();
-    today.setHours(0,0,0,0);
+    today.setHours(0, 0, 0, 0);
     const suggestedStart = endDate > today ? endDate : today;
 
     setEditingMember(member);
@@ -247,7 +247,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
   const handleCollectSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingMember) return;
-    
+
     const amount = Number(collectAmount);
     const maxAllowed = editingMember.feesAmount - editingMember.paidAmount;
 
@@ -279,7 +279,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
     if (paid === fee && fee > 0) status = PaymentStatus.PAID;
     else if (paid > 0) status = PaymentStatus.PARTIAL;
 
-    onRenewMember(editingMember.id, {
+    onRenewMember(editingMember._id || editingMember.id!, {
       planStart: renewalFormData.startDate,
       planDurationDays: Number(renewalFormData.duration),
       feesAmount: fee,
@@ -293,7 +293,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
 
   const confirmDeletion = () => {
     if (editingMember) {
-      onDeleteMember(editingMember.id);
+      onDeleteMember(editingMember._id || editingMember.id!);
       handleCloseModal();
     }
   };
@@ -308,14 +308,14 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
       {/* Stats Cards */}
       <div className={`grid grid-cols-1 ${isTrainer ? 'sm:grid-cols-2' : 'sm:grid-cols-3'} gap-6`}>
         <div className="bg-white p-7 rounded-3xl shadow-sm border border-slate-100 flex items-center group hover:shadow-xl hover:shadow-brand/5 transition-all">
-          <div className="bg-brand/10 p-4 rounded-2xl border border-brand/20 group-hover:bg-brand group-hover:text-white transition-all"><UserGroupIcon className="h-7 w-7 text-brand group-hover:text-white"/></div>
+          <div className="bg-brand/10 p-4 rounded-2xl border border-brand/20 group-hover:bg-brand group-hover:text-white transition-all"><UserGroupIcon className="h-7 w-7 text-brand group-hover:text-white" /></div>
           <div className="ml-5">
             <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">Active Now</p>
             <p className="text-3xl font-black text-slate-950">{stats.activeMembers}</p>
           </div>
         </div>
         <div className="bg-white p-7 rounded-3xl shadow-sm border border-slate-100 flex items-center group hover:shadow-xl hover:shadow-orange/5 transition-all">
-          <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100 group-hover:bg-orange-500 group-hover:text-white transition-all"><ClockIcon className="h-7 w-7 text-orange-500 group-hover:text-white"/></div>
+          <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100 group-hover:bg-orange-500 group-hover:text-white transition-all"><ClockIcon className="h-7 w-7 text-orange-500 group-hover:text-white" /></div>
           <div className="ml-5">
             <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">Expired List</p>
             <p className="text-3xl font-black text-slate-950">{stats.expiredMembers}</p>
@@ -323,7 +323,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
         </div>
         {!isTrainer && (
           <div className="bg-white p-7 rounded-3xl shadow-sm border border-slate-100 flex items-center group hover:shadow-xl hover:shadow-yellow/5 transition-all">
-            <div className="bg-yellow-50 p-4 rounded-2xl border border-yellow-100 group-hover:bg-yellow-500 group-hover:text-white transition-all"><ExclamationTriangleIcon className="h-7 w-7 text-yellow-500 group-hover:text-white"/></div>
+            <div className="bg-yellow-50 p-4 rounded-2xl border border-yellow-100 group-hover:bg-yellow-500 group-hover:text-white transition-all"><ExclamationTriangleIcon className="h-7 w-7 text-yellow-500 group-hover:text-white" /></div>
             <div className="ml-5">
               <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">Balance Due</p>
               <p className="text-3xl font-black text-slate-950">{stats.duesPending}</p>
@@ -341,7 +341,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
               <button onClick={() => setActiveTab('dues')} className={`${tabClasses('dues')} rounded-xl`}>Unpaid</button>
               <button onClick={() => setActiveTab('passes')} className={`${tabClasses('passes')} rounded-xl`}>Day Pass</button>
             </div>
-            
+
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="relative w-full sm:w-64">
                 <SearchIcon className="absolute left-4 top-4 h-5 w-5 text-slate-400" />
@@ -354,17 +354,17 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
                 />
               </div>
               <div className="flex gap-2">
-                <button 
-                    onClick={() => handleOpenModal(null, MemberType.DAY_PASS)} 
-                    className="flex-1 sm:flex-none flex items-center justify-center px-6 py-4 bg-orange-100 text-orange-800 rounded-2xl font-black uppercase tracking-widest hover:bg-orange-200 transition-all active:scale-95 text-[10px]"
+                <button
+                  onClick={() => handleOpenModal(null, MemberType.DAY_PASS)}
+                  className="flex-1 sm:flex-none flex items-center justify-center px-6 py-4 bg-orange-100 text-orange-800 rounded-2xl font-black uppercase tracking-widest hover:bg-orange-200 transition-all active:scale-95 text-[10px]"
                 >
-                    <TicketIcon className="w-4 h-4 mr-2" /> Day Pass
+                  <TicketIcon className="w-4 h-4 mr-2" /> Day Pass
                 </button>
-                <button 
-                    onClick={() => handleOpenModal(null, MemberType.SUBSCRIPTION)} 
-                    className="flex-1 sm:flex-none flex items-center justify-center px-8 py-4 bg-brand text-charcoal rounded-2xl font-black uppercase tracking-widest hover:bg-brand-400 transition-all shadow-xl shadow-brand/20 active:scale-95 text-[10px]"
+                <button
+                  onClick={() => handleOpenModal(null, MemberType.SUBSCRIPTION)}
+                  className="flex-1 sm:flex-none flex items-center justify-center px-8 py-4 bg-brand text-charcoal rounded-2xl font-black uppercase tracking-widest hover:bg-brand-400 transition-all shadow-xl shadow-brand/20 active:scale-95 text-[10px]"
                 >
-                    <PlusIcon className="w-4 h-4 mr-2" /> New Member
+                  <PlusIcon className="w-4 h-4 mr-2" /> New Member
                 </button>
               </div>
             </div>
@@ -373,18 +373,18 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
 
         {activeTab === 'expiry' && (
           <div className="px-10 py-5 bg-brand/5 flex flex-wrap items-center gap-4 border-y border-brand/10">
-             <span className="text-[10px] font-black text-brand-800 uppercase tracking-widest">Expiration Window</span>
-             <div className="flex gap-2">
-               {[3, 7, 15].map(days => (
-                   <button 
-                      key={days} 
-                      onClick={() => setExpiryFilter(days)} 
-                      className={`px-5 py-2 text-[10px] font-black uppercase rounded-xl border transition-all ${expiryFilter === days ? 'bg-brand text-charcoal border-brand shadow-sm' : 'bg-white text-brand border-brand/20'}`}
-                    >
-                       {days} Days
-                   </button>
-               ))}
-             </div>
+            <span className="text-[10px] font-black text-brand-800 uppercase tracking-widest">Expiration Window</span>
+            <div className="flex gap-2">
+              {[3, 7, 15].map(days => (
+                <button
+                  key={days}
+                  onClick={() => setExpiryFilter(days)}
+                  className={`px-5 py-2 text-[10px] font-black uppercase rounded-xl border transition-all ${expiryFilter === days ? 'bg-brand text-charcoal border-brand shadow-sm' : 'bg-white text-brand border-brand/20'}`}
+                >
+                  {days} Days
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
@@ -401,7 +401,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
             </thead>
             <tbody className="bg-white divide-y divide-slate-50">
               {filteredMembers.map(member => (
-                <MemberRow key={member.id} member={member} onEdit={(m) => handleOpenModal(m)} onDelete={handleOpenDeleteConfirm} onCollect={handleOpenCollectModal} onRenew={handleOpenRenewModal} />
+                <MemberRow key={member._id || member.id} member={member} onEdit={(m) => handleOpenModal(m)} onDelete={handleOpenDeleteConfirm} onCollect={handleOpenCollectModal} onRenew={handleOpenRenewModal} />
               ))}
             </tbody>
           </table>
@@ -421,7 +421,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
                       <div className="flex items-center gap-1.5">
                         <h4 className="font-bold text-slate-950">{member.name}</h4>
                         {member.memberType === MemberType.DAY_PASS && (
-                            <span className="text-[8px] font-black bg-orange-100 text-orange-700 px-1 rounded">PASS</span>
+                          <span className="text-[8px] font-black bg-orange-100 text-orange-700 px-1 rounded">PASS</span>
                         )}
                       </div>
                       <p className="text-xs text-slate-400 font-bold">{member.phone}</p>
@@ -432,19 +432,19 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
                     {balance > 0 && <span className="text-[9px] font-black text-red-600 uppercase">₹{balance} Due</span>}
                   </div>
                 </div>
-                
+
                 <div className="flex justify-between items-center py-4 px-5 bg-slate-50 rounded-2xl border border-slate-100">
                   <div className="text-xs">
-                    <span className="text-slate-400 font-black uppercase text-[9px] tracking-widest block mb-0.5">Expires</span> 
+                    <span className="text-slate-400 font-black uppercase text-[9px] tracking-widest block mb-0.5">Expires</span>
                     <span className="font-black text-slate-800">{endDate.toLocaleDateString()}</span>
                   </div>
                   <div className="flex space-x-2">
-                    <button onClick={() => handleOpenRenewModal(member)} className="bg-slate-900 text-white p-3 rounded-xl shadow-sm active:scale-95 transition-all"><ArrowPathIcon className="w-5 h-5"/></button>
+                    <button onClick={() => handleOpenRenewModal(member)} className="bg-slate-900 text-white p-3 rounded-xl shadow-sm active:scale-95 transition-all"><ArrowPathIcon className="w-5 h-5" /></button>
                     {balance > 0 && (
                       <button onClick={() => handleOpenCollectModal(member)} className="bg-yellow-500 text-white p-3 rounded-xl shadow-sm active:scale-95 transition-all font-black text-xs">₹+</button>
                     )}
-                    <button onClick={() => handleOpenModal(member)} className="bg-white text-slate-600 p-3 rounded-xl border border-slate-200 shadow-sm active:scale-95 transition-all"><EditIcon className="w-5 h-5"/></button>
-                    <button onClick={() => handleOpenDeleteConfirm(member)} className="bg-red-50 text-red-600 p-3 rounded-xl border border-red-100 shadow-sm active:scale-95 transition-all"><TrashIcon className="w-5 h-5"/></button>
+                    <button onClick={() => handleOpenModal(member)} className="bg-white text-slate-600 p-3 rounded-xl border border-slate-200 shadow-sm active:scale-95 transition-all"><EditIcon className="w-5 h-5" /></button>
+                    <button onClick={() => handleOpenDeleteConfirm(member)} className="bg-red-50 text-red-600 p-3 rounded-xl border border-red-100 shadow-sm active:scale-95 transition-all"><TrashIcon className="w-5 h-5" /></button>
                   </div>
                 </div>
               </div>
@@ -454,16 +454,16 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
 
         {filteredMembers.length === 0 && (
           <div className="text-center py-32">
-             <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
-               <UserGroupIcon className="w-8 h-8 text-slate-200" />
-             </div>
-             <p className="text-slate-400 font-black uppercase text-[10px] tracking-widest">No matching records</p>
+            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <UserGroupIcon className="w-8 h-8 text-slate-200" />
+            </div>
+            <p className="text-slate-400 font-black uppercase text-[10px] tracking-widest">No matching records</p>
           </div>
         )}
       </div>
-      
+
       <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingMember ? 'Update Profile' : initialType === MemberType.DAY_PASS ? 'Quick Day Pass' : 'New Member Registration'}>
-          <MemberForm member={editingMember} initialType={initialType} onSubmit={handleFormSubmit} onCancel={handleCloseModal} />
+        <MemberForm member={editingMember} initialType={initialType} onSubmit={handleFormSubmit} onCancel={handleCloseModal} />
       </Modal>
 
       {/* Collect Balance Modal */}
@@ -489,8 +489,8 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
               <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Payment Amount (INR)</label>
               <div className="relative">
                 <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   inputMode="numeric"
                   autoFocus
                   value={collectAmount}
@@ -515,20 +515,20 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
           <form onSubmit={handleRenewalSubmit} className="space-y-6">
             {/* Type Switcher */}
             <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200">
-                <button 
-                    type="button"
-                    onClick={() => setRenewalFormData({...renewalFormData, type: MemberType.SUBSCRIPTION, duration: 30})}
-                    className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${renewalFormData.type === MemberType.SUBSCRIPTION ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                >
-                    Full Subscription
-                </button>
-                <button 
-                    type="button"
-                    onClick={() => setRenewalFormData({...renewalFormData, type: MemberType.DAY_PASS, duration: 1})}
-                    className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${renewalFormData.type === MemberType.DAY_PASS ? 'bg-white text-orange-700 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                >
-                    Day Pass
-                </button>
+              <button
+                type="button"
+                onClick={() => setRenewalFormData({ ...renewalFormData, type: MemberType.SUBSCRIPTION, duration: 30 })}
+                className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${renewalFormData.type === MemberType.SUBSCRIPTION ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+              >
+                Full Subscription
+              </button>
+              <button
+                type="button"
+                onClick={() => setRenewalFormData({ ...renewalFormData, type: MemberType.DAY_PASS, duration: 1 })}
+                className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${renewalFormData.type === MemberType.DAY_PASS ? 'bg-white text-orange-700 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+              >
+                Day Pass
+              </button>
             </div>
 
             {/* Term Display Card */}
@@ -536,22 +536,22 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-3xl"></div>
               <p className="text-[10px] font-black text-white/50 uppercase tracking-widest mb-4">Calculated Coverage</p>
               {(() => {
-                  const start = new Date(renewalFormData.startDate);
-                  const end = new Date(start);
-                  end.setDate(start.getDate() + Number(renewalFormData.duration));
-                  return (
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Starts From</p>
-                        <p className="text-base font-black">{start.toLocaleDateString()}</p>
-                      </div>
-                      <div className="h-px w-10 bg-white/20"></div>
-                      <div className="text-right">
-                        <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Ends On</p>
-                        <p className="text-base font-black text-white">{end.toLocaleDateString()}</p>
-                      </div>
+                const start = new Date(renewalFormData.startDate);
+                const end = new Date(start);
+                end.setDate(start.getDate() + Number(renewalFormData.duration));
+                return (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Starts From</p>
+                      <p className="text-base font-black">{start.toLocaleDateString()}</p>
                     </div>
-                  );
+                    <div className="h-px w-10 bg-white/20"></div>
+                    <div className="text-right">
+                      <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Ends On</p>
+                      <p className="text-base font-black text-white">{end.toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                );
               })()}
             </div>
 
@@ -560,40 +560,40 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
                 {/* Custom Start Date Picker */}
                 <div>
                   <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-2">Effective Start</label>
-                  <input 
+                  <input
                     type="date"
                     value={renewalFormData.startDate}
-                    onChange={(e) => setRenewalFormData({...renewalFormData, startDate: e.target.value})}
+                    onChange={(e) => setRenewalFormData({ ...renewalFormData, startDate: e.target.value })}
                     className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black focus:ring-4 focus:ring-brand/5 outline-none transition-all"
                   />
                 </div>
 
                 {/* Duration Picker */}
                 <div>
-                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-2">Duration</label>
-                    {renewalFormData.type === MemberType.DAY_PASS ? (
-                        <div className="relative">
-                            <input 
-                                type="number"
-                                min="1"
-                                value={renewalFormData.duration}
-                                onChange={(e) => setRenewalFormData({...renewalFormData, duration: Number(e.target.value)})}
-                                className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black focus:ring-4 focus:ring-brand/5 outline-none"
-                            />
-                            <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 uppercase">Days</span>
-                        </div>
-                    ) : (
-                        <select 
-                            value={renewalFormData.duration}
-                            onChange={(e) => setRenewalFormData({...renewalFormData, duration: Number(e.target.value)})}
-                            className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black focus:ring-4 focus:ring-brand/5 outline-none transition-all"
-                        >
-                            <option value={30}>Monthly (30 days)</option>
-                            <option value={90}>Quarterly (90 days)</option>
-                            <option value={180}>Half Yearly (180 days)</option>
-                            <option value={365}>Yearly (365 days)</option>
-                        </select>
-                    )}
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-2">Duration</label>
+                  {renewalFormData.type === MemberType.DAY_PASS ? (
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="1"
+                        value={renewalFormData.duration}
+                        onChange={(e) => setRenewalFormData({ ...renewalFormData, duration: Number(e.target.value) })}
+                        className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black focus:ring-4 focus:ring-brand/5 outline-none"
+                      />
+                      <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 uppercase">Days</span>
+                    </div>
+                  ) : (
+                    <select
+                      value={renewalFormData.duration}
+                      onChange={(e) => setRenewalFormData({ ...renewalFormData, duration: Number(e.target.value) })}
+                      className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black focus:ring-4 focus:ring-brand/5 outline-none transition-all"
+                    >
+                      <option value={30}>Monthly (30 days)</option>
+                      <option value={90}>Quarterly (90 days)</option>
+                      <option value={180}>Half Yearly (180 days)</option>
+                      <option value={365}>Yearly (365 days)</option>
+                    </select>
+                  )}
                 </div>
               </div>
 
@@ -602,11 +602,11 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
                   <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-2">Total Fee (₹)</label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       inputMode="numeric"
                       value={renewalFormData.fee}
-                      onChange={(e) => setRenewalFormData({...renewalFormData, fee: e.target.value.replace(/\D/g, '')})}
+                      onChange={(e) => setRenewalFormData({ ...renewalFormData, fee: e.target.value.replace(/\D/g, '') })}
                       className="w-full pl-8 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black focus:ring-4 focus:ring-brand/5 outline-none"
                     />
                   </div>
@@ -615,11 +615,11 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
                   <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-2">Paid Today (₹)</label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-500 font-bold">₹</span>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       inputMode="numeric"
                       value={renewalFormData.paid}
-                      onChange={(e) => setRenewalFormData({...renewalFormData, paid: e.target.value.replace(/\D/g, '')})}
+                      onChange={(e) => setRenewalFormData({ ...renewalFormData, paid: e.target.value.replace(/\D/g, '') })}
                       className="w-full pl-8 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black text-brand-700 focus:ring-4 focus:ring-brand/5 outline-none"
                     />
                   </div>
@@ -635,9 +635,9 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
         )}
       </Modal>
 
-      <Modal 
-        isOpen={isDeleteModalOpen} 
-        onClose={handleCloseModal} 
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCloseModal}
         title="Confirm Deletion"
       >
         <div className="text-center py-4">
@@ -649,13 +649,13 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
             Deleting <span className="font-bold text-slate-900">{editingMember?.name}</span> will permanently erase their membership profile and payment history. This action cannot be undone.
           </p>
           <div className="flex gap-4">
-            <button 
+            <button
               onClick={handleCloseModal}
               className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-colors"
             >
               Cancel
             </button>
-            <button 
+            <button
               onClick={confirmDeletion}
               className="flex-1 py-4 bg-red-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-red-200 hover:bg-red-700 transition-colors active:scale-95"
             >

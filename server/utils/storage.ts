@@ -16,6 +16,8 @@ export const uploadToR2 = async (file: Express.Multer.File, folder: string = 'me
     const fileExtension = file.originalname.split('.').pop();
     const fileName = `${folder}/${crypto.randomUUID()}.${fileExtension}`;
 
+    console.log(`Uploading to R2: ${fileName}, Size: ${file.size} bytes, Mime: ${file.mimetype}`);
+
     const command = new PutObjectCommand({
         Bucket: process.env.R2_BUCKET,
         Key: fileName,
@@ -23,7 +25,13 @@ export const uploadToR2 = async (file: Express.Multer.File, folder: string = 'me
         ContentType: file.mimetype,
     });
 
-    await r2.send(command);
+    try {
+        await r2.send(command);
+        console.log('R2 Upload completed successfully');
+    } catch (err) {
+        console.error('R2 Upload failed:', err);
+        throw err;
+    }
 
     return `${process.env.R2_PUBLIC_BASE_URL}/${fileName}`;
 };

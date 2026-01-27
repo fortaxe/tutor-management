@@ -1,14 +1,16 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { User, Gym, Member, UserRole, GymStatus, MemberPayment, PaymentStatus, MemberType } from './types';
+import { User, Gym, UserRole, GymStatus } from './types';
 import Login from './pages/Login';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import GymOwnerDashboard from './pages/GymOwnerDashboard';
 import GymEarnings from './pages/GymEarnings';
 import StaffManagement from './pages/StaffManagement';
 import DashboardLayout from './components/DashboardLayout';
+import Toast from './components/Toast';
 import client from './lib/client';
 import { objectToFormData } from './lib/utils';
+import { useMyGym } from './hooks/useMyGym';
 
 const STORAGE_KEY = 'gym_mgmt_session';
 const SESSION_EXPIRY_DAYS = 30;
@@ -16,6 +18,11 @@ const SESSION_EXPIRY_DAYS = 30;
 const App: React.FC = () => {
   const queryClient = useQueryClient();
   const [activeView, setActiveView] = useState<string>('dashboard');
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToast({ message, type });
+  };
 
   // --- Auth State ---
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
@@ -31,6 +38,12 @@ const App: React.FC = () => {
     }
     return null;
   });
+
+  const handleLogout = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    setCurrentUser(null);
+    queryClient.clear();
+  };
 
   // --- Queries ---
   const { data: gyms = [], isLoading: gymsLoading } = useQuery({
@@ -69,6 +82,16 @@ const App: React.FC = () => {
     enabled: !!currentUser?.gymId,
   });
 
+  const { data: myGym, isError: isGymError, error: gymError } = useMyGym(currentUser);
+
+  // useEffect(() => {
+  //   if (isGymError) {
+  //     // If we get an error (like 404) trying to fetch the user's gym, their session is likely invalid/stale data.
+  //     handleLogout();
+  //     showToast('Session invalid. Please login again.', 'error');
+  //   }
+  // }, [isGymError, gymError]);
+
   // --- Mutations ---
   const loginMutation = useMutation({
     mutationFn: async (creds: any) => {
@@ -79,6 +102,9 @@ const App: React.FC = () => {
       const expiry = Date.now() + SESSION_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ user, expiry }));
       setCurrentUser(user);
+    },
+    onError: (error: any) => {
+      showToast('Login failed: Invalid Phone or Password', 'error');
     }
   });
 
@@ -87,7 +113,18 @@ const App: React.FC = () => {
       const res = await client.post('/gyms', { ...gym, password });
       return res.data;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['gyms'] })
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gyms'] });
+      showToast('Gym added successfully', 'success');
+    },
+    onError: (error: any) => {
+      const msg = error.response?.data?.error || error.message;
+      if (msg.includes('duplicate key') || msg.includes('E11000')) {
+        showToast('Gym Owner Phone/ID already exists!', 'error');
+      } else {
+        showToast(`Failed to add gym: ${msg}`, 'error');
+      }
+    }
   });
 
   const updateGymMutation = useMutation({
@@ -95,7 +132,14 @@ const App: React.FC = () => {
       const res = await client.patch(`/gyms/${gym.id}`, { ...gym, password });
       return res.data;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['gyms'] })
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gyms'] });
+      showToast('Gym updated successfully', 'success');
+    },
+    onError: (error: any) => {
+      const msg = error.response?.data?.error || error.message;
+      showToast(`Failed to update gym: ${msg}`, 'error');
+    }
   });
 
   const toggleGymStatusMutation = useMutation({
@@ -123,6 +167,15 @@ const App: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['members'] });
       queryClient.invalidateQueries({ queryKey: ['payments'] });
+      showToast('Member added successfully', 'success');
+    },
+    onError: (error: any) => {
+      const msg = error.response?.data?.error || error.message;
+      if (msg.includes('duplicate key') || msg.includes('E11000')) {
+        showToast('Member with this phone number already exists!', 'error');
+      } else {
+        showToast(`Failed to add member: ${msg}`, 'error');
+      }
     }
   });
 
@@ -137,6 +190,15 @@ const App: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['members'] });
       queryClient.invalidateQueries({ queryKey: ['payments'] });
+      showToast('Member updated successfully', 'success');
+    },
+    onError: (error: any) => {
+      const msg = error.response?.data?.error || error.message;
+      if (msg.includes('duplicate key') || msg.includes('E11000')) {
+        showToast('Update failed: Phone number already in use!', 'error');
+      } else {
+        showToast(`Failed to update member: ${msg}`, 'error');
+      }
     }
   });
 
@@ -165,7 +227,18 @@ const App: React.FC = () => {
       const res = await client.post('/staff', { ...trainerData, gymId: currentUser?.gymId });
       return res.data;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['staff'] })
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['staff'] });
+      showToast('Trainer/Staff added successfully', 'success');
+    },
+    onError: (error: any) => {
+      const msg = error.response?.data?.error || error.message;
+      if (msg.includes('duplicate key') || msg.includes('E11000')) {
+        showToast('Staff with this phone number already exists!', 'error');
+      } else {
+        showToast(`Failed to add staff: ${msg}`, 'error');
+      }
+    }
   });
 
   const updateStaffMutation = useMutation({
@@ -173,7 +246,18 @@ const App: React.FC = () => {
       const res = await client.patch(`/staff/${trainer._id}`, trainer);
       return res.data;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['staff'] })
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['staff'] });
+      showToast('Staff updated successfully', 'success');
+    },
+    onError: (error: any) => {
+      const msg = error.response?.data?.error || error.message;
+      if (msg.includes('duplicate key') || msg.includes('E11000')) {
+        showToast('Staff update failed: Phone number exists!', 'error');
+      } else {
+        showToast(`Failed to update staff: ${msg}`, 'error');
+      }
+    }
   });
 
   const deleteStaffMutation = useMutation({
@@ -185,29 +269,46 @@ const App: React.FC = () => {
   });
 
   // --- Handlers ---
-  const handleLogout = () => {
-    localStorage.removeItem(STORAGE_KEY);
-    setCurrentUser(null);
-    queryClient.clear();
-  };
 
-  if (!currentUser) return <Login onLogin={(creds) => loginMutation.mutate(creds)} />;
+  if (!currentUser) {
+    return (
+      <>
+        <Login onLogin={(creds) => loginMutation.mutate(creds)} />
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        )}
+      </>
+    );
+  }
 
   const isTrainer = currentUser.role === UserRole.TRAINER;
-  const currentGym = gyms.find(g => g.id === currentUser.gymId);
+  const currentGym = myGym || gyms.find(g => g.id === currentUser.gymId);
 
   if (currentUser.role === UserRole.SUPER_ADMIN) {
     return (
-      <SuperAdminDashboard
-        user={currentUser}
-        gyms={gyms}
-        members={members}
-        onLogout={handleLogout}
-        onToggleGymStatus={(id, status) => toggleGymStatusMutation.mutate({ gymId: id, status: status === GymStatus.ACTIVE ? GymStatus.SUSPENDED : GymStatus.ACTIVE })}
-        onDeleteGym={(id) => deleteGymMutation.mutate(id)}
-        onAddGym={(gym, password) => addGymMutation.mutate({ gym, password })}
-        onUpdateGym={(gym, password) => updateGymMutation.mutate({ gym, password })}
-      />
+      <>
+        <SuperAdminDashboard
+          user={currentUser}
+          gyms={gyms}
+          members={members}
+          onLogout={handleLogout}
+          onToggleGymStatus={(id, status) => toggleGymStatusMutation.mutate({ gymId: id, status: status === GymStatus.ACTIVE ? GymStatus.SUSPENDED : GymStatus.ACTIVE })}
+          onDeleteGym={(id) => deleteGymMutation.mutate(id)}
+          onAddGym={(gym, password) => addGymMutation.mutate({ gym, password })}
+          onUpdateGym={(gym, password) => updateGymMutation.mutate({ gym, password })}
+        />
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        )}
+      </>
     );
   }
 
@@ -254,6 +355,13 @@ const App: React.FC = () => {
           <div className="w-2 h-2 bg-brand rounded-full"></div>
           <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Syncing...</span>
         </div>
+      )}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
     </DashboardLayout>
   );

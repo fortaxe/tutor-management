@@ -6,7 +6,7 @@ const memberSchema = new mongoose.Schema({
   gymId: { type: Number, required: true, ref: 'Gym' },
   name: { type: String, required: true },
   email: String,
-  phone: { type: String, required: true },
+  phone: { type: String, required: true, unique: true },
   planStart: { type: String, required: true },
   planDurationDays: { type: Number, required: true },
   feesAmount: { type: Number, required: true },

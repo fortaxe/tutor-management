@@ -45,6 +45,17 @@ app.get('/api/gyms', async (req, res) => {
   }
 });
 
+app.get('/api/gyms/:id', async (req, res) => {
+  try {
+    await connectDB();
+    const gym = await Gym.findOne({ id: req.params.id });
+    if (!gym) return res.status(404).json({ error: 'Gym not found' });
+    res.json(gym);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/gyms', async (req, res) => {
   try {
     const { password, ...gymData } = req.body;

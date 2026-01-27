@@ -236,8 +236,9 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
   };
 
   const handleFormSubmit = (memberData: Omit<Member, 'id'> | Member) => {
-    if ('id' in memberData) {
-      onUpdateMember(memberData);
+    if ('id' in memberData || '_id' in memberData) {
+      // Cast to Member since we know it has an ID, effectively
+      onUpdateMember(memberData as Member);
     } else {
       onAddMember({ ...memberData, gymId: gym.id });
     }
@@ -413,7 +414,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
             const isExpired = remainingDays < 0;
             const balance = member.feesAmount - member.paidAmount;
             return (
-              <div key={member.id} className="p-6 space-y-4 hover:bg-slate-50 transition-colors">
+              <div key={member._id || member.id} className="p-6 space-y-4 hover:bg-slate-50 transition-colors">
                 <div className="flex justify-between items-start">
                   <div className="flex items-center">
                     <MemberAvatar member={member} />

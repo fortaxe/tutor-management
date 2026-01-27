@@ -49,9 +49,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         </a>
 
         <div className="absolute bottom-[20px] md:bottom-[50px] left-4 md:left-12 z-20">
-          <p className="text-slate-500 font-bold text-xs uppercase tracking-normal cursor-pointer">
-            Contact: <span className="text-white">+91 96766 75576</span>
-          </p>
+          <a href="tel:+919676675576" className="text-slate-500 font-bold text-xs uppercase tracking-normal hover:text-brand transition-colors block">
+            Contact: <span className="text-white group-hover:text-brand-300">+91 96766 75576</span>
+          </a>
         </div>
       </div>
 

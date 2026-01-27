@@ -124,6 +124,17 @@ app.get('/api/members', async (req, res) => {
   }
 });
 
+app.get('/api/members/:id', async (req, res) => {
+  try {
+    await connectDB();
+    const member = await Member.findById(req.params.id);
+    if (!member) return res.status(404).json({ error: 'Member not found' });
+    res.json(member);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/members', upload.single('photo'), async (req, res) => {
   try {
     const memberData = { ...req.body };

@@ -3,6 +3,36 @@ import React, { useState, useEffect } from 'react';
 import { Member, PaymentStatus, MemberType } from '../types';
 import CameraCapture from './CameraCapture';
 
+const compressImage = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 600;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > MAX_WIDTH) {
+          height *= MAX_WIDTH / width;
+          width = MAX_WIDTH;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.6));
+      };
+      img.onerror = reject;
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
 interface MemberFormProps {
   member?: Member | null;
   initialType?: MemberType;
@@ -24,6 +54,8 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
     paidToday: '' as string,
     photo: undefined as string | undefined,
   });
+
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (member) {
@@ -81,6 +113,18 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
   const handlePhotoCapture = (imageData: string) => {
     setFormData(prev => ({ ...prev, photo: imageData }));
     setShowCamera(false);
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        const compressed = await compressImage(file);
+        setFormData(prev => ({ ...prev, photo: compressed }));
+      } catch (error) {
+        console.error("Image compression error:", error);
+      }
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -154,10 +198,7 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
       {/* Profile Section */}
       <div className="space-y-5">
         <div className="flex flex-col items-center pb-4">
-          <div
-            onClick={() => setShowCamera(true)}
-            className="relative h-24 w-24 rounded-full border-2 border-dashed border-brand-200 bg-brand-50 flex items-center justify-center cursor-pointer hover:bg-brand-100 transition-colors group overflow-hidden"
-          >
+          <div className="relative h-24 w-24 rounded-full border-2 border-dashed border-brand-200 bg-brand-50 flex items-center justify-center overflow-hidden mb-3">
             {formData.photo ? (
               <img src={formData.photo} alt="Member preview" className="h-full w-full object-cover" />
             ) : (
@@ -168,11 +209,33 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
                 </svg>
               </div>
             )}
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-              <span className="text-white text-[10px] font-black uppercase tracking-tighter">
-                {formData.photo ? 'Change' : 'Capture'}
-              </span>
-            </div>
+          </div>
+
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileSelect}
+            accept="image/*"
+            className="hidden"
+          />
+
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setShowCamera(true)}
+              className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-brand hover:text-charcoal transition-all flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
+              Camera
+            </button>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-brand hover:text-charcoal transition-all flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+              Gallery
+            </button>
           </div>
         </div>
 

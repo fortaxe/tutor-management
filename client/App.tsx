@@ -164,18 +164,40 @@ const App: React.FC = () => {
       const res = await client.post('/members', formData);
       return res.data;
     },
+    onMutate: async (newMember) => {
+      const queryKey = ['members', currentUser?.gymId];
+      await queryClient.cancelQueries({ queryKey });
+      const previousMembers = queryClient.getQueryData(queryKey);
+      queryClient.setQueryData(queryKey, (old: any[]) => [
+        {
+          ...newMember,
+          id: Date.now(),
+          _id: 'temp-' + Date.now(),
+          gymId: currentUser?.gymId,
+          feesAmount: Number(newMember.feesAmount),
+          paidAmount: Number(newMember.paidAmount)
+        },
+        ...(old || [])
+      ]);
+      return { previousMembers };
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['members'] });
-      queryClient.invalidateQueries({ queryKey: ['payments'] });
       showToast('Member added successfully', 'success');
     },
-    onError: (error: any) => {
+    onError: (error: any, newMember, context) => {
+      if (context?.previousMembers) {
+        queryClient.setQueryData(['members', currentUser?.gymId], context.previousMembers);
+      }
       const msg = error.response?.data?.error || error.message;
       if (msg.includes('duplicate key') || msg.includes('E11000')) {
         showToast('Member with this phone number already exists!', 'error');
       } else {
         showToast(`Failed to add member: ${msg}`, 'error');
       }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['members'] });
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
     }
   });
 
@@ -268,6 +290,18 @@ const App: React.FC = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['staff'] })
   });
 
+  const changePasswordMutation = useMutation({
+    mutationFn: async (password: string) => {
+      if (currentUser?.role === UserRole.GYM_OWNER) {
+        await client.patch(`/gyms/${currentUser.gymId}`, { password });
+      } else if (currentUser?.role === UserRole.TRAINER || currentUser?.role === UserRole.SUPER_ADMIN) {
+        await client.patch(`/staff/${currentUser._id}`, { password });
+      }
+    },
+    onSuccess: () => showToast('Password updated successfully', 'success'),
+    onError: (err: any) => showToast('Failed to update password', 'error')
+  });
+
   // --- Handlers ---
 
   if (!currentUser) {
@@ -321,6 +355,7 @@ const App: React.FC = () => {
       pageTitle={effectiveView === 'earnings' ? 'Earnings & Reports' : effectiveView === 'staff' ? 'Staff Management' : currentGym?.name || 'Dashboard'}
       activeView={effectiveView}
       onViewChange={setActiveView}
+      onChangePassword={(pwd) => changePasswordMutation.mutate(pwd)}
     >
       {effectiveView === 'dashboard' && (
         <GymOwnerDashboard

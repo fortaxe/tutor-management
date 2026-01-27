@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { User, Gym, Member, PaymentStatus, UserRole, MemberType } from '../types';
+import client from '../lib/client';
 import Badge from '../components/Badge';
 import Modal from '../components/Modal';
 import MemberForm from '../components/MemberForm';

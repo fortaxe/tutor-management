@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { User, UserRole } from '../types';
 import DumbbellIcon from './icons/DumbbellIcon';
+import Modal from './Modal';
 
 interface DashboardLayoutProps {
   user: User;
@@ -9,20 +10,25 @@ interface DashboardLayoutProps {
   pageTitle: string;
   activeView?: string;
   onViewChange?: (view: string) => void;
+  onChangePassword?: (password: string) => void;
   children: React.ReactNode;
 }
 
-const DashboardLayout: React.FC<DashboardLayoutProps> = ({ 
-  user, 
-  onLogout, 
-  pageTitle, 
-  activeView = 'dashboard', 
+const DashboardLayout: React.FC<DashboardLayoutProps> = ({
+  user,
+  onLogout,
+  pageTitle,
+  activeView = 'dashboard',
   onViewChange,
-  children 
+  onChangePassword,
+  children
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isChangePassOpen, setChangePassOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
 
   const isOwner = user.role === UserRole.GYM_OWNER;
+  const isSuperAdmin = user.role === UserRole.SUPER_ADMIN;
   const isTrainer = user.role === UserRole.TRAINER;
 
   const navItems = (isOwner || isTrainer) ? [
@@ -43,7 +49,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           <DumbbellIcon className="h-6 w-6 text-brand" />
           <h1 className="text-xl font-extrabold tracking-tight">Gym Stack</h1>
         </div>
-        <button 
+        <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           className="p-2 hover:bg-slate-800 rounded-lg focus:outline-none transition-colors"
         >
@@ -68,7 +74,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             <DumbbellIcon className="h-9 w-9 text-brand" />
             <h1 className="text-2xl font-black tracking-tighter uppercase">Gym <span className="text-brand">Stack</span></h1>
           </div>
-          
+
           <nav className="space-y-2">
             <div className="text-[11px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-6 pl-2">Navigation</div>
             {navItems.map(item => (
@@ -78,11 +84,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                   onViewChange?.(item.id);
                   setIsSidebarOpen(false);
                 }}
-                className={`w-full flex items-center space-x-4 px-5 py-3.5 rounded-2xl transition-all font-semibold text-sm ${
-                  activeView === item.id 
-                    ? 'bg-brand text-charcoal shadow-lg shadow-brand/10' 
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-                }`}
+                className={`w-full flex items-center space-x-4 px-5 py-3.5 rounded-2xl transition-all font-semibold text-sm ${activeView === item.id
+                  ? 'bg-brand text-charcoal shadow-lg shadow-brand/10'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                  }`}
               >
                 <span className="text-lg opacity-80">{item.icon}</span>
                 <span>{item.label}</span>
@@ -101,6 +106,17 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               <p className="font-bold text-white truncate text-sm">{user.phone}</p>
             </div>
           </div>
+          {isSuperAdmin && (
+            <button
+              onClick={() => setChangePassOpen(true)}
+              className="w-full mb-3 px-5 py-3 bg-slate-800/50 text-slate-400 border border-slate-700/50 rounded-2xl hover:bg-slate-800 hover:text-white transition-all text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
+              </svg>
+              Change Password
+            </button>
+          )}
           <button
             onClick={onLogout}
             className="w-full px-5 py-3 bg-red-500/10 text-red-400 border border-red-500/20 rounded-2xl hover:bg-red-500 hover:text-white transition-all text-xs font-bold uppercase tracking-widest"
@@ -112,7 +128,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
       {/* Backdrop for mobile */}
       {isSidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-charcoal/80 z-30 lg:hidden transition-opacity backdrop-blur-md"
           onClick={() => setIsSidebarOpen(false)}
         />
@@ -123,12 +139,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         <header className="bg-white border-b border-slate-200/60 p-5 lg:px-10 lg:py-7 flex justify-between items-center sticky top-0 z-10 backdrop-blur-xl bg-white/80">
           <h2 className="text-xl lg:text-2xl font-bold text-slate-950 tracking-tight truncate">{pageTitle}</h2>
           <div className="hidden sm:block">
-             <div className="bg-brand/10 px-4 py-1.5 rounded-full border border-brand/20">
-                <span className="text-[11px] font-bold text-brand-700 uppercase tracking-widest">
-                  {user.role === UserRole.SUPER_ADMIN ? 'Platform Administrator' : 
-                   user.role === UserRole.GYM_OWNER ? 'Gym Manager' : 'Staff Trainer'}
-                </span>
-             </div>
+            <div className="bg-brand/10 px-4 py-1.5 rounded-full border border-brand/20">
+              <span className="text-[11px] font-bold text-brand-700 uppercase tracking-widest">
+                {user.role === UserRole.SUPER_ADMIN ? 'Platform Administrator' :
+                  user.role === UserRole.GYM_OWNER ? 'Gym Manager' : 'Staff Trainer'}
+              </span>
+            </div>
           </div>
         </header>
         <main className="flex-1 overflow-y-auto p-5 lg:p-10">
@@ -137,6 +153,26 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           </div>
         </main>
       </div>
+      <Modal isOpen={isChangePassOpen} onClose={() => { setChangePassOpen(false); setNewPassword(''); }} title="Change Password">
+        <form onSubmit={(e) => { e.preventDefault(); onChangePassword?.(newPassword); setChangePassOpen(false); setNewPassword(''); }} className="space-y-6">
+          <div>
+            <label className="block text-xs font-black text-slate-500 uppercase tracking-widest ml-1 mb-2">New Password</label>
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              required
+              minLength={6}
+              className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-brand/5 outline-none transition-all text-slate-900"
+              placeholder="••••••••"
+            />
+          </div>
+          <div className="flex gap-4 pt-2">
+            <button type="button" onClick={() => { setChangePassOpen(false); setNewPassword(''); }} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-colors">Cancel</button>
+            <button type="submit" className="flex-1 py-4 bg-charcoal text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-charcoal/20 active:scale-95 transition-all">Update</button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

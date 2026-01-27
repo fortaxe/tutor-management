@@ -20,15 +20,15 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState<User | null>(null);
-  const [formData, setFormData] = useState({ phone: '', password: '' });
+  const [formData, setFormData] = useState({ name: '', phone: '', password: '' });
 
   const handleOpenModal = (member?: User) => {
     if (member) {
       setEditingStaff(member);
-      setFormData({ phone: member.phone, password: '' });
+      setFormData({ name: member.name || '', phone: member.phone, password: '' });
     } else {
       setEditingStaff(null);
-      setFormData({ phone: '', password: '' });
+      setFormData({ name: '', phone: '', password: '' });
     }
     setIsModalOpen(true);
   };
@@ -54,18 +54,20 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
     if (editingStaff) {
       onUpdateTrainer({
         ...editingStaff,
+        name: formData.name,
         phone: formData.phone,
         password: formData.password.trim() || editingStaff.password,
       });
     } else {
       onAddTrainer({
+        name: formData.name,
         phone: formData.phone,
         password: formData.password,
         gymId: gym.id
       });
     }
-    
-    setFormData({ phone: '', password: '' });
+
+    setFormData({ name: '', phone: '', password: '' });
     handleCloseModals();
   };
 
@@ -83,7 +85,7 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
           <h3 className="text-sm font-black text-slate-950 uppercase tracking-[0.2em] mb-1">Team Roster</h3>
           <p className="text-xs text-slate-400 font-bold">Manage credentials for your trainers and staff.</p>
         </div>
-        <button 
+        <button
           onClick={() => handleOpenModal()}
           className="flex items-center px-6 py-3.5 bg-brand text-charcoal rounded-2xl font-black uppercase tracking-widest hover:bg-brand-400 transition-all shadow-xl shadow-brand/20 active:scale-95 text-[10px]"
         >
@@ -106,34 +108,37 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
                 )}
               </div>
             </div>
-            
+
             <div className="space-y-1 mb-6">
-              <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Login Phone</p>
-              <p className="text-lg font-black text-slate-950 tracking-tight">{member.phone}</p>
+              {member.name && <h4 className="font-bold text-slate-900">{member.name}</h4>}
+              <div>
+                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Login Phone</p>
+                <p className="text-lg font-black text-slate-950 tracking-tight">{member.phone}</p>
+              </div>
             </div>
 
             <div className="flex justify-end items-center pt-4 border-t border-slate-50">
-               {member.role !== UserRole.GYM_OWNER && (
-                 <div className="flex space-x-2">
-                   <button 
+              {member.role !== UserRole.GYM_OWNER && (
+                <div className="flex space-x-2">
+                  <button
                     onClick={() => handleOpenModal(member)}
                     className="p-2 text-slate-400 hover:text-brand hover:bg-brand/5 rounded-xl transition-all flex items-center gap-1 text-[10px] font-bold uppercase"
                     title="Edit Credentials"
-                   >
-                     <EditIcon className="w-4 h-4" /> Edit
-                   </button>
-                   <button 
+                  >
+                    <EditIcon className="w-4 h-4" /> Edit
+                  </button>
+                  <button
                     onClick={() => handleOpenDeleteConfirm(member)}
                     className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all flex items-center gap-1 text-[10px] font-bold uppercase"
                     title="Remove Account"
-                   >
-                     <TrashIcon className="w-4 h-4" /> Remove
-                   </button>
-                 </div>
-               )}
-               {member.role === UserRole.GYM_OWNER && (
-                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest italic">Primary Account</span>
-               )}
+                  >
+                    <TrashIcon className="w-4 h-4" /> Remove
+                  </button>
+                </div>
+              )}
+              {member.role === UserRole.GYM_OWNER && (
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest italic">Primary Account</span>
+              )}
             </div>
           </div>
         ))}
@@ -143,10 +148,22 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="bg-brand/5 p-4 rounded-2xl border border-brand/10 mb-2">
             <p className="text-xs text-brand-800 font-medium leading-relaxed italic">
-              {editingStaff 
+              {editingStaff
                 ? "Update login phone number or reset the staff member's password. Leave password blank if you don't want to change it."
                 : "Add professional staff members to help manage client registrations and renewals. They will not be able to see your earnings."}
             </p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-xs font-black text-slate-600 uppercase tracking-widest ml-1">Staff Name</label>
+            <input
+              type="text"
+              required
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand focus:outline-none font-bold text-slate-900"
+              placeholder="e.g. John Doe"
+            />
           </div>
 
           <div className="space-y-2">
@@ -156,7 +173,7 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
               required
               maxLength={10}
               value={formData.phone}
-              onChange={(e) => setFormData({...formData, phone: e.target.value.replace(/\D/g, '')})}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '') })}
               className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand focus:outline-none font-bold text-slate-900"
               placeholder="10-digit login number"
             />
@@ -170,22 +187,22 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
               type="text"
               required={!editingStaff}
               value={formData.password}
-              onChange={(e) => setFormData({...formData, password: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand focus:outline-none text-slate-900 font-bold"
               placeholder={editingStaff ? "Enter new password if resetting" : "e.g. TrainerPass123"}
             />
           </div>
 
           <div className="flex gap-4 pt-4">
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={handleCloseModals}
               className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-colors"
             >
               Cancel
             </button>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="flex-1 py-4 bg-brand text-charcoal rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-brand/20 hover:scale-[1.02] active:scale-95 transition-all"
             >
               {editingStaff ? "Update Credentials" : "Create Account"}
@@ -194,9 +211,9 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
         </form>
       </Modal>
 
-      <Modal 
-        isOpen={isDeleteModalOpen} 
-        onClose={handleCloseModals} 
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCloseModals}
         title="Confirm Deletion"
       >
         <div className="text-center py-4">
@@ -208,13 +225,13 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
             Removing the account for <span className="font-bold text-slate-900">{editingStaff?.phone}</span> will immediately revoke their access to this gym dashboard.
           </p>
           <div className="flex gap-4">
-            <button 
+            <button
               onClick={handleCloseModals}
               className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-colors"
             >
               Cancel
             </button>
-            <button 
+            <button
               onClick={confirmDeletion}
               className="flex-1 py-4 bg-red-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-red-200 hover:bg-red-700 transition-colors active:scale-95"
             >

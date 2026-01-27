@@ -4,6 +4,7 @@ import { UserRole } from '../types';
 
 const userSchema = new mongoose.Schema({
   phone: { type: String, required: true, unique: true },
+  name: { type: String },
   password: { type: String, required: true },
   role: { type: String, enum: Object.values(UserRole), required: true },
   gymId: { type: Number, ref: 'Gym' },

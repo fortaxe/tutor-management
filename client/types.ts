@@ -9,6 +9,7 @@ export interface User {
   _id?: string;
   id?: number;
   phone: string;
+  name?: string;
   password?: string;
   role: UserRole;
   gymId?: number;

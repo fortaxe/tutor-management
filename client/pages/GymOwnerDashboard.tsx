@@ -358,7 +358,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
       </div>
 
       <div className="bg-white rounded-xl md:rounded-[2.5rem] shadow-sm border border-slate-200/60 overflow-hidden">
-        <div className="p-4 md:p-8 lg:p-10 space-y-4 md:space-y-8">
+        <div className="p-4 md:p-4 space-y-4 md:space-y-8">
           <div className="flex flex-col xl:flex-row justify-between xl:items-center space-y-4 xl:space-y-0">
             <div className="flex bg-slate-100/80 p-1.5 rounded-xl md:rounded-2xl w-full xl:max-w-xl overflow-x-auto no-scrollbar border border-slate-200/50">
               <button onClick={() => setActiveTab('members')} className={`${tabClasses('members')} rounded-xl min-w-fit`}>All</button>
@@ -369,31 +369,35 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative w-full sm:w-64">
-                <SearchIcon className="absolute left-4 top-4 h-5 w-5 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Quick Search..."
-                  className="block w-full pl-11 pr-4 py-4 border border-slate-200 bg-slate-50/50 rounded-xl md:rounded-2xl placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-brand/5 focus:border-brand transition-all text-sm font-semibold"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
+
               <div className="flex gap-2">
                 <button
                   onClick={() => handleOpenModal(null, MemberType.DAY_PASS)}
-                  className="flex-1 sm:flex-none flex items-center justify-center px-6 py-4 bg-orange-100 text-orange-800 rounded-2xl font-black  tracking-widest hover:bg-orange-200 transition-all active:scale-95 text-[10px]"
+                  className="flex-1 sm:flex-none flex items-center justify-center px-4 py-2 bg-orange-100 text-orange-800 rounded-2xl font-black  tracking-normal font-medium hover:bg-orange-200 transition-all active:scale-95 text-[12px] md:text-[14px]"
                 >
                   <TicketIcon className="w-4 h-4 mr-2" /> Day Pass
                 </button>
                 <button
                   onClick={() => handleOpenModal(null, MemberType.SUBSCRIPTION)}
-                  className="flex-1 sm:flex-none flex items-center justify-center px-8 py-4 bg-brand text-charcoal rounded-2xl font-black  tracking-widest hover:bg-brand-400 transition-all shadow-xl shadow-brand/20 active:scale-95 text-[10px]"
+                  className="flex-1 sm:flex-none flex items-center justify-center px-4 py-2 bg-brand text-charcoal rounded-2xl font-black  tracking-normal font-medium hover:bg-brand-400 transition-all shadow-xl shadow-brand/20 active:scale-95 text-[12px] md:text-[14px]"
                 >
                   <PlusIcon className="w-4 h-4 mr-2" /> New Member
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+
+        <div className="w-full sm:max-w-md sm:ml-auto px-4 pb-4">
+          <div className="relative">
+            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 z-10" />
+            <input
+              type="text"
+              placeholder="Quick Search..."
+              className="block w-full pl-11 pr-4 py-3 border border-slate-200 bg-slate-50/50 rounded-xl md:rounded-2xl placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-brand/5 focus:border-brand transition-all text-sm font-semibold"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
         </div>
 

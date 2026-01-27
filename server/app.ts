@@ -117,7 +117,8 @@ app.get('/api/members', async (req, res) => {
   try {
     const { gymId } = req.query;
     await connectDB();
-    const members = await Member.find({ gymId }).sort({ createdAt: -1 });
+    const filter = (gymId && gymId !== 'undefined') ? { gymId } : {};
+    const members = await Member.find(filter).sort({ createdAt: -1 });
     res.json(members);
   } catch (error: any) {
     res.status(500).json({ error: error.message });

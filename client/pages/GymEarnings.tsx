@@ -25,7 +25,7 @@ const GymEarnings: React.FC<GymEarningsProps> = ({ gym, members, payments }) => 
         return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
       })
       .reduce((acc, p) => acc + p.amount, 0);
-    
+
     // Sum of all pending balances
     const pendingDues = members
       .reduce((acc, m) => acc + (m.feesAmount - m.paidAmount), 0);
@@ -41,17 +41,17 @@ const GymEarnings: React.FC<GymEarningsProps> = ({ gym, members, payments }) => 
       groups[key] = (groups[key] || 0) + p.amount;
     });
     return Object.entries(groups).sort((a, b) => {
-        const dateA = new Date(a[0]);
-        const dateB = new Date(b[0]);
-        return dateB.getTime() - dateA.getTime();
+      const dateA = new Date(a[0]);
+      const dateB = new Date(b[0]);
+      return dateB.getTime() - dateA.getTime();
     });
   }, [payments]);
 
   const filteredTransactions = useMemo(() => {
     const q = searchQuery.toLowerCase();
     return payments
-      .filter(p => 
-        p.memberName.toLowerCase().includes(q) || 
+      .filter(p =>
+        p.memberName.toLowerCase().includes(q) ||
         p.note.toLowerCase().includes(q)
       )
       .sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
@@ -69,7 +69,7 @@ const GymEarnings: React.FC<GymEarningsProps> = ({ gym, members, payments }) => 
             <span className="text-4xl font-black text-white tracking-tight">{stats.totalEarnings.toLocaleString()}</span>
           </div>
         </div>
-        
+
         <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col justify-between relative group hover:shadow-xl hover:shadow-brand/5 transition-all">
           <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Collected This Month</p>
           <div>
@@ -121,14 +121,14 @@ const GymEarnings: React.FC<GymEarningsProps> = ({ gym, members, payments }) => 
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 px-2">
             <h3 className="text-sm font-black text-slate-950 uppercase tracking-[0.2em]">Recent Inflow</h3>
             <div className="relative w-full sm:w-72">
-                <SearchIcon className="absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
-                <input 
-                  type="text" 
-                  placeholder="Filter by member..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-11 pr-5 py-3 bg-white border border-slate-200 rounded-2xl text-xs font-semibold focus:ring-4 focus:ring-brand/5 focus:border-brand outline-none shadow-sm transition-all"
-                />
+              <SearchIcon className="absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Filter by member..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-11 pr-5 py-3 bg-white border border-slate-200 rounded-2xl text-xs font-semibold focus:ring-4 focus:ring-brand/5 focus:border-brand outline-none shadow-sm transition-all"
+              />
             </div>
           </div>
 
@@ -186,10 +186,10 @@ const GymEarnings: React.FC<GymEarningsProps> = ({ gym, members, payments }) => 
 
             {filteredTransactions.length === 0 && (
               <div className="p-32 text-center">
-                 <div className="w-16 h-16 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                   <SearchIcon className="w-6 h-6 text-slate-200" />
-                 </div>
-                 <p className="text-slate-400 font-black uppercase text-[10px] tracking-widest">No matching records found</p>
+                <div className="w-16 h-16 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                  <SearchIcon className="w-6 h-6 text-slate-200" />
+                </div>
+                <p className="text-slate-400 font-black uppercase text-[10px] tracking-widest">No matching records found</p>
               </div>
             )}
           </div>

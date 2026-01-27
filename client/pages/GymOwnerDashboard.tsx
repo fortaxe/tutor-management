@@ -15,6 +15,12 @@ import SearchIcon from '../components/icons/SearchIcon';
 import ArrowPathIcon from '../components/icons/ArrowPathIcon';
 import TicketIcon from '../components/icons/TicketIcon';
 
+const WhatsAppIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+  </svg>
+);
+
 interface GymOwnerDashboardProps {
   user: User;
   gym: Gym;
@@ -26,7 +32,7 @@ interface GymOwnerDashboardProps {
   onDeleteMember: (memberId: string | number) => void;
 }
 
-type Tab = 'members' | 'expiry' | 'dues' | 'passes';
+type Tab = 'members' | 'expiry' | 'expired' | 'dues' | 'passes';
 
 const getPlanDates = (member: Member) => {
   if (!member) return { startDate: new Date(), endDate: new Date(), remainingDays: 0 };
@@ -62,11 +68,19 @@ const MemberRow: React.FC<{
   onEdit: (member: Member) => void,
   onDelete: (member: Member) => void,
   onCollect: (member: Member) => void,
-  onRenew: (member: Member) => void
-}> = ({ member, onEdit, onDelete, onCollect, onRenew }) => {
+  onRenew: (member: Member) => void,
+  activeTab: string
+}> = ({ member, onEdit, onDelete, onCollect, onRenew, activeTab }) => {
   const { endDate, remainingDays } = getPlanDates(member);
   const isExpired = remainingDays < 0;
   const balance = member.feesAmount - member.paidAmount;
+
+  const handleWhatsApp = () => {
+    const text = isExpired
+      ? `Hello ${member.name}, your gym membership has expired on ${endDate.toLocaleDateString()}. Please renew to continue your workout.`
+      : `Hello ${member.name}, your gym membership is ending in ${remainingDays} days. Please renew to continue your workout.`;
+    window.open(`https://wa.me/91${member.phone}?text=${encodeURIComponent(text)}`, '_blank');
+  };
 
   return (
     <tr className="hover:bg-slate-50 transition-colors group">
@@ -113,6 +127,11 @@ const MemberRow: React.FC<{
       </td>
       <td className="px-8 py-5 whitespace-nowrap text-right text-sm font-medium">
         <div className="flex items-center justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          {(activeTab === 'expiry' || activeTab === 'expired') && (
+            <button onClick={handleWhatsApp} className="p-2 bg-green-500 text-white hover:bg-green-600 rounded-xl transition-all shadow-sm" title="Send WhatsApp Reminder">
+              <WhatsAppIcon className="w-4 h-4" />
+            </button>
+          )}
           <button onClick={() => onRenew(member)} className="p-2 bg-slate-900 text-white hover:bg-black rounded-xl transition-all shadow-sm" title="New Plan / Renew">
             <ArrowPathIcon className="w-4 h-4" />
           </button>
@@ -176,6 +195,9 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
         break;
       case 'passes':
         baseList = members.filter(m => m.memberType === MemberType.DAY_PASS);
+        break;
+      case 'expired':
+        baseList = members.filter(m => getPlanDates(m).remainingDays < 0);
         break;
       case 'members':
       default:
@@ -306,42 +328,44 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
   `;
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="md:space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Stats Cards */}
-      <div className={`grid grid-cols-1 ${isTrainer ? 'sm:grid-cols-2' : 'sm:grid-cols-3'} gap-6`}>
-        <div className="bg-white p-7 rounded-3xl shadow-sm border border-slate-100 flex items-center group hover:shadow-xl hover:shadow-brand/5 transition-all">
-          <div className="bg-brand/10 p-4 rounded-2xl border border-brand/20 group-hover:bg-brand group-hover:text-white transition-all"><UserGroupIcon className="h-7 w-7 text-brand group-hover:text-white" /></div>
-          <div className="ml-5">
-            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">Active Now</p>
-            <p className="text-3xl font-black text-slate-950">{stats.activeMembers}</p>
+      {/* Stats Cards */}
+      <div className={`flex overflow-x-auto pb-4 gap-4 snap-x snap-mandatory no-scrollbar sm:grid sm:pb-0 sm:gap-6 ${isTrainer ? 'sm:grid-cols-2' : 'sm:grid-cols-3'}`}>
+        <div className="bg-white p-4 sm:p-7 flex-shrink-0 snap-center  rounded-xl md:rounded-3xl shadow-sm border border-slate-100 flex items-center group hover:shadow-xl hover:shadow-brand/5 transition-all">
+          <div className="bg-brand/10 p-3 sm:p-4 rounded-2xl border border-brand/20 group-hover:bg-brand group-hover:text-white transition-all"><UserGroupIcon className="h-6 w-6 sm:h-7 sm:w-7 text-brand group-hover:text-white" /></div>
+          <div className="ml-4 sm:ml-5">
+            <p className="text-[10px] sm:text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">Active Now</p>
+            <p className="text-2xl sm:text-3xl font-black text-slate-950">{stats.activeMembers}</p>
           </div>
         </div>
-        <div className="bg-white p-7 rounded-3xl shadow-sm border border-slate-100 flex items-center group hover:shadow-xl hover:shadow-orange/5 transition-all">
-          <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100 group-hover:bg-orange-500 group-hover:text-white transition-all"><ClockIcon className="h-7 w-7 text-orange-500 group-hover:text-white" /></div>
-          <div className="ml-5">
-            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">Expired List</p>
-            <p className="text-3xl font-black text-slate-950">{stats.expiredMembers}</p>
+        <div className="bg-white p-4 sm:p-7 flex-shrink-0 snap-center  rounded-xl md:rounded-3xl shadow-sm border border-slate-100 flex items-center group hover:shadow-xl hover:shadow-orange/5 transition-all">
+          <div className="bg-orange-50 p-3 sm:p-4 rounded-2xl border border-orange-100 group-hover:bg-orange-500 group-hover:text-white transition-all"><ClockIcon className="h-6 w-6 sm:h-7 sm:w-7 text-orange-500 group-hover:text-white" /></div>
+          <div className="ml-4 sm:ml-5">
+            <p className="text-[10px] sm:text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">Expired List</p>
+            <p className="text-2xl sm:text-3xl font-black text-slate-950">{stats.expiredMembers}</p>
           </div>
         </div>
         {!isTrainer && (
-          <div className="bg-white p-7 rounded-3xl shadow-sm border border-slate-100 flex items-center group hover:shadow-xl hover:shadow-yellow/5 transition-all">
-            <div className="bg-yellow-50 p-4 rounded-2xl border border-yellow-100 group-hover:bg-yellow-500 group-hover:text-white transition-all"><ExclamationTriangleIcon className="h-7 w-7 text-yellow-500 group-hover:text-white" /></div>
-            <div className="ml-5">
-              <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">Balance Due</p>
-              <p className="text-3xl font-black text-slate-950">{stats.duesPending}</p>
+          <div className="bg-white p-4 sm:p-7 flex-shrink-0 snap-center rounded-3xl shadow-sm border border-slate-100 flex items-center group hover:shadow-xl hover:shadow-yellow/5 transition-all">
+            <div className="bg-yellow-50 p-3 sm:p-4 rounded-2xl border border-yellow-100 group-hover:bg-yellow-500 group-hover:text-white transition-all"><ExclamationTriangleIcon className="h-6 w-6 sm:h-7 sm:w-7 text-yellow-500 group-hover:text-white" /></div>
+            <div className="ml-4 sm:ml-5">
+              <p className="text-[10px] sm:text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">Balance Due</p>
+              <p className="text-2xl sm:text-3xl font-black text-slate-950">{stats.duesPending}</p>
             </div>
           </div>
         )}
       </div>
 
-      <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200/60 overflow-hidden">
-        <div className="p-8 lg:p-10 space-y-8">
-          <div className="flex flex-col xl:flex-row justify-between xl:items-center space-y-6 xl:space-y-0">
-            <div className="flex bg-slate-100/80 p-1.5 rounded-2xl w-full xl:max-w-xl overflow-hidden border border-slate-200/50">
-              <button onClick={() => setActiveTab('members')} className={`${tabClasses('members')} rounded-xl`}>All</button>
-              <button onClick={() => setActiveTab('expiry')} className={`${tabClasses('expiry')} rounded-xl`}>Expiring</button>
-              <button onClick={() => setActiveTab('dues')} className={`${tabClasses('dues')} rounded-xl`}>Unpaid</button>
-              <button onClick={() => setActiveTab('passes')} className={`${tabClasses('passes')} rounded-xl`}>Day Pass</button>
+      <div className="bg-white rounded-xl md:rounded-[2.5rem] shadow-sm border border-slate-200/60 overflow-hidden">
+        <div className="p-4 md:p-8 lg:p-10 space-y-4 md:space-y-8">
+          <div className="flex flex-col xl:flex-row justify-between xl:items-center space-y-4 xl:space-y-0">
+            <div className="flex bg-slate-100/80 p-1.5 rounded-xl md:rounded-2xl w-full xl:max-w-xl overflow-x-auto no-scrollbar border border-slate-200/50">
+              <button onClick={() => setActiveTab('members')} className={`${tabClasses('members')} rounded-xl min-w-fit`}>All</button>
+              <button onClick={() => setActiveTab('expiry')} className={`${tabClasses('expiry')} rounded-xl min-w-fit`}>Expiring</button>
+              <button onClick={() => setActiveTab('expired')} className={`${tabClasses('expired')} rounded-xl min-w-fit`}>Expired</button>
+              <button onClick={() => setActiveTab('dues')} className={`${tabClasses('dues')} rounded-xl min-w-fit`}>Unpaid</button>
+              <button onClick={() => setActiveTab('passes')} className={`${tabClasses('passes')} rounded-xl min-w-fit`}>Day Pass</button>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
@@ -350,7 +374,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
                 <input
                   type="text"
                   placeholder="Quick Search..."
-                  className="block w-full pl-11 pr-4 py-4 border border-slate-200 bg-slate-50/50 rounded-2xl placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-brand/5 focus:border-brand transition-all text-sm font-semibold"
+                  className="block w-full pl-11 pr-4 py-4 border border-slate-200 bg-slate-50/50 rounded-xl md:rounded-2xl placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-brand/5 focus:border-brand transition-all text-sm font-semibold"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -358,13 +382,13 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
               <div className="flex gap-2">
                 <button
                   onClick={() => handleOpenModal(null, MemberType.DAY_PASS)}
-                  className="flex-1 sm:flex-none flex items-center justify-center px-6 py-4 bg-orange-100 text-orange-800 rounded-2xl font-black uppercase tracking-widest hover:bg-orange-200 transition-all active:scale-95 text-[10px]"
+                  className="flex-1 sm:flex-none flex items-center justify-center px-6 py-4 bg-orange-100 text-orange-800 rounded-2xl font-black  tracking-widest hover:bg-orange-200 transition-all active:scale-95 text-[10px]"
                 >
                   <TicketIcon className="w-4 h-4 mr-2" /> Day Pass
                 </button>
                 <button
                   onClick={() => handleOpenModal(null, MemberType.SUBSCRIPTION)}
-                  className="flex-1 sm:flex-none flex items-center justify-center px-8 py-4 bg-brand text-charcoal rounded-2xl font-black uppercase tracking-widest hover:bg-brand-400 transition-all shadow-xl shadow-brand/20 active:scale-95 text-[10px]"
+                  className="flex-1 sm:flex-none flex items-center justify-center px-8 py-4 bg-brand text-charcoal rounded-2xl font-black  tracking-widest hover:bg-brand-400 transition-all shadow-xl shadow-brand/20 active:scale-95 text-[10px]"
                 >
                   <PlusIcon className="w-4 h-4 mr-2" /> New Member
                 </button>
@@ -377,7 +401,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
           <div className="px-10 py-5 bg-brand/5 flex flex-wrap items-center gap-4 border-y border-brand/10">
             <span className="text-[10px] font-black text-brand-800 uppercase tracking-widest">Expiration Window</span>
             <div className="flex gap-2">
-              {[3, 7, 15].map(days => (
+              {[3, 7].map(days => (
                 <button
                   key={days}
                   onClick={() => setExpiryFilter(days)}
@@ -403,7 +427,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
             </thead>
             <tbody className="bg-white divide-y divide-slate-50">
               {filteredMembers.map(member => (
-                <MemberRow key={member._id || member.id} member={member} onEdit={(m) => handleOpenModal(m)} onDelete={handleOpenDeleteConfirm} onCollect={handleOpenCollectModal} onRenew={handleOpenRenewModal} />
+                <MemberRow key={member._id || member.id} member={member} onEdit={(m) => handleOpenModal(m)} onDelete={handleOpenDeleteConfirm} onCollect={handleOpenCollectModal} onRenew={handleOpenRenewModal} activeTab={activeTab} />
               ))}
             </tbody>
           </table>
@@ -429,18 +453,36 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
                       <p className="text-xs text-slate-400 font-bold">{member.phone}</p>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end space-y-2">
-                    {isExpired ? <Badge color="red">Expired</Badge> : <span className="text-[10px] font-black text-brand-700 uppercase bg-brand/10 px-3 py-1 rounded-lg">{remainingDays}d</span>}
+                  <div className="flex flex-col items-end space-y-2 text-right">
+                    {isExpired ? <Badge color="red">Expired</Badge> : (
+                      <div className="flex flex-col items-end">
+                        <span className="text-[10px] font-black text-brand-700 uppercase bg-brand/10 px-3 py-1 rounded-lg mb-1">{remainingDays}d Left</span>
+                        <span className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter">Exp: {endDate.toLocaleDateString()}</span>
+                      </div>
+                    )}
                     {balance > 0 && <span className="text-[9px] font-black text-red-600 uppercase">₹{balance} Due</span>}
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center py-4 px-5 bg-slate-50 rounded-2xl border border-slate-100">
-                  <div className="text-xs">
+                <div className="flex justify-end md:justify-between items-center py-4 px-5 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div className="text-xs hidden md:block">
                     <span className="text-slate-400 font-black uppercase text-[9px] tracking-widest block mb-0.5">Expires</span>
                     <span className="font-black text-slate-800">{endDate.toLocaleDateString()}</span>
                   </div>
                   <div className="flex space-x-2">
+                    {(activeTab === 'expiry' || activeTab === 'expired') && (
+                      <button
+                        onClick={() => {
+                          const text = isExpired
+                            ? `Hello ${member.name}, your gym membership has expired on ${endDate.toLocaleDateString()}. Please renew to continue your workout.`
+                            : `Hello ${member.name}, your gym membership is ending in ${remainingDays} days. Please renew to continue your workout.`;
+                          window.open(`https://wa.me/91${member.phone}?text=${encodeURIComponent(text)}`, '_blank');
+                        }}
+                        className="bg-green-500 text-white p-3 rounded-xl shadow-sm active:scale-95 transition-all"
+                      >
+                        <WhatsAppIcon className="w-5 h-5" />
+                      </button>
+                    )}
                     <button onClick={() => handleOpenRenewModal(member)} className="bg-slate-900 text-white p-3 rounded-xl shadow-sm active:scale-95 transition-all"><ArrowPathIcon className="w-5 h-5" /></button>
                     {balance > 0 && (
                       <button onClick={() => handleOpenCollectModal(member)} className="bg-yellow-500 text-white p-3 rounded-xl shadow-sm active:scale-95 transition-all font-black text-xs">₹+</button>

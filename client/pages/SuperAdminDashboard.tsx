@@ -26,11 +26,11 @@ interface SuperAdminDashboardProps {
   onUpdateGym: (gym: Gym, password?: string) => void;
 }
 
-const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ 
-  user, 
-  gyms, 
-  members, 
-  onLogout, 
+const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
+  user,
+  gyms,
+  members,
+  onLogout,
   onToggleGymStatus,
   onDeleteGym,
   onAddGym,
@@ -49,7 +49,7 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
   }, [gyms]);
 
   const filteredGyms = useMemo(() => {
-    return gyms.filter(gym => 
+    return gyms.filter(gym =>
       gym.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       gym.ownerPhone.includes(searchQuery)
     );
@@ -179,8 +179,8 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
               <h3 className="text-lg font-bold text-gray-900">Gym Subscriptions Ledger</h3>
               <p className="text-xs text-gray-500 mt-0.5 font-medium">Manage subscriptions and offline records</p>
             </div>
-            <button 
-              onClick={handleOpenAddModal} 
+            <button
+              onClick={handleOpenAddModal}
               className="w-full sm:w-auto flex justify-center items-center px-4 py-2 bg-brand-600 text-white text-sm font-bold rounded-lg hover:bg-brand-700 transition-colors shadow-sm"
             >
               <PlusIcon className="w-5 h-5 mr-1.5" /> Add Gym
@@ -234,7 +234,7 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-extrabold text-green-700">₹{gym.totalPaidAmount.toLocaleString()}</div>
-                    <button 
+                    <button
                       onClick={() => handleOpenHistoryModal(gym)}
                       className="text-[10px] text-brand-600 hover:text-brand-800 font-bold uppercase tracking-tighter flex items-center mt-1"
                     >
@@ -242,7 +242,7 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
                     </button>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                    <button 
+                    <button
                       onClick={() => handleOpenPaymentModal(gym)}
                       className="inline-flex items-center px-2.5 py-1 bg-green-50 text-green-700 border border-green-200 rounded-md hover:bg-green-100 transition-colors font-bold text-xs"
                       title="Record New Payment"
@@ -254,14 +254,13 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
                     </button>
                     <button
                       onClick={() => onToggleGymStatus(gym.id, gym.status)}
-                      className={`px-3 py-1 text-[10px] font-bold uppercase rounded-md border ${
-                        gym.status === GymStatus.ACTIVE ? 'border-red-100 text-red-600 hover:bg-red-50' : 'border-green-100 text-green-600 hover:bg-green-50'
-                      }`}
+                      className={`px-3 py-1 text-[10px] font-bold uppercase rounded-md border ${gym.status === GymStatus.ACTIVE ? 'border-red-100 text-red-600 hover:bg-red-50' : 'border-green-100 text-green-600 hover:bg-green-50'
+                        }`}
                     >
                       {gym.status === GymStatus.ACTIVE ? 'Suspend' : 'Activate'}
                     </button>
-                    <button 
-                      onClick={() => handleOpenDeleteConfirm(gym)} 
+                    <button
+                      onClick={() => handleOpenDeleteConfirm(gym)}
                       className="text-red-400 hover:text-red-600 transition-colors"
                       title="Delete Gym"
                     >
@@ -287,7 +286,7 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
                   {subscriptionStatusBadge(gym.subscriptionStatus)}
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded-lg border border-gray-100">
                 <div>
                   <p className="text-[10px] text-gray-400 font-bold uppercase">Expires</p>
@@ -300,32 +299,32 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
               </div>
 
               <div className="flex items-center justify-between pt-1">
-                 <button 
-                    onClick={() => handleOpenHistoryModal(gym)}
-                    className="text-[10px] text-brand-600 font-bold uppercase tracking-tighter flex items-center"
+                <button
+                  onClick={() => handleOpenHistoryModal(gym)}
+                  className="text-[10px] text-brand-600 font-bold uppercase tracking-tighter flex items-center"
+                >
+                  <ClockIcon className="w-3.5 h-3.5 mr-1" /> View History
+                </button>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => handleOpenPaymentModal(gym)}
+                    className="px-3 py-1.5 bg-green-600 text-white rounded-md font-bold text-xs flex items-center shadow-sm"
                   >
-                    <ClockIcon className="w-3.5 h-3.5 mr-1" /> View History
+                    ₹ Record Payment
                   </button>
-                  <div className="flex space-x-2">
-                    <button 
-                      onClick={() => handleOpenPaymentModal(gym)}
-                      className="px-3 py-1.5 bg-green-600 text-white rounded-md font-bold text-xs flex items-center shadow-sm"
-                    >
-                      ₹ Record Payment
-                    </button>
-                    <button 
-                      onClick={() => handleOpenEditModal(gym)}
-                      className="p-1.5 bg-gray-100 text-gray-600 rounded-md border border-gray-200"
-                    >
-                      <EditIcon className="w-5 h-5" />
-                    </button>
-                    <button 
-                      onClick={() => handleOpenDeleteConfirm(gym)}
-                      className="p-1.5 bg-red-50 text-red-600 rounded-md border border-red-100"
-                    >
-                      <TrashIcon className="w-5 h-5" />
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => handleOpenEditModal(gym)}
+                    className="p-1.5 bg-gray-100 text-gray-600 rounded-md border border-gray-200"
+                  >
+                    <EditIcon className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => handleOpenDeleteConfirm(gym)}
+                    className="p-1.5 bg-red-50 text-red-600 rounded-md border border-red-100"
+                  >
+                    <TrashIcon className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -348,55 +347,55 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
         )}
       </div>
 
-      <Modal 
-        isOpen={modalType === 'add' || modalType === 'edit'} 
-        onClose={handleCloseModal} 
+      <Modal
+        isOpen={modalType === 'add' || modalType === 'edit'}
+        onClose={handleCloseModal}
         title={selectedGym ? `Edit ${selectedGym.name}` : "Add New Gym"}
       >
-        <GymForm 
-          gym={selectedGym} 
-          onSubmit={handleGymFormSubmit} 
-          onCancel={handleCloseModal} 
+        <GymForm
+          gym={selectedGym}
+          onSubmit={handleGymFormSubmit}
+          onCancel={handleCloseModal}
         />
       </Modal>
 
-      <Modal 
-        isOpen={modalType === 'payment'} 
-        onClose={handleCloseModal} 
+      <Modal
+        isOpen={modalType === 'payment'}
+        onClose={handleCloseModal}
         title="Record Payment"
       >
         <div className="mb-4 text-sm text-gray-500 font-medium">
           Add an offline payment record for <span className="text-brand-600 font-bold">{selectedGym?.name}</span>.
         </div>
-        <PaymentForm 
-          onSubmit={handleRecordPayment} 
-          onCancel={handleCloseModal} 
+        <PaymentForm
+          onSubmit={handleRecordPayment}
+          onCancel={handleCloseModal}
         />
       </Modal>
 
-      <Modal 
-        isOpen={modalType === 'history'} 
-        onClose={handleCloseModal} 
+      <Modal
+        isOpen={modalType === 'history'}
+        onClose={handleCloseModal}
         title="Payment History"
       >
         <div className="mb-6 bg-green-50 p-4 rounded-xl border border-green-100 flex justify-between items-center">
-            <div>
-              <p className="text-xs text-green-600 font-bold uppercase">Lifetime Value</p>
-              <p className="text-2xl font-black text-green-800">₹{selectedGym?.totalPaidAmount.toLocaleString() || 0}</p>
-            </div>
-            <button 
-              onClick={() => setModalType('payment')}
-              className="px-4 py-2 bg-green-600 text-white text-xs font-bold rounded-lg hover:bg-green-700 shadow-md"
-            >
-              Add New
-            </button>
+          <div>
+            <p className="text-xs text-green-600 font-bold uppercase">Lifetime Value</p>
+            <p className="text-2xl font-black text-green-800">₹{selectedGym?.totalPaidAmount.toLocaleString() || 0}</p>
+          </div>
+          <button
+            onClick={() => setModalType('payment')}
+            className="px-4 py-2 bg-green-600 text-white text-xs font-bold rounded-lg hover:bg-green-700 shadow-md"
+          >
+            Add New
+          </button>
         </div>
         <PaymentHistory history={selectedGym?.paymentHistory || []} />
       </Modal>
 
-      <Modal 
-        isOpen={modalType === 'delete'} 
-        onClose={handleCloseModal} 
+      <Modal
+        isOpen={modalType === 'delete'}
+        onClose={handleCloseModal}
         title="Confirm Deletion"
       >
         <div className="text-center py-4">
@@ -408,13 +407,13 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
             Deleting <span className="font-bold text-slate-900">{selectedGym?.name}</span> will permanently remove all associated members, trainers, and payment records. This action cannot be undone.
           </p>
           <div className="flex gap-4">
-            <button 
+            <button
               onClick={handleCloseModal}
               className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-colors"
             >
               No, Keep It
             </button>
-            <button 
+            <button
               onClick={confirmDeletion}
               className="flex-1 py-4 bg-red-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-red-200 hover:bg-red-700 transition-colors active:scale-95"
             >

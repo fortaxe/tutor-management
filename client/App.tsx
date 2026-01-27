@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { User, Gym, UserRole, GymStatus } from './types';
 import Login from './pages/Login';
@@ -56,12 +56,13 @@ const App: React.FC = () => {
   });
 
   const { data: members = [], isLoading: membersLoading } = useQuery({
-    queryKey: ['members', currentUser?.gymId],
+    queryKey: ['members', currentUser?.role === UserRole.SUPER_ADMIN ? 'all' : currentUser?.gymId],
     queryFn: async () => {
-      const res = await client.get(`/members?gymId=${currentUser?.gymId}`);
+      const params = currentUser?.role === UserRole.SUPER_ADMIN ? {} : { gymId: currentUser?.gymId };
+      const res = await client.get('/members', { params });
       return res.data;
     },
-    enabled: !!currentUser?.gymId,
+    enabled: !!currentUser && (currentUser.role === UserRole.SUPER_ADMIN || !!currentUser.gymId),
   });
 
   const { data: staff = [], isLoading: staffLoading } = useQuery({

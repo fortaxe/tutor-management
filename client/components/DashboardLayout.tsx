@@ -42,7 +42,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
+    <div className="h-screen bg-slate-50 flex flex-col lg:flex-row overflow-hidden">
       {/* Mobile Header */}
       <div className="lg:hidden bg-charcoal text-white p-4 flex justify-between items-center sticky top-0 z-40 shadow-md">
         <div className="flex items-center space-x-2">
@@ -67,7 +67,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       <div className={`
         fixed inset-0 z-40 transform transition-transform duration-500 ease-in-out lg:relative lg:translate-x-0
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-        w-72 bg-charcoal text-white h-full lg:min-h-screen p-8 flex flex-col justify-between shadow-2xl lg:shadow-none
+        w-72 bg-charcoal text-white h-full lg:min-h-screen p-8 flex flex-col justify-between shadow-2xl lg:shadow-none overflow-y-auto
       `}>
         <div>
           <div className="hidden lg:flex items-center space-x-3 mb-12">

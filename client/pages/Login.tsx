@@ -4,9 +4,10 @@ import DumbbellIcon from '../components/icons/DumbbellIcon';
 
 interface LoginProps {
   onLogin: (creds: { phone: string; password: string }) => void;
+  isLoading?: boolean;
 }
 
-const Login: React.FC<LoginProps> = ({ onLogin }) => {
+const Login: React.FC<LoginProps> = ({ onLogin, isLoading }) => {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -111,9 +112,18 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <div className="pt-2">
               <button
                 type="submit"
-                className="w-full flex justify-center py-4 px-6 border border-transparent rounded-2xl shadow-lg shadow-brand/20 text-sm font-black uppercase tracking-widest text-charcoal bg-brand hover:bg-brand-600 hover:scale-[1.02] active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand"
+                disabled={isLoading}
+                className={`w-full flex justify-center py-4 px-6 border border-transparent rounded-2xl shadow-lg shadow-brand/20 text-sm font-black uppercase tracking-widest text-charcoal bg-brand hover:bg-brand-600 hover:scale-[1.02] active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
-                Login
+                {isLoading ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin h-5 w-5 text-charcoal" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Logging in...
+                  </span>
+                ) : 'Login'}
               </button>
             </div>
           </form>

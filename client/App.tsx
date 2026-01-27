@@ -307,7 +307,7 @@ const App: React.FC = () => {
   if (!currentUser) {
     return (
       <>
-        <Login onLogin={(creds) => loginMutation.mutate(creds)} />
+        <Login onLogin={(creds) => loginMutation.mutate(creds)} isLoading={loginMutation.isPending} />
         {toast && (
           <Toast
             message={toast.message}

@@ -88,8 +88,21 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                     </nav>
                 </div>
 
-                <div className="mt-auto pt-8 border-t border-slate-800">
-                    <div className="mb-6 px-2">
+                <div className="mt-auto flex flex-col gap-[6px]">
+                    <div className='p-[10px] rounded-main bg-[#F8FAFC] flex gap-[8px] items-center'>
+                        <div>
+                            <img src="/profile.png" alt="" className="w-[46px] h-[46px] rounded-main border-main" />
+                        </div>
+
+                        <div>
+                            <p className="tertiary-description text-[#0F172A] font-medium">
+                                {user.role === UserRole.SUPER_ADMIN ? 'Super Admin' : user.role === UserRole.GYM_OWNER ? 'Gym Owner' : (user.name || 'Staff')}
+                            </p>
+                            <p className="text-[12px]  leading-[18px] text-[#9CA3AF]" >{user.phone}</p>
+                        </div>
+
+                    </div>
+                    {/* <div className="mb-6 px-2">
                         <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-2">Connected Account</p>
                         <div className="flex items-center space-x-3">
                             <div className="h-8 w-8 rounded-full bg-slate-700 flex items-center justify-center font-bold text-xs text-brand">
@@ -108,12 +121,12 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                             </svg>
                             Change Password
                         </button>
-                    )}
+                    )} */}
                     <button
                         onClick={onLogout}
-                        className="w-full px-5 py-3 bg-red-500/10 text-red-400 border border-red-500/20 rounded-2xl hover:bg-red-500 hover:text-white transition-all text-xs font-bold uppercase tracking-widest"
+                        className="w-full px-5 py-3 bg-[#EF44441A] !text-[#EF4444] border border-[#EF444433] rounded-[10px]  primary-description"
                     >
-                        Sign Out
+                        Logout
                     </button>
                 </div>
             </div>

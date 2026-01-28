@@ -112,15 +112,19 @@ const MemberRow: React.FC<{
       </td>
       <td className="px-8 py-5 whitespace-nowrap text-sm">
         <div className="flex flex-col">
-          {member.feesStatus === PaymentStatus.PAID ? (
-            <Badge color="green">Settled</Badge>
+          {isExpired ? (
+            <></>
           ) : (
-            <div className="space-y-1">
-              <Badge color={member.feesStatus === PaymentStatus.PARTIAL ? 'yellow' : 'red'}>
-                {member.feesStatus === PaymentStatus.PARTIAL ? 'Partial' : 'Unpaid'}
-              </Badge>
-              <div className="text-[10px] font-black text-orange-600 uppercase tracking-tighter">Due: ₹{balance}</div>
-            </div>
+            member.feesStatus === PaymentStatus.PAID ? (
+              <Badge color="green">Settled</Badge>
+            ) : (
+              <div className="space-y-1">
+                <Badge color={member.feesStatus === PaymentStatus.PARTIAL ? 'yellow' : 'red'}>
+                  {member.feesStatus === PaymentStatus.PARTIAL ? 'Partial' : 'Unpaid'}
+                </Badge>
+                <div className="text-[10px] font-black text-orange-600 uppercase tracking-tighter">Due: ₹{balance}</div>
+              </div>
+            )
           )}
         </div>
       </td>

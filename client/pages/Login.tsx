@@ -52,7 +52,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, backendError }) => {
         <div className="relative z-20 flex justify-between items-center w-full">
           <div className="flex items-center gap-2">
 
-            <span className="text-white font-semibold text-[24px] leading-[24px] tracking-[-0.03em]" style={{ fontFamily: 'PPMori' }}>Gym <span className="text-brand-500">Stack</span></span>
+            <span className="text-white font-semibold text-[24px] leading-[24px] " >Gym <span className="text-brand-500">Stack</span></span>
           </div>
           <Button className='md:hidden' onClick={() => setIsModalOpen(true)}>
             Login

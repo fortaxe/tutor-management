@@ -17,7 +17,7 @@ const Button: React.FC<ButtonProps> = ({
     ...props
 }) => {
     const baseStyles =
-        'primary-bg-green hover:bg-[#16A34A] active:bg-[#15803D] text-white font-semibold px-5 py-3 rounded-main leading-[20px] md:leading-[24px] text-[14px] md:text-[16px] transition-all disabled:opacity-70 disabled:cursor-not-allowed';
+        'primary-bg-green hover:bg-[#16A34A] active:bg-[#15803D] text-white font-medium px-5 py-3 rounded-main leading-[20px] md:leading-[24px] text-[14px] md:text-[16px] transition-all disabled:opacity-70 disabled:cursor-not-allowed';
 
     const displayStyle = block ? 'block w-full' : 'inline-block';
     const combinedClassName = `${displayStyle} ${baseStyles} ${className}`.trim();

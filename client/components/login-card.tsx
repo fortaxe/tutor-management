@@ -22,7 +22,7 @@ const LoginCard: React.FC<LoginCardProps> = ({
     isLoading
 }) => {
     return (
-        <div className="w-full max-w-[420px] bg-white border-main p-[30px] rounded-main" >
+        <div className="w-full max-w-[420px] bg-white border-main p-[30px] rounded-main bg-[#F8FAFC] md:bg-white" >
             <div className="mb-[15px]">
                 <h2 className="secondary-heading text-black mb-[10px] ">Welcome Back!</h2>
                 <p className="secondary-description">Manage members, payments, and daily operations in one place.</p>

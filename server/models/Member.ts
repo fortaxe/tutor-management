@@ -14,6 +14,7 @@ const memberSchema = new mongoose.Schema({
   feesStatus: { type: String, enum: Object.values(PaymentStatus), required: true },
   memberType: { type: String, enum: Object.values(MemberType), required: true },
   photo: String,
+  dob: String,
 }, { timestamps: true });
 
 export const Member = mongoose.models.Member || mongoose.model('Member', memberSchema);

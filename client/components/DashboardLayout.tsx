@@ -26,7 +26,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isChangePassOpen, setChangePassOpen] = useState(false);
   const [newPassword, setNewPassword] = useState('');
-
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
 
   return (
@@ -40,6 +40,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         onViewChange={onViewChange}
         onLogout={onLogout}
         onChangePasswordRequest={() => setChangePassOpen(true)}
+        isCollapsed={isCollapsed}
       />
 
       {/* Backdrop for mobile */}
@@ -53,7 +54,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="bg-white border-b border-slate-200/60 p-5 lg:px-10 lg:py-7 flex justify-between items-center sticky top-0 z-10 backdrop-blur-xl bg-white/80">
-          <h2 className="text-xl lg:text-2xl font-bold text-slate-950 tracking-tight truncate">{pageTitle}</h2>
+          <div className="flex items-center gap-4">
+            <button onClick={() => setIsCollapsed(!isCollapsed)} className="hidden lg:block text-slate-500 hover:text-slate-700">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+              </svg>
+            </button>
+            <h2 className="text-xl lg:text-2xl font-bold text-slate-950 tracking-tight truncate">{pageTitle}</h2>
+          </div>
           <div className="hidden sm:block">
             <div className="bg-brand/10 px-4 py-1.5 rounded-full border border-brand/20">
               <span className="text-[11px] font-bold text-brand-700 uppercase tracking-widest">

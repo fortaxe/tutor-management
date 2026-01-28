@@ -28,4 +28,5 @@ export const memberSchemaValidation = z.object({
   feesStatus: z.nativeEnum(PaymentStatus),
   memberType: z.nativeEnum(MemberType),
   photo: z.string().optional(),
+  dob: z.string().optional(),
 });

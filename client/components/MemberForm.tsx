@@ -44,51 +44,65 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
   const [showCamera, setShowCamera] = useState(false);
   const [activeType, setActiveType] = useState<MemberType>(member?.memberType || initialType);
 
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    planStart: new Date().toISOString().split('T')[0],
-    planDurationDays: 30,
-    feesAmount: '' as string,
-    paidToday: '' as string,
-    photo: undefined as string | undefined,
-  });
-
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
+  const [formData, setFormData] = useState(() => {
     if (member) {
-      setFormData({
+      return {
         name: member.name,
         email: member.email || '',
         phone: member.phone,
+        dob: member.dob || '',
         planStart: member.planStart,
         planDurationDays: member.planDurationDays,
         feesAmount: member.feesAmount.toString(),
         paidToday: member.paidAmount.toString(),
         photo: member.photo,
-      });
-      setActiveType(member.memberType);
-    } else {
-      // Defaults for Day Pass
-      if (activeType === MemberType.DAY_PASS) {
-        setFormData(prev => ({
+      };
+    }
+    // Base defaults
+    return {
+      name: '',
+      email: '',
+      phone: '',
+      dob: '',
+      planStart: new Date().toISOString().split('T')[0],
+      planDurationDays: initialType === MemberType.DAY_PASS ? 1 : 29,
+      feesAmount: initialType === MemberType.DAY_PASS ? '100' : '',
+      paidToday: initialType === MemberType.DAY_PASS ? '100' : '',
+      photo: undefined as string | undefined,
+    };
+  });
+
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Effect only updates form when activeType toggles for NEW members.
+  // We should NOT reset form data if we are editing an existing member just because activeType matches.
+  // Actually, standard practice: if switching type, update defaults.
+  /* Removed useEffect that was causing lint error */
+
+  const handleSetSubscription = () => {
+    setActiveType(MemberType.SUBSCRIPTION);
+    setFormData(prev => {
+      if (prev.planDurationDays === 1) {
+        return {
           ...prev,
-          planDurationDays: 1,
-          feesAmount: '100',
-          paidToday: '100'
-        }));
-      } else {
-        setFormData(prev => ({
-          ...prev,
-          planDurationDays: 30,
+          planDurationDays: 29,
           feesAmount: '',
           paidToday: ''
-        }));
+        };
       }
-    }
-  }, [member, activeType]);
+      return prev;
+    });
+  };
+
+  const handleSetDayPass = () => {
+    setActiveType(MemberType.DAY_PASS);
+    setFormData(prev => ({
+      ...prev,
+      planDurationDays: 1,
+      feesAmount: '100',
+      paidToday: '100'
+    }));
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -146,6 +160,7 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
       name: formData.name,
       email: formData.email.trim() || undefined,
       phone: formData.phone,
+      dob: formData.dob || undefined,
       planStart: formData.planStart,
       planDurationDays: formData.planDurationDays,
       feesAmount: totalFee,
@@ -180,14 +195,14 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
         <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200">
           <button
             type="button"
-            onClick={() => setActiveType(MemberType.SUBSCRIPTION)}
+            onClick={handleSetSubscription}
             className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${activeType === MemberType.SUBSCRIPTION ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
           >
             Subscription
           </button>
           <button
             type="button"
-            onClick={() => setActiveType(MemberType.DAY_PASS)}
+            onClick={handleSetDayPass}
             className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${activeType === MemberType.DAY_PASS ? 'bg-white text-orange-700 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
           >
             Quick Day Pass
@@ -264,6 +279,10 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
             <label htmlFor="email" className={labelClasses}>Email (Optional)</label>
             <input type="email" name="email" id="email" value={formData.email} onChange={handleChange} className={inputClasses} placeholder="Optional" />
           </div>
+          <div>
+            <label htmlFor="dob" className={labelClasses}>Date of Birth (Optional)</label>
+            <input type="date" name="dob" id="dob" value={formData.dob} onChange={handleChange} className={inputClasses} />
+          </div>
         </div>
       </div>
 
@@ -279,10 +298,10 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
                 <input type="number" name="planDurationDays" value={formData.planDurationDays} onChange={handleChange} className={inputClasses} min="1" />
               ) : (
                 <select name="planDurationDays" value={formData.planDurationDays} onChange={handleChange} required className={inputClasses}>
-                  <option value={30}>Monthly (30 days)</option>
-                  <option value={90}>Quarterly (90 days)</option>
-                  <option value={180}>Half Yearly (180 days)</option>
-                  <option value={365}>Yearly (365 days)</option>
+                  <option value={29}>Monthly (30 days)</option>
+                  <option value={89}>Quarterly (90 days)</option>
+                  <option value={179}>Half Yearly (180 days)</option>
+                  <option value={364}>Yearly (365 days)</option>
                 </select>
               )}
             </div>
@@ -316,10 +335,10 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
                 <input type="number" name="planDurationDays" value={formData.planDurationDays} onChange={handleChange} className={inputClasses} min="1" />
               ) : (
                 <select name="planDurationDays" value={formData.planDurationDays} onChange={handleChange} required className={inputClasses}>
-                  <option value={30}>Monthly (30 days)</option>
-                  <option value={90}>Quarterly (90 days)</option>
-                  <option value={180}>Half Yearly (180 days)</option>
-                  <option value={365}>Yearly (365 days)</option>
+                  <option value={29}>Monthly (30 days)</option>
+                  <option value={89}>Quarterly (90 days)</option>
+                  <option value={179}>Half Yearly (180 days)</option>
+                  <option value={364}>Yearly (365 days)</option>
                   <option value={formData.planDurationDays}>{formData.planDurationDays} Days (Custom)</option>
                 </select>
               )}

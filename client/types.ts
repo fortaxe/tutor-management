@@ -75,7 +75,9 @@ export interface Member {
   feesStatus: PaymentStatus;
   memberType: MemberType;
   photo?: string; // Base64 encoded image
+  dob?: string;
 }
+
 
 export interface MemberPayment {
   id: number;

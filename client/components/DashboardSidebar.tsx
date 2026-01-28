@@ -11,6 +11,7 @@ interface DashboardSidebarProps {
     onViewChange?: (view: string) => void;
     onLogout: () => void;
     onChangePasswordRequest: () => void;
+    isCollapsed?: boolean;
 }
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
@@ -20,10 +21,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
     activeView,
     onViewChange,
     onLogout,
-    onChangePasswordRequest,
+    onChangePasswordRequest: _onChangePasswordRequest,
+    isCollapsed = false,
 }) => {
     const isOwner = user.role === UserRole.GYM_OWNER;
-    const isSuperAdmin = user.role === UserRole.SUPER_ADMIN;
     const isTrainer = user.role === UserRole.TRAINER;
 
     const navItems = (isOwner || isTrainer) ? [
@@ -62,12 +63,12 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             <div className={`
         fixed inset-0 z-40 transform transition-transform duration-500 ease-in-out lg:relative lg:translate-x-0
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-        w-72 bg-gradient-to-b from-black to-[#1C1C1C] text-white h-full lg:min-h-screen p-5 flex flex-col justify-between shadow-2xl lg:shadow-none overflow-y-auto
+        ${isCollapsed ? 'w-[90px]' : 'w-72'} bg-gradient-to-b from-black to-[#1C1C1C] text-white h-full lg:min-h-screen p-5 flex flex-col justify-between shadow-2xl lg:shadow-none overflow-y-auto transition-all duration-300
       `}>
                 <div>
-                    <span className="text-white font-semibold text-[24px] leading-[24px] " >Gym <span className="text-brand-500">Stack</span></span>
 
-                    <nav className="space-y-[5px] mt-[33px]">
+
+                    <nav className="space-y-[5px] ">
 
                         {navItems.map(item => (
                             <button
@@ -76,30 +77,33 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                                     onViewChange?.(item.id);
                                     setIsSidebarOpen(false);
                                 }}
-                                className={`w-full flex items-center space-x-4 px-[10px] py-[15px] rounded-main transition-all font-medium primary-description text-white ${activeView === item.id
+                                title={isCollapsed ? item.label : ''}
+                                className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-[5px] px-[10px]'} py-[12px] rounded-main transition-all font-medium primary-description text-white ${activeView === item.id
                                     && 'bg-[#242424]  '
 
                                     }`}
                             >
-                                <img src={item.icon} alt={item.label} />
-                                <span>{item.label}</span>
+                                <img src={item.icon} alt={item.label} className={isCollapsed ? "w-6 h-6" : ""} />
+                                {!isCollapsed && <span>{item.label}</span>}
                             </button>
                         ))}
                     </nav>
                 </div>
 
                 <div className="mt-auto flex flex-col gap-[6px]">
-                    <div className='p-[10px] rounded-main bg-[#F8FAFC] flex gap-[8px] items-center'>
+                    <div className={`p-[10px] rounded-main bg-[#F8FAFC] flex gap-[8px] items-center ${isCollapsed ? 'justify-center' : ''}`}>
                         <div>
                             <img src="/profile.png" alt="" className="w-[46px] h-[46px] rounded-main border-main" />
                         </div>
 
-                        <div>
-                            <p className="tertiary-description text-[#0F172A] font-medium">
-                                {user.role === UserRole.SUPER_ADMIN ? 'Super Admin' : user.role === UserRole.GYM_OWNER ? 'Gym Owner' : (user.name || 'Staff')}
-                            </p>
-                            <p className="text-[12px]  leading-[18px] text-[#9CA3AF]" >{user.phone}</p>
-                        </div>
+                        {!isCollapsed && (
+                            <div>
+                                <p className="tertiary-description text-[#0F172A] font-medium">
+                                    {user.role === UserRole.SUPER_ADMIN ? 'Super Admin' : user.role === UserRole.GYM_OWNER ? 'Gym Owner' : (user.name || 'Staff')}
+                                </p>
+                                <p className="text-[12px]  leading-[18px] text-[#9CA3AF]" >{user.phone}</p>
+                            </div>
+                        )}
 
                     </div>
                     {/* <div className="mb-6 px-2">
@@ -124,12 +128,18 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                     )} */}
                     <button
                         onClick={onLogout}
-                        className="w-full px-5 py-3 bg-[#EF44441A] !text-[#EF4444] border border-[#EF444433] rounded-[10px]  primary-description"
+                        title={isCollapsed ? 'Logout' : ''}
+                        className={`w-full ${isCollapsed ? 'px-0' : 'px-5'} justify-center py-3 bg-[#EF44441A] !text-[#EF4444] border border-[#EF444433] font-medium rounded-[10px] primary-description flex items-center`}
                     >
-                        Logout
+                        {isCollapsed ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                            </svg>
+                        ) : 'Logout'}
                     </button>
                 </div>
             </div>
+
         </>
     );
 };

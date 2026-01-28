@@ -16,7 +16,7 @@
       theme: {
         extend: {
           fontFamily: {
-            sans: ['PPMori', 'sans-serif'],
+            sans: ['Geist', 'sans-serif'],
           },
           colors: {
             brand: {
@@ -70,16 +70,30 @@
 </script>
   <style type="text/tailwindcss">
     @font-face {
+      font-family: 'Geist';
+      src: url('/fonts/Geist[wght].ttf') format('truetype');
+      font-weight: 100 900;
+      font-style: normal;
+    }
+    
+    @font-face {
       font-family: 'PPMori';
       src: url('/fonts/PPMori-Regular.otf') format('opentype');
       font-weight: 400;
+      font-style: normal;
+    }
+    
+    @font-face {
+      font-family: 'PPMori';
+      src: url('/fonts/PPMori-Semibold.otf') format('opentype');
+      font-weight: 600;
       font-style: normal;
     }
 
 
 
     body {
-      font-family: 'PPMori', sans-serif;
+      font-family: 'Geist', sans-serif;
       font-weight: 400;
     }
 
@@ -113,19 +127,19 @@
     }
 
     .primary-description {
-      @apply text-white text-[14px] md:text-[16px]  leading-[20px] md:leading-[22px] ;
+      @apply text-white text-[14px] md:text-[16px]   leading-[20px] md:leading-[22px] ;
     }
     .secondary-description {
       @apply text-[#9CA3AF] text-[14px] md:text-[16px]  leading-[20px] md:leading-[22px] ;
     }
     .tertiary-description {
-      @apply  text-[14px] leading-[20px] ;
+      @apply  text-[14px] leading-[20px]  ;
     }
     .primary-heading {
-      @apply text-white text-[48px] md:text-[72px] font-semibold   leading-[46px] md:leading-[68px] tracking-[-0.03em] ;
+      @apply text-white text-[48px] md:text-[72px] font-semibold leading-[46px] md:leading-[68px] ;
     }
     .secondary-heading {
-      @apply text-[32px] leading-[32px]  font-semibold text-[#0F172A]  tracking-[-0.03em] ;
+      @apply text-[32px] leading-[32px] font-semibold text-[#0F172A];
     }
     .primary-bg-green {
       @apply bg-[#22C55E] 
@@ -142,7 +156,7 @@
   </style>
 </head>
 
-<body class="bg-slate-50 text-slate-600">
+<body class="bg-slate-50 text-slate-600 antialiased">
   <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>

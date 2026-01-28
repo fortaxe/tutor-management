@@ -52,16 +52,16 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, backendError }) => {
         <div className="relative z-20 flex justify-between items-center w-full">
           <div className="flex items-center gap-2">
 
-            <span className="text-white font-bold text-[24px] leading-[24px] tracking-[-0.03em]">Gym <span className="text-brand-500">Stack</span></span>
+            <span className="text-white font-semibold text-[24px] leading-[24px] tracking-[-0.03em]" style={{ fontFamily: 'PPMori' }}>Gym <span className="text-brand-500">Stack</span></span>
           </div>
           <Button className='md:hidden' onClick={() => setIsModalOpen(true)}>
             Login
           </Button>
-          <a href="tel:+919676675576" className="primary-description hidden md:block">Need Help?</a>
+
         </div>
 
         {/* Bottom Content on Left Side */}
-        <div className="relative z-20 max-w-lg mb-[109px] md:mb-0">
+        <div className="relative z-20  mb-[109px] md:mb-0">
           <h1 className="primary-heading">
             Professional<br />
             Membership<br />
@@ -70,12 +70,16 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, backendError }) => {
           <p className="primary-description my-5">
             The ultimate platform for gym owners to track members, manage payments, and streamline operations effortlessly.
           </p>
-          <Button href="tel:+919676675576">
-            Book Demo Today
-          </Button>
+          <div className='flex justify-between items-center'>
+            <Button href="tel:+919676675576">
+              Book Demo Today
+            </Button>
+
+            <a href="tel:+919676675576" className="primary-description hidden md:block">Need Help?</a>
+          </div>
         </div>
 
-        <div className="absolute bottom-4 right-6 z-20 md:hidden">
+        <div className="absolute bottom-4 right-4 z-20 md:hidden">
           <a href="tel:+919676675576" className="primary-description">Need Help?</a>
         </div>
       </div>

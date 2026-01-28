@@ -25,7 +25,9 @@ const App: React.FC = () => {
   };
 
   // --- Auth State ---
+  const [loginError, setLoginError] = useState<string>('');
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    // ... existing initialization ...
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
@@ -85,14 +87,6 @@ const App: React.FC = () => {
 
   const { data: myGym, isError: isGymError, error: gymError } = useMyGym(currentUser);
 
-  // useEffect(() => {
-  //   if (isGymError) {
-  //     // If we get an error (like 404) trying to fetch the user's gym, their session is likely invalid/stale data.
-  //     handleLogout();
-  //     showToast('Session invalid. Please login again.', 'error');
-  //   }
-  // }, [isGymError, gymError]);
-
   // --- Mutations ---
   const loginMutation = useMutation({
     mutationFn: async (creds: any) => {
@@ -100,12 +94,14 @@ const App: React.FC = () => {
       return res.data;
     },
     onSuccess: (user) => {
+      setLoginError('');
       const expiry = Date.now() + SESSION_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ user, expiry }));
       setCurrentUser(user);
     },
     onError: (error: any) => {
-      showToast('Login failed: Invalid Phone or Password', 'error');
+      // Set local error instead of showing toast
+      setLoginError('Incorrect password. Try again.');
     }
   });
 
@@ -303,19 +299,19 @@ const App: React.FC = () => {
     onError: (err: any) => showToast('Failed to update password', 'error')
   });
 
-  // --- Handlers ---
-
   if (!currentUser) {
     return (
       <>
-        <Login onLogin={(creds) => loginMutation.mutate(creds)} isLoading={loginMutation.isPending} />
-        {toast && (
-          <Toast
-            message={toast.message}
-            type={toast.type}
-            onClose={() => setToast(null)}
-          />
-        )}
+        {/* Pass custom error handling to Login */}
+        <Login
+          onLogin={(creds) => {
+            setLoginError(''); // Clear previous errors on new attempt
+            loginMutation.mutate(creds);
+          }}
+          isLoading={loginMutation.isPending}
+          backendError={loginError}
+        />
+        {/* Removed Toast for login page as requested */}
       </>
     );
   }

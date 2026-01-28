@@ -306,10 +306,40 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
       )}
 
       {member && (
-        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-center">
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed">
-            Plan details are managed via the <span className="text-brand-600">Renew</span> button on the dashboard for better tracking.
-          </p>
+        <div className="pt-6 border-t border-slate-100 space-y-5">
+          <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Current Plan Details</h4>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={labelClasses}>Duration (Days)</label>
+              {activeType === MemberType.DAY_PASS ? (
+                <input type="number" name="planDurationDays" value={formData.planDurationDays} onChange={handleChange} className={inputClasses} min="1" />
+              ) : (
+                <select name="planDurationDays" value={formData.planDurationDays} onChange={handleChange} required className={inputClasses}>
+                  <option value={30}>Monthly (30 days)</option>
+                  <option value={90}>Quarterly (90 days)</option>
+                  <option value={180}>Half Yearly (180 days)</option>
+                  <option value={365}>Yearly (365 days)</option>
+                  <option value={formData.planDurationDays}>{formData.planDurationDays} Days (Custom)</option>
+                </select>
+              )}
+            </div>
+            <div>
+              <label className={labelClasses}>Start Date</label>
+              <input type="date" name="planStart" value={formData.planStart} onChange={handleChange} required className={inputClasses} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={labelClasses}>Total Fee (₹)</label>
+              <input type="text" inputMode="numeric" name="feesAmount" value={formData.feesAmount} onChange={handleChange} required className={`${inputClasses} font-black`} />
+            </div>
+            <div>
+              <label className={labelClasses}>Paid Total (₹)</label>
+              <input type="text" inputMode="numeric" name="paidToday" value={formData.paidToday} onChange={handleChange} required className={`${inputClasses} font-black text-brand-700`} />
+            </div>
+          </div>
         </div>
       )}
 

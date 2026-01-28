@@ -1,16 +1,26 @@
 
 import React, { useState } from 'react';
-import DumbbellIcon from '../components/icons/DumbbellIcon';
+
+import Button from '../components/Button';
+import LoginCard from '@/components/login-card';
 
 interface LoginProps {
   onLogin: (creds: { phone: string; password: string }) => void;
   isLoading?: boolean;
+  backendError?: string;
 }
 
-const Login: React.FC<LoginProps> = ({ onLogin, isLoading }) => {
+const Login: React.FC<LoginProps> = ({ onLogin, isLoading, backendError }) => {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState<{ phone?: string; password?: string; general?: string }>({});
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  React.useEffect(() => {
+    if (backendError) {
+      setErrors(prev => ({ ...prev, password: backendError }));
+    }
+  }, [backendError]);
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.replace(/\D/g, '').slice(0, 10);
@@ -19,10 +29,10 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setErrors({});
 
     if (phone.length !== 10) {
-      setError('Mobile number must be exactly 10 digits.');
+      setErrors({ phone: '*Enter a valid 10-digit mobile number' });
       return;
     }
 
@@ -30,107 +40,79 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading }) => {
   };
 
   return (
-    <div className="h-full md:h-screen bg-slate-50 relative flex flex-col md:flex-row overflow-hidden">
+    <div className="w-full h-screen bg-white relative flex flex-col md:flex-row overflow-hidden font-sans">
       {/* Hero Banner - Left Side (50%) */}
-      <div className="w-full md:w-1/2 h-[250px] md:h-full bg-slate-900 relative overflow-hidden flex flex-col justify-center items-start text-center px-4 md:px-12 shrink-0 z-10">
-        <div className="absolute inset-0 bg-brand/10 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+      <div className="w-full md:w-1/2 h-full bg-black relative flex flex-col justify-between px-4 pb-4 pt-6 md:p-[50px] z-10">
+        <div className="absolute inset-0 z-0">
+          <img src="/images/hero.jpg" alt="Gym Background" className="w-full h-full object-cover opacity-60" />
 
+        </div>
 
-        <h1 className="text-3xl md:text-5xl  font-black text-white mb-4 md:mb-6 tracking-tight font-bold text-left max-w-[1000px] relative z-20">
-          Professional Membership <span className="text-brand">Management</span>
-        </h1>
-        <p className=" hidden md:block text-slate-400 font-medium text-sm md:text-lg max-w-lg mb-10 leading-relaxed text-left relative z-20">
-          The ultimate platform for gym owners to track members, manage payments, and streamline operations effortlessly.
-        </p>
-        <a
-          href="tel:+919676675576"
-          className="inline-flex justify-center py-2 md:py-4 px-4 md:px-6 border border-transparent rounded-2xl shadow-lg shadow-brand/20 text-sm font-black uppercase tracking-wide text-charcoal bg-brand hover:bg-brand-600 hover:scale-[1.02] active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand relative z-20 items-center gap-2"
-        >
-          <span>Book a Demo Call</span>
-        </a>
+        {/* Top Header on Left Side */}
+        <div className="relative z-20 flex justify-between items-center w-full">
+          <div className="flex items-center gap-2">
 
-        <div className="absolute bottom-[20px] md:bottom-[50px] left-4 md:left-12 z-20">
-          <a href="tel:+919676675576" className="text-slate-500 font-bold text-xs uppercase tracking-normal hover:text-brand transition-colors block">
-            Contact: <span className="text-white group-hover:text-brand-300">+91 96766 75576</span>
-          </a>
+            <span className="text-white font-bold text-[24px] leading-[24px] tracking-[-0.03em]">Gym <span className="text-brand-500">Stack</span></span>
+          </div>
+          <Button className='md:hidden' onClick={() => setIsModalOpen(true)}>
+            Login
+          </Button>
+          <a href="tel:+919676675576" className="primary-description hidden md:block">Need Help?</a>
+        </div>
+
+        {/* Bottom Content on Left Side */}
+        <div className="relative z-20 max-w-lg mb-[109px] md:mb-0">
+          <h1 className="primary-heading">
+            Professional<br />
+            Membership<br />
+            <span className="text-brand-500">Management</span>
+          </h1>
+          <p className="primary-description my-5">
+            The ultimate platform for gym owners to track members, manage payments, and streamline operations effortlessly.
+          </p>
+          <Button href="tel:+919676675576">
+            Book Demo Today
+          </Button>
+        </div>
+
+        <div className="absolute bottom-4 right-6 z-20 md:hidden">
+          <a href="tel:+919676675576" className="primary-description">Need Help?</a>
         </div>
       </div>
 
       {/* Login Section - Right Side (50%) */}
-      <div className="w-full md:w-1/2 flex-1 flex flex-col justify-center items-center p-6 relative bg-slate-50">
-        <div className="absolute top-0 -left-10 w-72 h-72 bg-brand/10 rounded-full blur-3xl -z-10 animate-pulse"></div>
-        <div className="absolute bottom-0 -right-10 w-96 h-96 bg-blue-100 rounded-full blur-3xl -z-10"></div>
-
-        <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 md:p-12 border border-slate-100">
-          <div className="text-center mb-10">
-            <div className="inline-flex p-4 bg-charcoal rounded-2xl mb-6 shadow-xl shadow-charcoal/20">
-              <DumbbellIcon className="h-10 w-10 text-brand" />
-            </div>
-            <h1 className="text-4xl font-black text-slate-950 tracking-tight mb-2 uppercase">Gym <span className="text-brand">Stack</span></h1>
-            <p className="text-slate-500 font-medium text-sm">Professional Membership Management</p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <div className="bg-orange-50 border-l-4 border-orange-500 p-4 mb-4 rounded-r-lg">
-                <p className="text-sm text-orange-700 font-semibold">{error}</p>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <label htmlFor="phone" className="block text-xs font-bold text-slate-600 uppercase tracking-widest ml-1">
-                Mobile Number
-              </label>
-              <input
-                id="phone"
-                type="tel"
-                inputMode="numeric"
-                required
-                maxLength={10}
-                value={phone}
-                onChange={handlePhoneChange}
-                className="appearance-none block w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all font-bold text-slate-900"
-                placeholder="0000000000"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="password" className="block text-xs font-bold text-slate-600 uppercase tracking-widest ml-1">
-                Secret Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none block w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all text-slate-900"
-                placeholder="••••••••"
-              />
-            </div>
-
-            <div className="pt-2">
-              <button
-                type="submit"
-                disabled={isLoading}
-                className={`w-full flex justify-center py-4 px-6 border border-transparent rounded-2xl shadow-lg shadow-brand/20 text-sm font-black uppercase tracking-widest text-charcoal bg-brand hover:bg-brand-600 hover:scale-[1.02] active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-              >
-                {isLoading ? (
-                  <span className="flex items-center gap-2">
-                    <svg className="animate-spin h-5 w-5 text-charcoal" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Logging in...
-                  </span>
-                ) : 'Login'}
-              </button>
-            </div>
-          </form>
-
-
-        </div>
+      <div className="w-full md:w-1/2 h-full flex flex-col justify-center items-center p-6 md:p-24 bg-[#F8FAFC] hidden md:flex">
+        <LoginCard
+          phone={phone}
+          handlePhoneChange={handlePhoneChange}
+          password={password}
+          setPassword={setPassword}
+          handleSubmit={handleSubmit}
+          errors={errors}
+          isLoading={isLoading}
+        />
       </div>
+
+      {/* Mobile Modal Overlay */}
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center  p-4 md:hidden"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-[420px]">
+            <LoginCard
+              phone={phone}
+              handlePhoneChange={handlePhoneChange}
+              password={password}
+              setPassword={setPassword}
+              handleSubmit={handleSubmit}
+              errors={errors}
+              isLoading={isLoading}
+            />
+          </div>
+        </div>
+
+      )}
     </div>
   );
 };

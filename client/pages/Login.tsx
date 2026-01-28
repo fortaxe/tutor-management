@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+// Test lint hook
 
 import Button from '../components/Button';
 import LoginCard from '@/components/login-card';
@@ -70,7 +71,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, backendError }) => {
           <p className="primary-description my-5">
             The ultimate platform for gym owners to track members, manage payments, and streamline operations effortlessly.
           </p>
-          <div className='flex justify-between items-center'>
+          <div className='flex justify-between items-end'>
             <Button href="tel:+919676675576">
               Book Demo Today
             </Button>

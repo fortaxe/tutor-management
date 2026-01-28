@@ -40,9 +40,9 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
   const [selectedGym, setSelectedGym] = useState<Gym | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const getMemberCount = (gymId: number) => {
+  const getMemberCount = React.useCallback((gymId: number) => {
     return members.filter(member => member.gymId === gymId).length;
-  };
+  }, [members]);
 
   const totalRevenue = useMemo(() => {
     return gyms.reduce((acc, gym) => acc + (gym.totalPaidAmount || 0), 0);
@@ -60,7 +60,7 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
       ...gym,
       memberCount: getMemberCount(gym.id),
     }));
-  }, [filteredGyms, members]);
+  }, [filteredGyms, getMemberCount]);
 
   const subscriptionStatusBadge = (status: SubscriptionStatus) => {
     switch (status) {
@@ -118,11 +118,13 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
     setSelectedGym(null);
   };
 
-  const handleGymFormSubmit = (gymData: any, password?: string) => {
+  const handleGymFormSubmit = (gymData: Omit<Gym, 'id'> | Gym, password?: string) => {
     if (selectedGym) {
       onUpdateGym({ ...selectedGym, ...gymData }, password);
     } else {
-      onAddGym({ ...gymData, paymentHistory: [] }, password);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { paymentHistory, ...rest } = gymData;
+      onAddGym(rest as Omit<Gym, 'id' | 'paymentHistory'>, password);
     }
     handleCloseModal();
   };
@@ -353,6 +355,7 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
         title={selectedGym ? `Edit ${selectedGym.name}` : "Add New Gym"}
       >
         <GymForm
+          key={selectedGym ? selectedGym.id : 'new'}
           gym={selectedGym}
           onSubmit={handleGymFormSubmit}
           onCancel={handleCloseModal}

@@ -34,7 +34,7 @@ const App: React.FC = () => {
         const { user, expiry } = JSON.parse(saved);
         if (Date.now() < expiry) return user;
         localStorage.removeItem(STORAGE_KEY);
-      } catch (e) {
+      } catch {
         localStorage.removeItem(STORAGE_KEY);
       }
     }
@@ -85,7 +85,7 @@ const App: React.FC = () => {
     enabled: !!currentUser?.gymId,
   });
 
-  const { data: myGym, isError: isGymError, error: gymError } = useMyGym(currentUser);
+  const { data: myGym } = useMyGym(currentUser);
 
   // --- Mutations ---
   const loginMutation = useMutation({
@@ -99,7 +99,7 @@ const App: React.FC = () => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ user, expiry }));
       setCurrentUser(user);
     },
-    onError: (error: any) => {
+    onError: (_error: any) => {
       // Set local error instead of showing toast
       setLoginError('Incorrect password. Try again.');
     }
@@ -296,7 +296,7 @@ const App: React.FC = () => {
       }
     },
     onSuccess: () => showToast('Password updated successfully', 'success'),
-    onError: (err: any) => showToast('Failed to update password', 'error')
+    onError: (_err: any) => showToast('Failed to update password', 'error')
   });
 
   if (!currentUser) {
@@ -365,6 +365,46 @@ const App: React.FC = () => {
           onRenewMember={(id, renewalData) => renewMemberMutation.mutate({ memberId: id, renewalData })}
           onDeleteMember={(id) => deleteMemberMutation.mutate(id)}
         />
+      )}
+
+      {/* Subscription Expired / Suspended Block - Global Overlay */}
+      {(currentUser.role === UserRole.GYM_OWNER || currentUser.role === UserRole.TRAINER) && currentGym && (
+        (() => {
+          const today = new Date().toISOString().split('T')[0];
+          // Use currentGym data which is fresh from the API
+          const isExpired = currentGym.subscriptionEndDate && currentGym.subscriptionEndDate < today;
+          const isInactive = currentGym.status !== GymStatus.ACTIVE;
+
+          if (isInactive || isExpired) {
+            return (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-2xl border border-red-100 animate-in zoom-in-95 duration-300">
+                  <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg className="w-10 h-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                  <h2 className="text-2xl font-black text-slate-900 mb-2">Subscription Expired</h2>
+                  <p className="text-slate-500 mb-8 leading-relaxed">
+                    Your gym's subscription plan is currently Expired.
+                    Access to the dashboard has been restricted.
+                  </p>
+                  <div className="bg-slate-50 rounded-2xl p-4 mb-8 border border-slate-100">
+                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Contact Administrator</p>
+                    <a href="tel:+919676675576" className="text-lg font-black text-brand-600 hover:underline">+91 96766 75576</a>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-black transition-all"
+                  >
+                    Logout
+                  </button>
+                </div>
+              </div>
+            );
+          }
+          return null;
+        })()
       )}
       {effectiveView === 'earnings' && !isTrainer && (
         <GymEarnings

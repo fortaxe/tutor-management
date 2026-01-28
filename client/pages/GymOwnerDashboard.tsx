@@ -1,7 +1,6 @@
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import { User, Gym, Member, PaymentStatus, UserRole, MemberType } from '../types';
-import client from '../lib/client';
 import Badge from '../components/Badge';
 import Modal from '../components/Modal';
 import MemberForm from '../components/MemberForm';
@@ -126,7 +125,7 @@ const MemberRow: React.FC<{
         </div>
       </td>
       <td className="px-8 py-5 whitespace-nowrap text-right text-sm font-medium">
-        <div className="flex items-center justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center justify-end space-x-2 transition-opacity">
           {(activeTab === 'expiry' || activeTab === 'expired') && (
             <button onClick={handleWhatsApp} className="p-2 bg-green-500 text-white hover:bg-green-600 rounded-xl transition-all shadow-sm" title="Send WhatsApp Reminder">
               <WhatsAppIcon className="w-4 h-4" />
@@ -149,7 +148,7 @@ const MemberRow: React.FC<{
 };
 
 
-const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, members, onLogout, onAddMember, onUpdateMember, onRenewMember, onDeleteMember }) => {
+const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, members, onAddMember, onUpdateMember, onRenewMember, onDeleteMember }) => {
   const [activeTab, setActiveTab] = useState<Tab>('members');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCollectModalOpen, setIsCollectModalOpen] = useState(false);

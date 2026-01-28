@@ -13,6 +13,8 @@ export interface User {
   password?: string;
   role: UserRole;
   gymId?: number;
+  gymStatus?: GymStatus;
+  gymSubscriptionEndDate?: string;
 }
 
 export enum GymStatus {

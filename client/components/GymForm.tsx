@@ -9,58 +9,56 @@ interface GymFormProps {
 }
 
 const GymForm: React.FC<GymFormProps> = ({ gym, onSubmit, onCancel }) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    ownerPhone: '',
-    password: '',
-    status: GymStatus.ACTIVE,
-    subscriptionStatus: SubscriptionStatus.PENDING,
-    subscriptionStartDate: new Date().toISOString().split('T')[0],
-    subscriptionEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    totalPaidAmount: 0,
-  });
-
-  useEffect(() => {
+  const [formData, setFormData] = useState(() => {
     if (gym) {
-      setFormData(prev => ({
-        ...prev,
+      return {
         name: gym.name,
         ownerPhone: gym.ownerPhone,
+        password: '',
         status: gym.status,
         subscriptionStatus: gym.subscriptionStatus,
         subscriptionStartDate: gym.subscriptionStartDate,
         subscriptionEndDate: gym.subscriptionEndDate,
         totalPaidAmount: gym.totalPaidAmount,
-        password: '', // Clear password field for existing gyms
-      }));
+      };
     }
-  }, [gym]);
+    return {
+      name: '',
+      ownerPhone: '',
+      password: '',
+      status: GymStatus.ACTIVE,
+      subscriptionStatus: SubscriptionStatus.PENDING,
+      subscriptionStartDate: new Date().toISOString().split('T')[0],
+      subscriptionEndDate: new Date(Date.now() + 29 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days inclusive
+      totalPaidAmount: 0,
+    };
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    
+
     if (name === 'ownerPhone') {
       const cleaned = value.replace(/\D/g, '').slice(0, 10);
       setFormData(prev => ({ ...prev, [name]: cleaned }));
       return;
     }
 
-    setFormData(prev => ({ 
-      ...prev, 
-      [name]: name === 'totalPaidAmount' ? Number(value) : value 
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === 'totalPaidAmount' ? Number(value) : value
     }));
   };
-  
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.ownerPhone.length !== 10) {
       alert("Mobile number must be exactly 10 digits.");
       return;
     }
-    
+
     // Separate password from gym data
     const { password, ...gymOnlyData } = formData;
-    
+
     // Ensure paymentHistory is included to satisfy Gym or Omit<Gym, 'id'> type
     if (gym) {
       // For updates, merge existing gym data with form changes
@@ -76,28 +74,28 @@ const GymForm: React.FC<GymFormProps> = ({ gym, onSubmit, onCancel }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700">Gym Name</label>
-          <input 
-            type="text" 
-            name="name" 
-            id="name" 
-            value={formData.name} 
-            onChange={handleChange} 
-            required 
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm" 
+          <input
+            type="text"
+            name="name"
+            id="name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm"
           />
         </div>
         <div>
           <label htmlFor="ownerPhone" className="block text-sm font-medium text-gray-700">Owner Mobile Number</label>
-          <input 
-            type="tel" 
+          <input
+            type="tel"
             inputMode="numeric"
-            name="ownerPhone" 
-            id="ownerPhone" 
-            value={formData.ownerPhone} 
-            onChange={handleChange} 
-            required 
+            name="ownerPhone"
+            id="ownerPhone"
+            value={formData.ownerPhone}
+            onChange={handleChange}
+            required
             maxLength={10}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm font-bold" 
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm font-bold"
             placeholder="10-digit number"
           />
         </div>
@@ -107,15 +105,15 @@ const GymForm: React.FC<GymFormProps> = ({ gym, onSubmit, onCancel }) => {
         <label htmlFor="password" className="block text-sm font-medium text-gray-700">
           {gym ? 'Reset Owner Password (Optional)' : 'Initial Owner Password'}
         </label>
-        <input 
-          type="text" 
-          name="password" 
-          id="password" 
+        <input
+          type="text"
+          name="password"
+          id="password"
           placeholder={gym ? "Leave blank to keep current" : "e.g. TempPass123"}
-          value={formData.password} 
-          onChange={handleChange} 
-          required={!gym} 
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm" 
+          value={formData.password}
+          onChange={handleChange}
+          required={!gym}
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm"
         />
         {gym && (
           <p className="mt-1 text-[10px] text-slate-400 font-bold uppercase tracking-tight italic">
@@ -127,26 +125,26 @@ const GymForm: React.FC<GymFormProps> = ({ gym, onSubmit, onCancel }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
         <div>
           <label htmlFor="subscriptionStartDate" className="block text-sm font-medium text-gray-700">Subscription Start Date</label>
-          <input 
-            type="date" 
-            name="subscriptionStartDate" 
-            id="subscriptionStartDate" 
-            value={formData.subscriptionStartDate} 
-            onChange={handleChange} 
-            required 
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm" 
+          <input
+            type="date"
+            name="subscriptionStartDate"
+            id="subscriptionStartDate"
+            value={formData.subscriptionStartDate}
+            onChange={handleChange}
+            required
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm"
           />
         </div>
         <div>
           <label htmlFor="subscriptionEndDate" className="block text-sm font-medium text-gray-700">Subscription End Date</label>
-          <input 
-            type="date" 
-            name="subscriptionEndDate" 
-            id="subscriptionEndDate" 
-            value={formData.subscriptionEndDate} 
-            onChange={handleChange} 
-            required 
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm" 
+          <input
+            type="date"
+            name="subscriptionEndDate"
+            id="subscriptionEndDate"
+            value={formData.subscriptionEndDate}
+            onChange={handleChange}
+            required
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm"
           />
         </div>
       </div>
@@ -154,24 +152,24 @@ const GymForm: React.FC<GymFormProps> = ({ gym, onSubmit, onCancel }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label htmlFor="totalPaidAmount" className="block text-sm font-medium text-gray-700">Lifetime Amount Collected (INR)</label>
-          <input 
-            type="number" 
-            name="totalPaidAmount" 
-            id="totalPaidAmount" 
-            value={formData.totalPaidAmount} 
-            onChange={handleChange} 
-            required 
+          <input
+            type="number"
+            name="totalPaidAmount"
+            id="totalPaidAmount"
+            value={formData.totalPaidAmount}
+            onChange={handleChange}
+            required
             min="0"
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm font-bold text-brand-700" 
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm font-bold text-brand-700"
           />
           <p className="mt-1 text-xs text-gray-500">Record total cash/offline payment received from this owner.</p>
         </div>
         <div>
           <label htmlFor="subscriptionStatus" className="block text-sm font-medium text-gray-700">Subscription Status</label>
-          <select 
-            name="subscriptionStatus" 
-            id="subscriptionStatus" 
-            value={formData.subscriptionStatus} 
+          <select
+            name="subscriptionStatus"
+            id="subscriptionStatus"
+            value={formData.subscriptionStatus}
             onChange={handleChange}
             className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm"
           >
@@ -184,10 +182,10 @@ const GymForm: React.FC<GymFormProps> = ({ gym, onSubmit, onCancel }) => {
 
       <div>
         <label htmlFor="status" className="block text-sm font-medium text-gray-700">Overall Gym Status</label>
-        <select 
-          name="status" 
-          id="status" 
-          value={formData.status} 
+        <select
+          name="status"
+          id="status"
+          value={formData.status}
           onChange={handleChange}
           className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm"
         >
@@ -196,7 +194,7 @@ const GymForm: React.FC<GymFormProps> = ({ gym, onSubmit, onCancel }) => {
           <option value={GymStatus.INACTIVE}>Inactive</option>
         </select>
       </div>
-      
+
       <div className="flex justify-end space-x-2 pt-4 border-t">
         <button type="button" onClick={onCancel} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancel</button>
         <button type="submit" className="px-4 py-2 bg-brand-600 text-white rounded-md hover:bg-brand-700">

@@ -2,6 +2,7 @@
 import React from 'react';
 import { User, UserRole } from '../types';
 import DumbbellIcon from './icons/DumbbellIcon';
+import BorderButton from './BorderButton';
 
 interface DashboardSidebarProps {
     user: User;
@@ -126,17 +127,13 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                             Change Password
                         </button>
                     )} */}
-                    <button
-                        onClick={onLogout}
-                        title={isCollapsed ? 'Logout' : ''}
-                        className={`w-full ${isCollapsed ? 'px-0' : 'px-5'} justify-center py-3 bg-[#EF44441A] !text-[#EF4444] border border-[#EF444433] font-medium rounded-[10px] primary-description flex items-center`}
-                    >
+                    <BorderButton variant="red" onClick={onLogout}>
                         {isCollapsed ? (
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
                             </svg>
                         ) : 'Logout'}
-                    </button>
+                    </BorderButton>
                 </div>
             </div>
 

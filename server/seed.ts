@@ -1,5 +1,4 @@
 
-import mongoose from 'mongoose';
 import { User } from './models/User';
 import { UserRole } from './types';
 import { connectDB } from './connectDB';
@@ -15,18 +14,6 @@ const seedData = async () => {
                 phone: '9999999999',
                 password: 'admin',
                 role: UserRole.SUPER_ADMIN,
-            },
-            {
-                phone: '8888888888',
-                password: 'owner',
-                role: UserRole.GYM_OWNER,
-                gymId: 101, // Example Gym ID
-            },
-            {
-                phone: '7777777777',
-                password: 'trainer',
-                role: UserRole.TRAINER,
-                gymId: 101, // Example Gym ID
             },
         ];
 

@@ -74,7 +74,7 @@ const LoginCard: React.FC<LoginCardProps> = ({
                     isLoading={isLoading}
                     block
                 >
-                    {isLoading ? 'Logging in...' : 'Access Dashboard'}
+                    Access Dashboard
                 </Button>
 
             </form>

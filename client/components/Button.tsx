@@ -1,4 +1,5 @@
 import React from 'react';
+import Spinner from './Spinner';
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> &
     React.AnchorHTMLAttributes<HTMLAnchorElement> & {
@@ -36,7 +37,13 @@ const Button: React.FC<ButtonProps> = ({
             disabled={isLoading || disabled}
             {...props}
         >
-            {children}
+            {isLoading ? (
+                <div className="flex items-center justify-center gap-2">
+                    <Spinner size={20} />
+                </div>
+            ) : (
+                children
+            )}
         </button>
     );
 };

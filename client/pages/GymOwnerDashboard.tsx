@@ -335,13 +335,20 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
       {/* Stats Cards */}
       {/* Stats Cards */}
       <div className={`flex overflow-x-auto pb-4 gap-4 snap-x snap-mandatory no-scrollbar sm:grid sm:pb-0 sm:gap-6 ${isTrainer ? 'sm:grid-cols-2' : 'sm:grid-cols-3'}`}>
-        <div className="bg-white p-4 sm:p-7 flex-shrink-0 snap-center  rounded-xl md:rounded-3xl shadow-sm border border-slate-100 flex items-center group hover:shadow-xl hover:shadow-brand/5 transition-all">
-          <div className="bg-brand/10 p-3 sm:p-4 rounded-2xl border border-brand/20 group-hover:bg-brand group-hover:text-white transition-all"><UserGroupIcon className="h-6 w-6 sm:h-7 sm:w-7 text-brand group-hover:text-white" /></div>
-          <div className="ml-4 sm:ml-5">
-            <p className="text-[10px] sm:text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">Active Now</p>
-            <p className="text-2xl sm:text-3xl font-black text-slate-950">{stats.activeMembers}</p>
+
+        <div className="bg-white p-5 flex-shrink-0 snap-center  rounded-main border-main flex items-center ">
+
+          <div className="">
+            <p className="secondary-description font-medium pb-3">Active Now</p>
+            <p className="green-text-color text-[32px] font-medium leading-[32px] mb-5">{stats.activeMembers}</p>
+
+            <p className='border-green px-[5px] py-[10px] rounded-main  py-[5px] px-[10px] text-[12px] leading[20px] font-medium flex justify-center items-center gap-[3.5px] green-text-color '>
+              <img className='size-[13px]' src="/icons/up.svg" alt="" />
+              16 This Month
+            </p>
           </div>
         </div>
+
         <div className="bg-white p-4 sm:p-7 flex-shrink-0 snap-center  rounded-xl md:rounded-3xl shadow-sm border border-slate-100 flex items-center group hover:shadow-xl hover:shadow-orange/5 transition-all">
           <div className="bg-orange-50 p-3 sm:p-4 rounded-2xl border border-orange-100 group-hover:bg-orange-500 group-hover:text-white transition-all"><ClockIcon className="h-6 w-6 sm:h-7 sm:w-7 text-orange-500 group-hover:text-white" /></div>
           <div className="ml-4 sm:ml-5">

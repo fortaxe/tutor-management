@@ -349,7 +349,7 @@ const App: React.FC = () => {
     <DashboardLayout
       user={currentUser}
       onLogout={handleLogout}
-      pageTitle={effectiveView === 'earnings' ? 'Earnings & Reports' : effectiveView === 'staff' ? 'Staff Management' : currentGym?.name || 'Dashboard'}
+      pageTitle={effectiveView === 'earnings' ? 'Earnings & Reports' : effectiveView === 'staff' ? 'Staff Management' : currentGym?.name || 'Overview'}
       activeView={effectiveView}
       onViewChange={setActiveView}
       onChangePassword={(pwd) => changePasswordMutation.mutate(pwd)}

@@ -24,7 +24,7 @@ const LoginCard: React.FC<LoginCardProps> = ({
     const [isPasswordVisible, setIsPasswordVisible] = React.useState(false);
 
     return (
-        <div className="w-full max-w-[420px] bg-white border-main p-[30px] rounded-main bg-white" >
+        <div className="w-full max-w-[420px] bg-white border-main p-5 md:p-[30px] rounded-main bg-white" >
             <div className="mb-[15px]">
                 <h2 className="secondary-heading text-black mb-[10px] ">Welcome Back!</h2>
                 <p className="text-[#9CA3AF] text-[14px] md:text-[16px]  leading-[20px] md:leading-[22px] tracking-[0em]">Manage members, payments, and daily operations in one place.</p>

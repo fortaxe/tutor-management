@@ -44,7 +44,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, backendError }) => {
       {/* Hero Banner - Left Side (50%) */}
       <div className="absolute inset-0 w-full h-full md:relative md:w-1/2 bg-black flex flex-col justify-between px-4 pb-4 pt-6 md:p-[50px] z-0">
         <div className="absolute inset-0 z-0">
-          <img src="/images/hero.png" alt="Gym Background" className="w-full h-full object-cover  " />
+          <img src="/images/hero.png" alt="Gym Background" className="w-full h-full object-cover " />
 
         </div>
 
@@ -93,7 +93,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, backendError }) => {
 
         {/* Top Right */}
         <div className="absolute top-4 md:top-[25px] right-4 md:right-[25px]">
-          <a href="#" className="text-white md:!text-[#0F172A] primary-description underline">Contact us</a>
+          <a href="#" className="text-white md:!text-[#0F172A] primary-description underline decoration-[1px] outline-none ring-none">Contact us</a>
         </div>
 
         {/* Bottom Left */}
@@ -103,7 +103,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, backendError }) => {
 
         {/* Bottom Right */}
         <div className="absolute bottom-4 md:bottom-[25px] right-4 md:right-[25px]">
-          <a href="#" className="text-white md:!text-[#0F172A] primary-description underline">Book a Demo</a>
+          <a href="#" className="text-white md:!text-[#0F172A] primary-description underline decoration-[1px] outline-none ring-none">Book a Demo</a>
         </div>
         <LoginCard
           phone={phone}

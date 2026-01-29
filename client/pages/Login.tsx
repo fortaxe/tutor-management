@@ -88,7 +88,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, backendError }) => {
       <div className="relative w-full md:w-1/2 h-full flex flex-col justify-center items-center p-6 md:p-[25px] bg-transparent md:bg-[#F8FAFC]">
         {/* Top Left */}
         <div className="absolute top-4 md:top-[25px] left-4 md:left-[25px]">
-          <span className="text-white md:text-black font-semibold text-[24px] leading-[24px]" >Gym <span className="text-brand-500">Stack</span></span>
+          <span className="text-white md:text-black font-semibold text-[18px] md:text-[24px]leading-[22px] md:leading-[24px]" >Gym <span className="text-brand-500">Stack</span></span>
         </div>
 
         {/* Top Right */}

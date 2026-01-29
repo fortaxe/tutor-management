@@ -42,14 +42,14 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, backendError }) => {
   return (
     <div className="w-full h-screen bg-white relative flex flex-col md:flex-row overflow-hidden font-sans">
       {/* Hero Banner - Left Side (50%) */}
-      <div className="w-full md:w-1/2 h-full bg-black relative flex flex-col justify-between px-4 pb-4 pt-6 md:p-[50px] z-10">
+      <div className="absolute inset-0 w-full h-full md:relative md:w-1/2 bg-black flex flex-col justify-between px-4 pb-4 pt-6 md:p-[50px] z-0">
         <div className="absolute inset-0 z-0">
-          <img src="/images/hero.jpg" alt="Gym Background" className="w-full h-full object-cover opacity-60" />
+          <img src="/images/hero.png" alt="Gym Background" className="w-full h-full " />
 
         </div>
 
         {/* Top Header on Left Side */}
-        <div className="relative z-20 flex justify-between items-center w-full">
+        {/* <div className="relative z-20 flex justify-between items-center w-full">
           <div className="flex items-center gap-2">
 
             <span className="text-white font-semibold text-[24px] leading-[24px] " >Gym <span className="text-brand-500">Stack</span></span>
@@ -58,10 +58,10 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, backendError }) => {
             Login
           </Button>
 
-        </div>
+        </div> */}
 
         {/* Bottom Content on Left Side */}
-        <div className="relative z-20  mb-[109px] md:mb-0">
+        {/* <div className="relative z-20  mb-[109px] md:mb-0">
           <h1 className="primary-heading">
             Professional<br />
             Membership<br />
@@ -81,11 +81,30 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, backendError }) => {
 
         <div className="absolute bottom-4 right-4 z-20 md:hidden">
           <a href="tel:+919676675576" className="primary-description">Need Help?</a>
-        </div>
+        </div> */}
       </div>
 
       {/* Login Section - Right Side (50%) */}
-      <div className="w-full md:w-1/2 h-full flex flex-col justify-center items-center p-6 md:p-24 bg-[#F8FAFC] hidden md:flex">
+      <div className="relative w-full md:w-1/2 h-full flex flex-col justify-center items-center p-6 md:p-[25px] bg-transparent md:bg-[#F8FAFC]">
+        {/* Top Left */}
+        <div className="absolute top-4 md:top-[25px] left-4 md:left-[25px]">
+          <span className="text-white md:text-black font-semibold text-[24px] leading-[24px]" >Gym <span className="text-brand-500">Stack</span></span>
+        </div>
+
+        {/* Top Right */}
+        <div className="absolute top-4 md:top-[25px] right-4 md:right-[25px]">
+          <a href="#" className="text-white md:!text-[#0F172A] primary-description underline">Contact us</a>
+        </div>
+
+        {/* Bottom Left */}
+        <div className="absolute bottom-4 md:bottom-[25px] left-4 md:left-[25px]">
+          <span className="text-white md:!text-[#0F172A] primary-description">Anju Laxmi Global Pvt. Ltd.</span>
+        </div>
+
+        {/* Bottom Right */}
+        <div className="absolute bottom-4 md:bottom-[25px] right-4 md:right-[25px]">
+          <a href="#" className="text-white md:!text-[#0F172A] primary-description underline">Book a Demo</a>
+        </div>
         <LoginCard
           phone={phone}
           handlePhoneChange={handlePhoneChange}

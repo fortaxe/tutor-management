@@ -1,5 +1,5 @@
 import React from 'react';
-import Spinner from './Spinner';
+import { Spinner } from '@geist-ui/core';
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> &
     React.AnchorHTMLAttributes<HTMLAnchorElement> & {
@@ -38,8 +38,8 @@ const Button: React.FC<ButtonProps> = ({
             {...props}
         >
             {isLoading ? (
-                <div className="flex items-center justify-center gap-2">
-                    <Spinner size={20} />
+                <div className="flex items-center justify-center gap-2 text-white">
+                    <Spinner className='text-white' />
                 </div>
             ) : (
                 children

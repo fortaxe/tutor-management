@@ -17,6 +17,7 @@
     ]
   },
   "dependencies": {
+    "@geist-ui/core": "^2.3.8",
     "@tanstack/react-query": "^5.0.0",
     "axios": "^1.6.0",
     "geist": "^1.5.1",

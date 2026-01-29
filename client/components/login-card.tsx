@@ -21,8 +21,10 @@ const LoginCard: React.FC<LoginCardProps> = ({
     errors,
     isLoading
 }) => {
+    const [isPasswordVisible, setIsPasswordVisible] = React.useState(false);
+
     return (
-        <div className="w-full max-w-[420px] bg-white border-main p-[30px] rounded-main bg-[#F8FAFC] md:bg-white" >
+        <div className="w-full max-w-[420px] bg-white border-main p-[30px] rounded-main bg-white" >
             <div className="mb-[15px]">
                 <h2 className="secondary-heading text-black mb-[10px] ">Welcome Back!</h2>
                 <p className="text-[#9CA3AF] text-[14px] md:text-[16px]  leading-[20px] md:leading-[22px] tracking-[0em]">Manage members, payments, and daily operations in one place.</p>
@@ -52,14 +54,23 @@ const LoginCard: React.FC<LoginCardProps> = ({
                     </div>
 
                     <div className="space-y-[5px]">
-                        <Input
-                            id="password"
-                            type="password"
-                            required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Secret Password"
-                        />
+                        <div className="relative">
+                            <Input
+                                id="password"
+                                type={isPasswordVisible ? "text" : "password"}
+                                required
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="Secret Password"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setIsPasswordVisible(!isPasswordVisible)}
+                                className="absolute right-[15px] top-1/2 -translate-y-1/2"
+                            >
+                                <img src="/icons/eye.svg" alt="Show Password" className="size-[18px]" />
+                            </button>
+                        </div>
                         {errors.password && <p className="tertiary-description red-color">{errors.password}</p>}
                     </div>
                 </div>

@@ -342,7 +342,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
             <p className="secondary-description font-medium pb-3">Active Now</p>
             <p className="green-text-color text-[32px] font-medium leading-[32px] mb-5">{stats.activeMembers}</p>
 
-            <p className='border-green px-[5px] py-[10px] rounded-main  py-[5px] px-[10px] text-[12px] leading[20px] font-medium flex justify-center items-center gap-[3.5px] green-text-color '>
+            <p className='border-green px-[5px] py-[10px] rounded-main  py-[5px] px-[10px] text-[12px] leading[20px] font-medium flex justify-center items-center gap-[3.5px] green-secondary-bg green-text-color '>
               <img className='size-[13px]' src="/icons/up.svg" alt="" />
               16 This Month
             </p>

@@ -70,7 +70,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 </span>
               </h2>
             </div>
-            <div className='mt-[30px]'>
+            <div className='mt-[30px] pb-5'>
               <h2 className="text-[32px] leading-[32px] font-medium text-black">{pageTitle}</h2>
             </div>
           </div>
@@ -86,7 +86,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto pt-5">
+        <main className="flex-1 overflow-y-auto ">
           <div className="">
             {children}
           </div>

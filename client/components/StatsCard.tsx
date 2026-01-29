@@ -1,4 +1,5 @@
 import React from 'react';
+import Tag from './Tag';
 
 interface StatsCardProps {
     label: string;
@@ -38,12 +39,13 @@ const StatsCard: React.FC<StatsCardProps> = ({ label, value, variant, onClick, i
                 <p className={`${styles.value} text-[32px] font-medium leading-[32px] mb-5`}>{value}</p>
 
                 {children && (
-                    <div
+                    <Tag
+                        variant={variant}
+                        isActive={isActive}
                         onClick={onClick}
-                        className={`px-[10px] py-[5px] rounded-main text-[12px] leading-[20px] font-medium inline-flex justify-center items-center gap-[3.5px] border ${footerStyles} ${onClick ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
                     >
                         {children}
-                    </div>
+                    </Tag>
                 )}
             </div>
         </div>

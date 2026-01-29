@@ -4,14 +4,17 @@ import { User, Gym, Member, PaymentStatus, UserRole, MemberType } from '../types
 import Badge from '../components/Badge';
 import Modal from '../components/Modal';
 import MemberForm from '../components/MemberForm';
-import PlusIcon from '../components/icons/PlusIcon';
+
 import EditIcon from '../components/icons/EditIcon';
 import TrashIcon from '../components/icons/TrashIcon';
 import UserGroupIcon from '../components/icons/UserGroupIcon';
 import ExclamationTriangleIcon from '../components/icons/ExclamationTriangleIcon';
-import SearchIcon from '../components/icons/SearchIcon';
+
 import ArrowPathIcon from '../components/icons/ArrowPathIcon';
+import Button from '../components/Button';
+import Tag from '../components/Tag';
 import TicketIcon from '../components/icons/TicketIcon';
+import Input from '../components/Input';
 import StatsCard from '../components/StatsCard';
 
 const WhatsAppIcon = ({ className }: { className?: string }) => (
@@ -50,13 +53,13 @@ const MemberAvatar: React.FC<{ member: Member }> = ({ member }) => {
       <img
         src={member.photo}
         alt={member.name}
-        className="h-11 w-11 rounded-2xl object-cover border border-slate-200"
+        className="size-[46px] rounded-main object-cover border-main"
       />
     );
   }
 
   return (
-    <div className={`h-11 w-11 rounded-2xl border flex items-center justify-center font-black text-xs ${member.memberType === MemberType.DAY_PASS ? 'bg-orange-50 border-orange-200 text-orange-700' : 'bg-brand/10 border-brand/20 text-brand-700'}`}>
+    <div className={`size-[46px] rounded-main border flex items-center justify-center font-black text-xs uppercase font-bold font-grotesk ${member.memberType === MemberType.DAY_PASS ? 'bg-orange-50 border-orange-200 text-orange-700' : 'bg-brand/10 border-brand/20 text-brand-700'}`}>
       {member.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)}
     </div>
   );
@@ -83,46 +86,53 @@ const MemberRow: React.FC<{
 
   return (
     <tr className="hover:bg-slate-50 transition-colors group">
-      <td className="px-8 py-5 whitespace-nowrap">
+      <td className="py-[15px] whitespace-nowrap">
         <div className="flex items-center">
           <MemberAvatar member={member} />
-          <div className="ml-4">
+          <div className="ml-2">
             <div className="flex items-center gap-2">
-              <div className="text-sm font-bold text-slate-900 group-hover:text-brand transition-colors">{member.name}</div>
+              <div className="dashboard-primary-desc-geist text-black">{member.name}</div>
               {member.memberType === MemberType.DAY_PASS && (
                 <span className="bg-orange-100 text-orange-700 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-tighter">Pass</span>
               )}
             </div>
-            <div className="text-[11px] font-medium text-slate-400 truncate max-w-[150px]">{member.phone}</div>
+            <div className="dashboard-secondary-desc-geist secondary-color pt-[1px]">{member.phone}</div>
           </div>
         </div>
       </td>
-      <td className="px-8 py-5 whitespace-nowrap text-sm">
-        <div className="font-bold text-slate-700">{endDate.toLocaleDateString()}</div>
-        <div className="text-[10px] text-slate-400 uppercase font-black tracking-widest mt-0.5">{isExpired ? 'Expired On' : 'Expires'}</div>
+      <td className="py-5 whitespace-nowrap text-sm">
+        <div className="dashboard-primary-desc-geist text-black">{endDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' })}</div>
+        <div className="dashboard-secondary-desc uppercase font-grotesk font-bold secondary-color">{isExpired ? 'Expired On' : 'Expires On'}</div>
       </td>
-      <td className="px-8 py-5 whitespace-nowrap text-sm">
+      <td className="py-5 whitespace-nowrap text-sm">
         {isExpired ? (
-          <Badge color="red">Expired</Badge>
+          <Tag variant="red">EXPIRED</Tag>
         ) : (
-          <span className={`text-sm font-black ${remainingDays <= 3 ? 'text-red-600' : remainingDays <= 7 ? 'text-orange-600' : 'text-brand-600'}`}>
+          <span className={`dashboard-primary-desc-geist ${remainingDays <= 10
+            ? 'red-color'
+            : remainingDays <= 20
+              ? 'yellow-text-color'
+              : 'green-text-color'
+            }`}>
             {remainingDays} {remainingDays === 1 ? 'Day' : 'Days'} Left
           </span>
         )}
       </td>
       <td className="px-8 py-5 whitespace-nowrap text-sm">
-        <div className="flex flex-col">
+        <div className="flex flex-col items-start gap-1">
           {isExpired ? (
-            <></>
+            <Tag variant="red">EXPIRED</Tag>
           ) : (
             member.feesStatus === PaymentStatus.PAID ? (
-              <Badge color="green">Settled</Badge>
+              <Tag variant="green">SETTLED</Tag>
             ) : (
-              <div className="space-y-1">
-                <Badge color={member.feesStatus === PaymentStatus.PARTIAL ? 'yellow' : 'red'}>
-                  {member.feesStatus === PaymentStatus.PARTIAL ? 'Partial' : 'Unpaid'}
-                </Badge>
-                <div className="text-[10px] font-black text-orange-600 uppercase tracking-tighter">Due: ₹{balance}</div>
+              <div className="flex gap-2">
+                <Tag variant={member.feesStatus === PaymentStatus.PARTIAL ? 'orange' : 'red'}>
+                  {member.feesStatus === PaymentStatus.PARTIAL ? 'PARTIAL' : 'UNPAID'}
+                </Tag>
+                {member.feesStatus === PaymentStatus.PARTIAL && (
+                  <Tag variant="blue">DUE : ₹{balance}</Tag>
+                )}
               </div>
             )
           )}
@@ -353,13 +363,55 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
     }
   };
 
+
+  const handleExportExcel = () => {
+    if (!filteredMembers.length) {
+      alert('No members to export.');
+      return;
+    }
+
+    // CSV Header
+    const headers = ['Name', 'Phone', 'Email', 'Plan Start', 'Duration (Days)', 'Fee Amount', 'Paid Amount', 'Status', 'Member Type', 'Payment Mode'];
+
+    // CSV Rows
+    const rows = filteredMembers.map(m => [
+      `"${m.name}"`, // Quote strings to handle commas
+      `"${m.phone}"`,
+      `"${m.email || ''}"`,
+      `"${m.planStart}"`,
+      m.planDurationDays,
+      m.feesAmount,
+      m.paidAmount,
+      `"${m.feesStatus}"`,
+      `"${m.memberType}"`,
+      `"${m.paymentMode || ''}"`
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n');
+
+    // Create a Blob and trigger download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+
+    link.setAttribute('href', url);
+    link.setAttribute('download', `members_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const tabClasses = (tabName: Tab) => `
-    flex-1 text-center py-3.5 px-4 text-[10px] font-black transition-all duration-300 uppercase tracking-widest
-    ${!showThisMonthOnly && activeTab === tabName ? 'bg-charcoal text-white shadow-lg shadow-charcoal/20 z-10' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}
+    flex-1 text-center px-[15px] py-[5px] uppercase  dashboard-primary-desc font-black transition-all duration-300 w-fit  
+    ${!showThisMonthOnly && activeTab === tabName ? 'bg-black text-white  z-10' : 'secondary-color border-main'}
   `;
 
   return (
-    <div className="md:space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-5">
       {/* Stats Cards */}
       {/* Stats Cards */}
       <div className={`flex overflow-x-auto pb-4 gap-4 snap-x snap-mandatory no-scrollbar sm:grid sm:pb-0 sm:gap-[15px] ${isTrainer ? 'sm:grid-cols-2' : 'sm:grid-cols-3'}`}>
@@ -411,46 +463,50 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
       </div>
 
       <div className="bg-white rounded-main shadow-sm border-main overflow-hidden">
-        <div className="p-4 md:p-4 space-y-4 md:space-y-8">
-          <div className="flex flex-col xl:flex-row justify-between xl:items-center space-y-4 xl:space-y-0">
-            <div className="flex bg-slate-100/80 p-1.5 rounded-xl md:rounded-2xl w-full xl:max-w-xl overflow-x-auto no-scrollbar border border-slate-200/50">
-              <button onClick={() => handleTabChange('members')} className={`${tabClasses('members')} rounded-xl min-w-fit`}>All</button>
-              <button onClick={() => handleTabChange('expiry')} className={`${tabClasses('expiry')} rounded-xl min-w-fit`}>Expiring</button>
-              <button onClick={() => handleTabChange('expired')} className={`${tabClasses('expired')} rounded-xl min-w-fit`}>Expired</button>
-              <button onClick={() => handleTabChange('dues')} className={`${tabClasses('dues')} rounded-xl min-w-fit`}>Unpaid</button>
-              <button onClick={() => handleTabChange('passes')} className={`${tabClasses('passes')} rounded-xl min-w-fit`}>Day Pass</button>
+        <div className=" space-y-4 md:space-y-8">
+          <div className="flex flex-col xl:flex-row justify-between xl:items-center space-y-4 xl:space-y-0  border-b border-[#E2E8F0] pb-5 px-5 pt-5">
+
+            <div className='flex gap-[5px] flex-wrap items-end'>
+              <button onClick={() => handleTabChange('members')} className={`${tabClasses('members')} rounded-main min-w-fit px-6`}>All</button>
+              <button onClick={() => handleTabChange('expiry')} className={`${tabClasses('expiry')} rounded-main min-w-fit px-6`}>Expiring</button>
+              <button onClick={() => handleTabChange('expired')} className={`${tabClasses('expired')} rounded-main min-w-fit px-6`}>Expired</button>
+              <button onClick={() => handleTabChange('dues')} className={`${tabClasses('dues')} rounded-main min-w-fit px-6`}>Balance Due</button>
+              <button onClick={() => handleTabChange('passes')} className={`${tabClasses('passes')} rounded-main min-w-fit px-6`}>DayPass</button>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4">
 
-              <div className="flex gap-2">
-                <button
+            <div className="flex flex-col sm:flex-row gap-[5px] xl:items-center">
+
+              <button onClick={handleExportExcel} className="h-[46px] w-[46px] flex items-center justify-center rounded-main border border-slate-200 hover:bg-slate-50 transition-colors">
+                <img src="/icons/excel.svg" alt="" className='size-[20px]' />
+              </button>
+
+              <div className="relative w-full sm:w-auto">
+                <img src="/icons/search.svg" alt="" className="absolute left-[15px] top-1/2 -translate-y-1/2 size-5 z-10" />
+                <Input
+                  type="text"
+                  placeholder="SEARCH..."
+                  className="block w-full sm:w-[191px] pl-[45px] pr-4 h-[46px] font-bold uppercase  bg-white"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+
+              <div className="flex gap-2 w-full sm:w-auto">
+                <Button
                   onClick={() => handleOpenModal(null, MemberType.DAY_PASS)}
-                  className="flex-1 sm:flex-none flex items-center justify-center px-4 py-2 bg-orange-100 text-orange-800 rounded-2xl font-black  tracking-normal font-medium hover:bg-orange-200 transition-all active:scale-95 text-[12px] md:text-[14px]"
+                  className="!bg-[#FFFBEB] !border-[#FBD691] !text-[#F59E0B] border  flex-1 sm:flex-none uppercase  "
                 >
-                  <TicketIcon className="w-4 h-4 mr-2" /> Day Pass
-                </button>
-                <button
+                  <img src="/icons/calendar.svg" alt="" className="w-5 h-5 mr-2" /> DAY PASS
+                </Button>
+                <Button
                   onClick={() => handleOpenModal(null, MemberType.SUBSCRIPTION)}
-                  className="flex-1 sm:flex-none flex items-center justify-center px-4 py-2 bg-brand text-charcoal rounded-2xl font-black  tracking-normal font-medium hover:bg-brand-400 transition-all shadow-xl shadow-brand/20 active:scale-95 text-[12px] md:text-[14px]"
+                  className="flex-1 sm:flex-none uppercase "
                 >
-                  <PlusIcon className="w-4 h-4 mr-2" /> New Member
-                </button>
+                  <img src="/icons/plus.svg" alt="" className="w-5 h-5 mr-2" /> ADD MEMBER
+                </Button>
               </div>
             </div>
-          </div>
-        </div>
-
-        <div className="w-full sm:max-w-md sm:ml-auto px-4 pb-4">
-          <div className="relative">
-            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 z-10" />
-            <input
-              type="text"
-              placeholder="Quick Search..."
-              className="block w-full pl-11 pr-4 py-3 border border-slate-200 bg-slate-50/50 rounded-xl md:rounded-2xl placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-brand/5 focus:border-brand transition-all text-sm font-semibold"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
           </div>
         </div>
 
@@ -471,15 +527,39 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
           </div>
         )}
 
-        <div className="hidden lg:block overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-100">
-            <thead className="bg-slate-50/50">
-              <tr>
-                <th className="px-10 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Profile</th>
-                <th className="px-10 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Expiry Date</th>
-                <th className="px-10 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Days Left</th>
-                <th className="px-10 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Payment</th>
-                <th className="relative px-10 py-5 text-right"><span className="sr-only">Actions</span></th>
+        <div className="hidden lg:block overflow-x-auto pt-5 px-5">
+          <table className="min-w-full  " >
+            <thead className=" ">
+              <tr className=''>
+                <th className="dashboard-secondary-desc secondary-color uppercase flex items-center gap-[1px] pb-3 bg-white">
+                  <div className="flex items-center gap-[1px]">
+                    PROFILE
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M10.5 11.75V4.25M10.5 4.25L13 6.82812M10.5 4.25L8 6.82812" stroke="#9CA3AF" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M5.5 4.25V11.75M5.5 11.75L8 9.17188M5.5 11.75L3 9.17188" stroke="#0081DD" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                </th>
+                <th className="dashboard-secondary-desc secondary-color uppercase pb-3">
+                  <div className="flex items-center gap-[1px]">
+                    EXPIRY DATE
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M10.5 11.75V4.25M10.5 4.25L13 6.82812M10.5 4.25L8 6.82812" stroke="#9CA3AF" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M5.5 4.25V11.75M5.5 11.75L8 9.17188M5.5 11.75L3 9.17188" stroke="#0081DD" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                </th>
+                <th className="dashboard-secondary-desc secondary-color uppercase pb-3">
+                  <div className="flex items-center gap-[1px]">
+                    DAYS LEFT
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M10.5 11.75V4.25M10.5 4.25L13 6.82812M10.5 4.25L8 6.82812" stroke="#9CA3AF" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M5.5 4.25V11.75M5.5 11.75L8 9.17188M5.5 11.75L3 9.17188" stroke="#0081DD" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                </th>
+                <th className="dashboard-secondary-desc secondary-color uppercase pb-3 text-left">PAYMENT</th>
+                <th className="dashboard-secondary-desc secondary-color uppercase pb-3 text-right pr-10">ACTIONS</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-slate-50">
@@ -490,38 +570,44 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
           </table>
         </div>
 
-        <div className="lg:hidden divide-y divide-slate-50">
+        <div className="lg:hidden ">
           {filteredMembers.map(member => {
             const { endDate, remainingDays } = getPlanDates(member);
             const isExpired = remainingDays < 0;
             const balance = member.feesAmount - member.paidAmount;
             return (
-              <div key={member._id || member.id} className="p-6 space-y-4 hover:bg-slate-50 transition-colors">
+              <div key={member._id || member.id} className=" transition-colors">
                 <div className="flex justify-between items-start">
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-2">
                     <MemberAvatar member={member} />
-                    <div className="ml-4">
-                      <div className="flex items-center gap-1.5">
-                        <h4 className="font-bold text-slate-950">{member.name}</h4>
+                    <div className="">
+                      <div className="flex items-center gap-[1px]">
+                        <h4 className="dashboard-primary-desc-geist ">{member.name}</h4>
                         {member.memberType === MemberType.DAY_PASS && (
                           <span className="text-[8px] font-black bg-orange-100 text-orange-700 px-1 rounded">PASS</span>
                         )}
                       </div>
-                      <p className="text-xs text-slate-400 font-bold">{member.phone}</p>
+                      <p className="dashboard-secondary-desc-geist secondary-color">{member.phone}</p>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end space-y-2 text-right">
-                    {isExpired ? <Badge color="red">Expired</Badge> : (
-                      <div className="flex flex-col items-end">
-                        <span className="text-[10px] font-black text-brand-700 uppercase bg-brand/10 px-3 py-1 rounded-lg mb-1">{remainingDays}d Left</span>
-                        <span className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter">Exp: {endDate.toLocaleDateString()}</span>
-                      </div>
-                    )}
-                    {balance > 0 && <span className="text-[9px] font-black text-red-600 uppercase">₹{balance} Due</span>}
+                  <div className="flex flex-col items-end justify-center">
+                    <span className={`dashboard-primary-desc-geist text-left ${isExpired
+                      ? 'red-color'
+                      : remainingDays <= 10
+                        ? 'red-color'
+                        : remainingDays <= 20
+                          ? 'yellow-text-color'
+                          : 'green-text-color'
+                      }`}>
+                      {isExpired ? 'Expired' : `${remainingDays} Days Left`}
+                    </span>
+                    <span className="dashboard-secondary-desc-geist secondary-color text-left">
+                      {balance > 0 ? `₹${balance} Due` : endDate.toLocaleDateString()}
+                    </span>
                   </div>
                 </div>
 
-                <div className="flex justify-end md:justify-between items-center py-4 px-5 bg-slate-50 rounded-2xl border border-slate-100">
+                <div className="flex justify-end md:justify-between items-center bg-slate-50 rounded-2xl border border-slate-100">
                   <div className="text-xs hidden md:block">
                     <span className="text-slate-400 font-black uppercase text-[9px] tracking-widest block mb-0.5">Expires</span>
                     <span className="font-black text-slate-800">{endDate.toLocaleDateString()}</span>

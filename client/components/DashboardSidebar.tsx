@@ -80,8 +80,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                                 }}
                                 title={isCollapsed ? item.label : ''}
                                 className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-[5px] px-[10px]'} py-[12px] rounded-main transition-all font-medium primary-description text-white ${activeView === item.id
-                                    && 'bg-[#242424]  '
-
+                                    ? 'bg-[#242424]  '
+                                    : 'bg-[#101010] border border-[#242424]'
                                     }`}
                             >
                                 <img src={item.icon} alt={item.label} className={isCollapsed ? "w-6 h-6" : ""} />

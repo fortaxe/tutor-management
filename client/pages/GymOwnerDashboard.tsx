@@ -8,11 +8,11 @@ import PlusIcon from '../components/icons/PlusIcon';
 import EditIcon from '../components/icons/EditIcon';
 import TrashIcon from '../components/icons/TrashIcon';
 import UserGroupIcon from '../components/icons/UserGroupIcon';
-import ClockIcon from '../components/icons/ClockIcon';
 import ExclamationTriangleIcon from '../components/icons/ExclamationTriangleIcon';
 import SearchIcon from '../components/icons/SearchIcon';
 import ArrowPathIcon from '../components/icons/ArrowPathIcon';
 import TicketIcon from '../components/icons/TicketIcon';
+import StatsCard from '../components/StatsCard';
 
 const WhatsAppIcon = ({ className }: { className?: string }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 24 24">
@@ -154,6 +154,7 @@ const MemberRow: React.FC<{
 
 const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, members, onAddMember, onUpdateMember, onRenewMember, onDeleteMember }) => {
   const [activeTab, setActiveTab] = useState<Tab>('members');
+  const [showThisMonthOnly, setShowThisMonthOnly] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCollectModalOpen, setIsCollectModalOpen] = useState(false);
   const [isRenewModalOpen, setIsRenewModalOpen] = useState(false);
@@ -179,32 +180,54 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
   const stats = useMemo(() => {
     const activeMembers = members.filter(m => getPlanDates(m).remainingDays >= 0).length;
     const expiredMembers = members.length - activeMembers;
-    const duesPending = members.filter(m => m.feesStatus !== PaymentStatus.PAID).length;
-    return { activeMembers, expiredMembers, duesPending };
+    const duesPendingMembers = members.filter(m => m.feesStatus !== PaymentStatus.PAID);
+    const duesPending = duesPendingMembers.length;
+    const totalDuesAmount = duesPendingMembers.reduce((sum, m) => sum + (m.feesAmount - m.paidAmount), 0);
+
+    // Calculate members joined this month
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const thisMonthMembers = members.filter(m => {
+      const d = new Date(m.planStart); // Using planStart as proxy for join date
+      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+    }).length;
+
+    return { activeMembers, expiredMembers, duesPending, totalDuesAmount, thisMonthMembers };
   }, [members]);
 
   const filteredMembers = useMemo(() => {
     let baseList = members;
 
-    switch (activeTab) {
-      case 'expiry':
-        baseList = members.filter(m => {
-          const { remainingDays } = getPlanDates(m);
-          return m.memberType === MemberType.SUBSCRIPTION && remainingDays >= 0 && remainingDays <= expiryFilter;
-        });
-        break;
-      case 'dues':
-        baseList = members.filter(m => m.feesStatus !== PaymentStatus.PAID);
-        break;
-      case 'passes':
-        baseList = members.filter(m => m.memberType === MemberType.DAY_PASS);
-        break;
-      case 'expired':
-        baseList = members.filter(m => getPlanDates(m).remainingDays < 0);
-        break;
-      case 'members':
-      default:
-        baseList = members;
+    if (showThisMonthOnly) {
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+      baseList = baseList.filter(m => {
+        const d = new Date(m.planStart);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      });
+    } else {
+      switch (activeTab) {
+        case 'expiry':
+          baseList = members.filter(m => {
+            const { remainingDays } = getPlanDates(m);
+            return m.memberType === MemberType.SUBSCRIPTION && remainingDays >= 0 && remainingDays <= expiryFilter;
+          });
+          break;
+        case 'dues':
+          baseList = members.filter(m => m.feesStatus !== PaymentStatus.PAID);
+          break;
+        case 'passes':
+          baseList = members.filter(m => m.memberType === MemberType.DAY_PASS);
+          break;
+        case 'expired':
+          baseList = members.filter(m => getPlanDates(m).remainingDays < 0);
+          break;
+        case 'members':
+        default:
+          baseList = members;
+      }
     }
 
     if (searchQuery.trim()) {
@@ -217,7 +240,12 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
     }
 
     return baseList;
-  }, [activeTab, members, expiryFilter, searchQuery]);
+  }, [activeTab, members, expiryFilter, searchQuery, showThisMonthOnly]);
+
+  const handleTabChange = (tab: Tab) => {
+    setActiveTab(tab);
+    setShowThisMonthOnly(false);
+  };
 
   const handleOpenModal = (member: Member | null = null, type: MemberType = MemberType.SUBSCRIPTION) => {
     setEditingMember(member);
@@ -327,43 +355,58 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
 
   const tabClasses = (tabName: Tab) => `
     flex-1 text-center py-3.5 px-4 text-[10px] font-black transition-all duration-300 uppercase tracking-widest
-    ${activeTab === tabName ? 'bg-charcoal text-white shadow-lg shadow-charcoal/20 z-10' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}
+    ${!showThisMonthOnly && activeTab === tabName ? 'bg-charcoal text-white shadow-lg shadow-charcoal/20 z-10' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}
   `;
 
   return (
     <div className="md:space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Stats Cards */}
       {/* Stats Cards */}
-      <div className={`flex overflow-x-auto pb-4 gap-4 snap-x snap-mandatory no-scrollbar sm:grid sm:pb-0 sm:gap-6 ${isTrainer ? 'sm:grid-cols-2' : 'sm:grid-cols-3'}`}>
+      <div className={`flex overflow-x-auto pb-4 gap-4 snap-x snap-mandatory no-scrollbar sm:grid sm:pb-0 sm:gap-[15px] ${isTrainer ? 'sm:grid-cols-2' : 'sm:grid-cols-3'}`}>
+        <StatsCard
+          label="Active Now"
+          value={stats.activeMembers}
+          variant="green"
+          isActive={showThisMonthOnly}
+          onClick={() => {
+            if (showThisMonthOnly) {
+              setShowThisMonthOnly(false);
+            } else {
+              setActiveTab('members');
+              setShowThisMonthOnly(true);
+            }
+          }}
+        >
+          <img className='size-[13px]' src="/icons/up.svg" alt="" />
+          {stats.thisMonthMembers} This Month
+        </StatsCard>
 
-        <div className="bg-white p-5 flex-shrink-0 snap-center  rounded-main border-main flex items-center ">
+        <StatsCard
+          label="Expired List"
+          value={stats.expiredMembers}
+          variant="red"
+          isActive={!showThisMonthOnly && activeTab === 'expired'}
+          onClick={() => {
+            setActiveTab('expired');
+            setShowThisMonthOnly(false);
+          }}
+        >
+          View List
+        </StatsCard>
 
-          <div className="">
-            <p className="secondary-description font-medium pb-3">Active Now</p>
-            <p className="green-text-color text-[32px] font-medium leading-[32px] mb-5">{stats.activeMembers}</p>
-
-            <p className='border-green px-[5px] py-[10px] rounded-main  py-[5px] px-[10px] text-[12px] leading[20px] font-medium flex justify-center items-center gap-[3.5px] green-secondary-bg green-text-color '>
-              <img className='size-[13px]' src="/icons/up.svg" alt="" />
-              16 This Month
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-white p-4 sm:p-7 flex-shrink-0 snap-center  rounded-xl md:rounded-3xl shadow-sm border border-slate-100 flex items-center group hover:shadow-xl hover:shadow-orange/5 transition-all">
-          <div className="bg-orange-50 p-3 sm:p-4 rounded-2xl border border-orange-100 group-hover:bg-orange-500 group-hover:text-white transition-all"><ClockIcon className="h-6 w-6 sm:h-7 sm:w-7 text-orange-500 group-hover:text-white" /></div>
-          <div className="ml-4 sm:ml-5">
-            <p className="text-[10px] sm:text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">Expired List</p>
-            <p className="text-2xl sm:text-3xl font-black text-slate-950">{stats.expiredMembers}</p>
-          </div>
-        </div>
         {!isTrainer && (
-          <div className="bg-white p-4 sm:p-7 flex-shrink-0 snap-center rounded-3xl shadow-sm border border-slate-100 flex items-center group hover:shadow-xl hover:shadow-yellow/5 transition-all">
-            <div className="bg-yellow-50 p-3 sm:p-4 rounded-2xl border border-yellow-100 group-hover:bg-yellow-500 group-hover:text-white transition-all"><ExclamationTriangleIcon className="h-6 w-6 sm:h-7 sm:w-7 text-yellow-500 group-hover:text-white" /></div>
-            <div className="ml-4 sm:ml-5">
-              <p className="text-[10px] sm:text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">Balance Due</p>
-              <p className="text-2xl sm:text-3xl font-black text-slate-950">{stats.duesPending}</p>
-            </div>
-          </div>
+          <StatsCard
+            label="Balance Due"
+            value={stats.duesPending < 10 ? `0${stats.duesPending}` : stats.duesPending}
+            variant="blue"
+            isActive={!showThisMonthOnly && activeTab === 'dues'}
+            onClick={() => {
+              setActiveTab('dues');
+              setShowThisMonthOnly(false);
+            }}
+          >
+            Due : ₹{stats.totalDuesAmount}
+          </StatsCard>
         )}
       </div>
 
@@ -371,11 +414,11 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
         <div className="p-4 md:p-4 space-y-4 md:space-y-8">
           <div className="flex flex-col xl:flex-row justify-between xl:items-center space-y-4 xl:space-y-0">
             <div className="flex bg-slate-100/80 p-1.5 rounded-xl md:rounded-2xl w-full xl:max-w-xl overflow-x-auto no-scrollbar border border-slate-200/50">
-              <button onClick={() => setActiveTab('members')} className={`${tabClasses('members')} rounded-xl min-w-fit`}>All</button>
-              <button onClick={() => setActiveTab('expiry')} className={`${tabClasses('expiry')} rounded-xl min-w-fit`}>Expiring</button>
-              <button onClick={() => setActiveTab('expired')} className={`${tabClasses('expired')} rounded-xl min-w-fit`}>Expired</button>
-              <button onClick={() => setActiveTab('dues')} className={`${tabClasses('dues')} rounded-xl min-w-fit`}>Unpaid</button>
-              <button onClick={() => setActiveTab('passes')} className={`${tabClasses('passes')} rounded-xl min-w-fit`}>Day Pass</button>
+              <button onClick={() => handleTabChange('members')} className={`${tabClasses('members')} rounded-xl min-w-fit`}>All</button>
+              <button onClick={() => handleTabChange('expiry')} className={`${tabClasses('expiry')} rounded-xl min-w-fit`}>Expiring</button>
+              <button onClick={() => handleTabChange('expired')} className={`${tabClasses('expired')} rounded-xl min-w-fit`}>Expired</button>
+              <button onClick={() => handleTabChange('dues')} className={`${tabClasses('dues')} rounded-xl min-w-fit`}>Unpaid</button>
+              <button onClick={() => handleTabChange('passes')} className={`${tabClasses('passes')} rounded-xl min-w-fit`}>Day Pass</button>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">

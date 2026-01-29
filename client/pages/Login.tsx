@@ -44,7 +44,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, backendError }) => {
       {/* Hero Banner - Left Side (50%) */}
       <div className="absolute inset-0 w-full h-full md:relative md:w-1/2 bg-black flex flex-col justify-between px-4 pb-4 pt-6 md:p-[50px] z-0">
         <div className="absolute inset-0 z-0">
-          <img src="/images/hero.png" alt="Gym Background" className="w-full h-full " />
+          <img src="/images/hero.png" alt="Gym Background" className="w-full h-full object-cover md:object-contain " />
 
         </div>
 

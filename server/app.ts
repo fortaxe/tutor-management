@@ -157,7 +157,8 @@ app.post('/api/members', upload.single('photo'), async (req, res) => {
         gymId: member.gymId,
         amount: member.paidAmount,
         paymentDate: new Date().toISOString().split('T')[0],
-        note: 'Initial Registration Payment'
+        note: 'Initial Registration Payment',
+        paymentMode: validatedMember.paymentMode
       });
     }
     res.status(201).json(member);
@@ -184,7 +185,8 @@ app.patch('/api/members/:id', upload.single('photo'), async (req, res) => {
         gymId: updatedMember.gymId,
         amount: memberData.paidAmount - oldMember.paidAmount,
         paymentDate: new Date().toISOString().split('T')[0],
-        note: memberData.paidAmount >= updatedMember.feesAmount ? 'Balance Cleared' : 'Partial Payment'
+        note: memberData.paidAmount >= updatedMember.feesAmount ? 'Balance Cleared' : 'Partial Payment',
+        paymentMode: memberData.paymentMode // Assuming paymentMode is passed in the update body
       });
     }
     res.json(updatedMember);
@@ -206,7 +208,8 @@ app.post('/api/members/:id/renew', async (req, res) => {
         gymId: member.gymId,
         amount: renewalData.paidAmount,
         paymentDate: new Date().toISOString().split('T')[0],
-        note: `Renewal (${renewalData.planDurationDays} days)`
+        note: `Renewal (${renewalData.planDurationDays} days)`,
+        paymentMode: renewalData.paymentMode // Assuming paymentMode is in renewalData
       });
     }
     res.json(member);

@@ -1,6 +1,6 @@
 
 import mongoose from 'mongoose';
-import { PaymentStatus, MemberType } from '../types';
+import { PaymentStatus, MemberType, PaymentMode } from '../types';
 
 const memberSchema = new mongoose.Schema({
   gymId: { type: Number, required: true, ref: 'Gym' },
@@ -15,6 +15,7 @@ const memberSchema = new mongoose.Schema({
   memberType: { type: String, enum: Object.values(MemberType), required: true },
   photo: String,
   dob: String,
+  paymentMode: { type: String, enum: Object.values(PaymentMode) },
 }, { timestamps: true });
 
 export const Member = mongoose.models.Member || mongoose.model('Member', memberSchema);

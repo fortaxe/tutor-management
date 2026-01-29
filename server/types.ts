@@ -57,6 +57,11 @@ export enum MemberType {
   DAY_PASS = 'Day Pass',
 }
 
+export enum PaymentMode {
+  CASH = 'Cash',
+  UPI = 'UPI',
+}
+
 export interface Member {
   id: number;
   gymId: number;
@@ -70,6 +75,7 @@ export interface Member {
   feesStatus: PaymentStatus;
   memberType: MemberType;
   photo?: string; // Base64 encoded image
+  paymentMode?: PaymentMode;
 }
 
 export interface MemberPayment {
@@ -80,4 +86,5 @@ export interface MemberPayment {
   amount: number;
   paymentDate: string;
   note: string;
+  paymentMode?: PaymentMode;
 }

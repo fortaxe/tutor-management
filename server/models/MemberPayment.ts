@@ -7,7 +7,8 @@ const memberPaymentSchema = new mongoose.Schema({
   gymId: { type: Number, ref: 'Gym', required: true },
   amount: { type: Number, required: true },
   paymentDate: { type: String, required: true },
-  note: { type: String }
+  note: { type: String },
+  paymentMode: { type: String }
 }, { timestamps: true });
 
 export const MemberPaymentRecord = mongoose.models.MemberPayment || mongoose.model('MemberPayment', memberPaymentSchema);

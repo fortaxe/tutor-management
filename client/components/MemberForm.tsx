@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Member, PaymentStatus, MemberType } from '../types';
+import { Member, PaymentStatus, MemberType, PaymentMode } from '../types';
 import CameraCapture from './CameraCapture';
 
 const compressImage = (file: File): Promise<string> => {
@@ -55,6 +55,7 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
         planDurationDays: member.planDurationDays,
         feesAmount: member.feesAmount.toString(),
         paidToday: member.paidAmount.toString(),
+        paymentMode: member.paymentMode || PaymentMode.CASH,
         photo: member.photo,
       };
     }
@@ -68,6 +69,7 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
       planDurationDays: initialType === MemberType.DAY_PASS ? 1 : 29,
       feesAmount: initialType === MemberType.DAY_PASS ? '100' : '',
       paidToday: initialType === MemberType.DAY_PASS ? '100' : '',
+      paymentMode: PaymentMode.CASH,
       photo: undefined as string | undefined,
     };
   });
@@ -168,6 +170,7 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
       feesStatus: status,
       memberType: activeType,
       photo: formData.photo,
+      paymentMode: formData.paymentMode,
     };
 
     if (member) {
@@ -321,6 +324,26 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
               <input type="text" inputMode="numeric" name="paidToday" value={formData.paidToday} onChange={handleChange} required className={`${inputClasses} font-black text-brand-700`} />
             </div>
           </div>
+
+          <div>
+            <label className={labelClasses}>Payment Mode</label>
+            <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 mt-1">
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, paymentMode: PaymentMode.CASH }))}
+                className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${formData.paymentMode === PaymentMode.CASH ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+              >
+                Cash
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, paymentMode: PaymentMode.UPI }))}
+                className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${formData.paymentMode === PaymentMode.UPI ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+              >
+                UPI
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -355,8 +378,28 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
               <input type="text" inputMode="numeric" name="feesAmount" value={formData.feesAmount} onChange={handleChange} required className={`${inputClasses} font-black`} />
             </div>
             <div>
-              <label className={labelClasses}>Paid Total (₹)</label>
+              <label className={labelClasses}>Paid Today (₹)</label>
               <input type="text" inputMode="numeric" name="paidToday" value={formData.paidToday} onChange={handleChange} required className={`${inputClasses} font-black text-brand-700`} />
+            </div>
+          </div>
+
+          <div>
+            <label className={labelClasses}>Payment Mode</label>
+            <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 mt-1">
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, paymentMode: PaymentMode.CASH }))}
+                className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${formData.paymentMode === PaymentMode.CASH ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+              >
+                Cash
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, paymentMode: PaymentMode.UPI }))}
+                className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${formData.paymentMode === PaymentMode.UPI ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+              >
+                UPI
+              </button>
             </div>
           </div>
         </div>

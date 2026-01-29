@@ -61,6 +61,11 @@ export enum MemberType {
   DAY_PASS = 'Day Pass',
 }
 
+export enum PaymentMode {
+  CASH = 'Cash',
+  UPI = 'UPI',
+}
+
 export interface Member {
   _id?: string;
   id?: number;
@@ -76,6 +81,7 @@ export interface Member {
   memberType: MemberType;
   photo?: string; // Base64 encoded image
   dob?: string;
+  paymentMode?: PaymentMode;
 }
 
 

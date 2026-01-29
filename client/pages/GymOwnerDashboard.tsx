@@ -410,7 +410,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
         )}
       </div>
 
-      <div className="bg-white rounded-xl md:rounded-[2.5rem] shadow-sm border border-slate-200/60 overflow-hidden">
+      <div className="bg-white rounded-main shadow-sm border-main overflow-hidden">
         <div className="p-4 md:p-4 space-y-4 md:space-y-8">
           <div className="flex flex-col xl:flex-row justify-between xl:items-center space-y-4 xl:space-y-0">
             <div className="flex bg-slate-100/80 p-1.5 rounded-xl md:rounded-2xl w-full xl:max-w-xl overflow-x-auto no-scrollbar border border-slate-200/50">

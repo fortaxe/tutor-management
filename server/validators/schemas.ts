@@ -1,6 +1,6 @@
 
 import { z } from 'zod';
-import { UserRole, GymStatus, SubscriptionStatus, PaymentStatus, MemberType } from '../types';
+import { UserRole, GymStatus, SubscriptionStatus, PaymentStatus, MemberType, PaymentMode } from '../types';
 
 export const loginSchema = z.object({
   phone: z.string().length(10),
@@ -29,4 +29,5 @@ export const memberSchemaValidation = z.object({
   memberType: z.nativeEnum(MemberType),
   photo: z.string().optional(),
   dob: z.string().optional(),
+  paymentMode: z.nativeEnum(PaymentMode).optional(),
 });

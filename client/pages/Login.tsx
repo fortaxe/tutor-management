@@ -40,9 +40,9 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, backendError }) => {
   };
 
   return (
-    <div className="w-full h-screen bg-white relative flex flex-col md:flex-row overflow-hidden font-sans">
+    <div className="w-full h-screen bg-white relative flex flex-col lg:flex-row overflow-hidden font-sans">
       {/* Hero Banner - Left Side (50%) */}
-      <div className="absolute inset-0 w-full h-full md:relative md:w-1/2 bg-black flex flex-col justify-between px-4 pb-4 pt-6 md:p-[50px] z-0">
+      <div className="absolute inset-0 w-full h-full lg:relative lg:w-1/2 bg-black flex flex-col justify-between px-4 pb-4 pt-6 lg:p-[50px] z-0">
         <div className="absolute inset-0 z-0">
           <img src="/images/hero.png" alt="Gym Background" className="w-full h-full object-cover " />
 
@@ -85,25 +85,25 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, backendError }) => {
       </div>
 
       {/* Login Section - Right Side (50%) */}
-      <div className="relative w-full md:w-1/2 h-full flex flex-col justify-center items-center p-6 md:p-[25px] bg-transparent md:bg-[#F8FAFC]">
+      <div className="relative w-full lg:w-1/2 h-full flex flex-col justify-center items-center p-4 lg:p-[25px] bg-transparent lg:bg-[#F8FAFC]">
         {/* Top Left */}
-        <div className="absolute top-4 md:top-[25px] left-4 md:left-[25px]">
-          <span className="text-white md:text-black font-semibold text-[18px] md:text-[24px] leading-[22px] md:leading-[24px]" >Gym <span className="text-brand-500">Stack</span></span>
+        <div className="absolute top-4 lg:top-[25px] left-4 lg:left-[25px]">
+          <span className="text-white lg:text-black font-semibold text-[18px] lg:text-[24px] leading-[22px] lg:leading-[24px]" >Gym <span className="text-brand-500">Stack</span></span>
         </div>
 
         {/* Top Right */}
-        <div className="absolute top-4 md:top-[25px] right-4 md:right-[25px]">
-          <a href="tel:+919676675576" className="text-white md:!text-[#0F172A] primary-description underline decoration-[1px] outline-none ring-none">Contact us</a>
+        <div className="absolute top-4 lg:top-[25px] right-4 lg:right-[25px]">
+          <a href="tel:+919676675576" className="text-white lg:!text-[#0F172A] primary-description underline decoration-[1px] outline-none ring-none">Contact us</a>
         </div>
 
         {/* Bottom Left */}
-        <div className="absolute bottom-4 md:bottom-[25px] left-4 md:left-[25px]">
-          <span className="text-white md:!text-[#0F172A] primary-description">Terms of use</span>
+        <div className="absolute bottom-4 lg:bottom-[25px] left-4 lg:left-[25px]">
+          <span className="text-white lg:!text-[#0F172A] primary-description underline decoration-[1px]">Terms of use</span>
         </div>
 
         {/* Bottom Right */}
-        <div className="absolute bottom-4 md:bottom-[25px] right-4 md:right-[25px]">
-          <a href="tel:+919676675576" className="text-white md:!text-[#0F172A] primary-description underline decoration-[1px] outline-none ring-none">Book a Demo</a>
+        <div className="absolute bottom-4 lg:bottom-[25px] right-4 lg:right-[25px]">
+          <a href="tel:+919676675576" className="text-white lg:!text-[#0F172A] primary-description underline decoration-[1px] outline-none ring-none">Book a Demo</a>
         </div>
         <LoginCard
           phone={phone}

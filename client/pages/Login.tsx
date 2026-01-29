@@ -98,7 +98,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, backendError }) => {
 
         {/* Bottom Left */}
         <div className="absolute bottom-4 md:bottom-[25px] left-4 md:left-[25px]">
-          <span className="text-white md:!text-[#0F172A] primary-description">Anju Laxmi Global Pvt. Ltd.</span>
+          <span className="text-white md:!text-[#0F172A] primary-description">Terms of Use</span>
         </div>
 
         {/* Bottom Right */}

@@ -48,7 +48,7 @@ const LoginCard: React.FC<LoginCardProps> = ({
                             maxLength={10}
                             value={phone}
                             onChange={handlePhoneChange}
-                            placeholder="Enter Your Mobile Number"
+                            placeholder="Enter mobile number"
                         />
                         {errors.phone && <p className="tertiary-description red-color">{errors.phone}</p>}
                     </div>
@@ -61,7 +61,7 @@ const LoginCard: React.FC<LoginCardProps> = ({
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                placeholder="Secret Password"
+                                placeholder="Enter your password"
                             />
                             <button
                                 type="button"

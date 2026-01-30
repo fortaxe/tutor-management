@@ -1,68 +1,50 @@
+
 import React from 'react';
 
 export interface Column<T> {
-    header: string;
-    accessor: keyof T | ((item: T) => React.ReactNode);
-    className?: string;
-    sortable?: boolean;
+    key: string;
+    header: React.ReactNode;
+    render?: (item: T) => React.ReactNode;
+    className?: string; // Class for the <td>
+    headerClassName?: string; // Class for the <th>
+    onClickHeader?: () => void;
 }
 
 interface TableProps<T> {
     data: T[];
     columns: Column<T>[];
     keyExtractor: (item: T) => string | number;
+    className?: string;
+    onRowClick?: (item: T) => void;
 }
 
-function Table<T>({ data, columns, keyExtractor }: TableProps<T>) {
+export function Table<T>({ data, columns, keyExtractor, className, onRowClick }: TableProps<T>) {
     return (
-        <div className="overflow-x-auto pt-5 px-5">
-            <table className="min-w-full divide-y divide-slate-100">
+        <div className={`hidden lg:block overflow-x-auto pt-5 no-scrollbar ${className || ''}`}>
+            <table className="min-w-full">
                 <thead>
                     <tr>
-                        {columns.map((col, index) => (
+                        {columns.map((col) => (
                             <th
-                                key={index}
-                                className={`dashboard-secondary-desc secondary-color uppercase pb-3 ${col.className || ''}`}
+                                key={col.key}
+                                className={`dashboard-secondary-desc secondary-color uppercase pb-3 ${col.headerClassName || ''}`}
+                                onClick={col.onClickHeader}
                             >
-                                <div className="flex items-center gap-[1px]">
-                                    {col.header}
-                                    {col.sortable && (
-                                        <svg
-                                            width="16"
-                                            height="16"
-                                            viewBox="0 0 16 16"
-                                            fill="none"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                        >
-                                            <path
-                                                d="M10.5 11.75V4.25M10.5 4.25L13 6.82812M10.5 4.25L8 6.82812"
-                                                stroke="#9CA3AF"
-                                                strokeWidth="1.3"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                            />
-                                            <path
-                                                d="M5.5 4.25V11.75M5.5 11.75L8 9.17188M5.5 11.75L3 9.17188"
-                                                stroke="#0081DD"
-                                                strokeWidth="1.3"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                            />
-                                        </svg>
-                                    )}
-                                </div>
+                                {col.header}
                             </th>
                         ))}
                     </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-slate-50">
                     {data.map((item) => (
-                        <tr key={keyExtractor(item)} className="group hover:bg-slate-50 transition-colors">
-                            {columns.map((col, index) => (
-                                <td key={index} className={`whitespace-nowrap px-6 py-4 ${col.className || ''}`}>
-                                    {typeof col.accessor === 'function'
-                                        ? col.accessor(item)
-                                        : (item[col.accessor] as React.ReactNode)}
+                        <tr
+                            key={keyExtractor(item)}
+                            className="odd:bg-[#F4F7FB] even:bg-[#FFFFFF] transition-colors group"
+                            onClick={() => onRowClick?.(item)}
+                        >
+                            {columns.map((col) => (
+                                <td key={col.key} className={col.className}>
+                                    {col.render ? col.render(item) : null}
                                 </td>
                             ))}
                         </tr>
@@ -72,5 +54,3 @@ function Table<T>({ data, columns, keyExtractor }: TableProps<T>) {
         </div>
     );
 }
-
-export default Table;

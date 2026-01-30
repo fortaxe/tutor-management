@@ -35,8 +35,8 @@ const StatsCard: React.FC<StatsCardProps> = ({ label, value, variant, onClick, i
     return (
         <div className="bg-white p-5 flex-shrink-0 snap-center rounded-main border-main flex items-center w-full">
             <div className="w-full">
-                <p className="secondary-description font-medium pb-3">{label}</p>
-                <p className={`${styles.value} text-[32px] font-medium leading-[32px] mb-5`}>{value}</p>
+                <p className="secondary-description font-bold font-grotesk uppercase pb-3">{label}</p>
+                <p className={`${styles.value} text-[32px] font-medium leading-[32px] mb-5 font-bold font-grotesk `}>{value}</p>
 
                 {children && (
                     <Tag

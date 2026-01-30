@@ -24,7 +24,7 @@ const BorderButton: React.FC<BorderButtonProps> = ({
         <button
             type={type}
             onClick={onClick}
-            className={`w-full px-5 py-3 border font-medium rounded-[10px] primary-description flex items-center justify-center transition-all hover:opacity-80 ${variantStyles[variant]} ${className}`}
+            className={`w-full px-5 py-3 border rounded-[10px] primary-description flex items-center justify-center transition-all  font-grotesk uppercase font-bold ${variantStyles[variant]} ${className}`}
         >
             {children}
         </button>

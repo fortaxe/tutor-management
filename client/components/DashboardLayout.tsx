@@ -62,7 +62,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 onClick={() => setIsCollapsed(!isCollapsed)}
                 className="size-[26px] cursor-pointer"
               />
-              <h2 className="primary-descripiton font-medium ">
+              <h2 className="primary-descripiton uppercase font-grotesk font-bold ">
                 Dashboard / <span className='text-black'>
                   {activeView === 'dashboard' ? 'Members' :
                     activeView === 'staff' ? 'Staff' :
@@ -70,15 +70,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 </span>
               </h2>
             </div>
-            <div className='mt-[30px] pb-5'>
-              <h2 className="text-[32px] leading-[32px] font-medium text-black">{pageTitle}</h2>
-            </div>
           </div>
 
 
 
 
-          <div className="hidden sm:block">
+          <div className="hidden sm:block  pb-[10px]">
             <BorderButton variant="green">
               {user.role === UserRole.SUPER_ADMIN ? 'Platform Administrator' :
                 user.role === UserRole.GYM_OWNER ? 'Gym Manager' : 'Staff Trainer'}
@@ -87,6 +84,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         </header>
 
         <main className="flex-1 overflow-y-auto ">
+          <div className=' pb-5'>
+            <h2 className="text-[32px] leading-[32px] font-semibold text-black">{pageTitle}</h2>
+          </div>
           <div className="">
             {children}
           </div>

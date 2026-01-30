@@ -321,36 +321,11 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
 
         {step === 2 && (
           <div className="space-y-6">
-            <div className="bg-[#F8FAFC] rounded-main border border-[#E2E8F0] p-4">
-              <h4 className="text-[12px] leading-[16px] font-bold text-[#64748B] uppercase font-grotesk mb-3">Calculated Coverage</h4>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] leading-[14px] font-medium text-[#64748B] mb-1">Starts From</label>
-                  <div className="text-[14px] leading-[20px] font-bold text-[#0F172A] font-grotesk">
-                    {formData.planStart ? new Date(formData.planStart).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-[10px] leading-[14px] font-medium text-[#64748B] mb-1">Ends On</label>
-                  <div className="text-[14px] leading-[20px] font-bold text-[#0F172A] font-grotesk">
-                    {(() => {
-                      if (!formData.planStart) return '-';
-                      const date = new Date(formData.planStart);
-                      date.setDate(date.getDate() + (Number(formData.planDurationDays) || 0));
-                      return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                    })()}
-                  </div>
-                </div>
-              </div>
-            </div>
+
 
             <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-[#F1F5F9] rounded-full">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M1.75 11.2336C2.26071 11.8386 3.01353 12.25 3.86478 12.25H10.1352C10.9865 12.25 11.7393 11.8386 12.25 11.2336M1.75 11.2336C1.43634 10.8621 1.25 10.3845 1.25 9.86667V3.58333C1.25 2.50634 2.12656 1.63333 3.20833 1.63333H10.7917C11.8734 1.63333 12.75 2.50634 12.75 3.58333V9.86667C12.75 10.3845 12.5637 10.8621 12.25 11.2336M1.75 11.2336C1.75 11.4554 1.79133 11.6677 1.86756 11.8647M12.25 11.2336C12.25 11.4554 12.2087 11.6677 12.1324 11.8647M4.16667 3.96667H9.83333M4.16667 6.3H7.58333" stroke="#0F172A" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <h3 className="text-[14px] leading-[20px] font-bold text-[#0F172A] font-grotesk">Configure Membership Term</h3>
+
+
             </div>
 
             <div>

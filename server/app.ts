@@ -67,6 +67,7 @@ app.post('/api/gyms', async (req, res) => {
 
     await User.create({
       phone: validatedGym.ownerPhone,
+      name: validatedGym.ownerName,
       password: password || 'gym123',
       role: UserRole.GYM_OWNER,
       gymId: id
@@ -84,12 +85,13 @@ app.patch('/api/gyms/:id', async (req, res) => {
     await connectDB();
     const gym = await Gym.findOneAndUpdate({ id: req.params.id }, gymData, { new: true });
 
-    if (password || gymData.ownerPhone) {
+    if (password || gymData.ownerPhone || gymData.ownerName) {
       await User.findOneAndUpdate(
         { gymId: req.params.id, role: UserRole.GYM_OWNER },
         {
           ...(password ? { password } : {}),
-          ...(gymData.ownerPhone ? { phone: gymData.ownerPhone } : {})
+          ...(gymData.ownerPhone ? { phone: gymData.ownerPhone } : {}),
+          ...(gymData.ownerName ? { name: gymData.ownerName } : {})
         }
       );
     }

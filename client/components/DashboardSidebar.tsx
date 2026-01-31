@@ -107,26 +107,18 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                         )}
 
                     </div>
-                    {/* <div className="mb-6 px-2">
-                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-2">Connected Account</p>
-                        <div className="flex items-center space-x-3">
-                            <div className="h-8 w-8 rounded-full bg-slate-700 flex items-center justify-center font-bold text-xs text-brand">
-                                {user.phone.slice(-2)}
-                            </div>
-                            <p className="font-bold text-white truncate text-sm">{user.phone}</p>
-                        </div>
-                    </div>
-                    {isSuperAdmin && (
+                    {(user.role === UserRole.GYM_OWNER || user.role === UserRole.SUPER_ADMIN) && (
                         <button
-                            onClick={onChangePasswordRequest}
-                            className="w-full mb-3 px-5 py-3 bg-slate-800/50 text-slate-400 border border-slate-700/50 rounded-2xl hover:bg-slate-800 hover:text-white transition-all text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2"
+                            onClick={_onChangePasswordRequest}
+                            className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-[5px] px-[10px]'} py-[12px] rounded-main transition-all font-medium primary-description text-white bg-[#101010] border border-[#242424] hover:bg-[#242424]`}
+                            title={isCollapsed ? "Change Password" : ""}
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 flex-shrink-0">
                                 <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
                             </svg>
-                            Change Password
+                            {!isCollapsed && <span>Change Password</span>}
                         </button>
-                    )} */}
+                    )}
                     <BorderButton variant="red" onClick={onLogout}>
                         {isCollapsed ? (
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">

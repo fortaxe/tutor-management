@@ -41,7 +41,10 @@ export interface SubscriptionPayment {
 export interface Gym {
   id: number;
   name: string;
+  ownerName?: string;
   ownerPhone: string;
+  state?: string;
+  pincode?: string;
   status: GymStatus;
   subscriptionStatus: SubscriptionStatus;
   subscriptionStartDate: string;

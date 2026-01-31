@@ -13,7 +13,7 @@ const Input: React.FC<InputProps> = ({ className = '', label, error, required, s
     return (
         <div className="space-y-[5px] overflow-visible">
             {label && (
-                <label className="block text-[14px] font-bold font-grotesk secondary-color uppercase mb-[5px]">
+                <label className="block text-[14px] leading-[20px] md:text-[16px] md:leading-[22px] font-bold font-grotesk secondary-color uppercase mb-[5px]">
                     {label}
                     {required && <span className="red-color">*</span>}
                 </label>

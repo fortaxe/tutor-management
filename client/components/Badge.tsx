@@ -9,7 +9,7 @@ interface BadgeProps {
 const Badge: React.FC<BadgeProps> = ({ color, children }) => {
   const colorClasses = {
     green: 'bg-emerald-50 text-emerald-700 border-emerald-100',
-    yellow: 'bg-yellow-50 text-yellow-700 border-yellow-100',
+    yellow: 'bg-orange-50 text-orange-700 border-orange-100',
     red: 'bg-red-50 text-red-700 border-red-100',
     blue: 'bg-blue-50 text-blue-700 border-blue-100',
     gray: 'bg-slate-100 text-slate-600 border-slate-200',

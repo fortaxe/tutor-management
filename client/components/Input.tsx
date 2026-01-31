@@ -15,7 +15,7 @@ const Input: React.FC<InputProps> = ({ className = '', label, error, required, s
             {label && (
                 <label className="block primary-description font-bold font-grotesk secondary-color uppercase mb-[5px]">
                     {label}
-                    {required && <span className="text-[#EF4444]">*</span>}
+                    {required && <span className="red-color">*</span>}
                 </label>
             )}
             <div className={cn(
@@ -29,7 +29,7 @@ const Input: React.FC<InputProps> = ({ className = '', label, error, required, s
                 />
                 {endContent && <div className="ml-2 flex-shrink-0">{endContent}</div>}
             </div>
-            {error && <p className="text-red-500 text-xs font-medium">{error}</p>}
+            {error && <p className="text-[14px] leading-[20px] font-semibold  red-color">{error}</p>}
         </div>
     );
 };

@@ -4,7 +4,7 @@ import Tag from './Tag';
 interface StatsCardProps {
     label: string;
     value: string | number;
-    variant: 'green' | 'red' | 'blue';
+    variant: 'green' | 'red' | 'blue' | 'orange';
     onClick?: () => void;
     isActive?: boolean;
     children?: React.ReactNode;
@@ -26,11 +26,16 @@ const StatsCard: React.FC<StatsCardProps> = ({ label, value, variant, onClick, i
             value: 'blue-text-color',
             footer: 'blue-secondary-bg blue-text-color border-blue',
             activeFooter: 'bg-[#0E7490] text-white border-[#0E7490]'
+        },
+        orange: {
+            value: 'orange-text-color',
+            footer: 'orange-secondary-bg orange-text-color border-orange',
+            activeFooter: 'bg-[#F59E0B] text-white border-[#F59E0B]'
         }
     };
 
     const styles = variantStyles[variant];
-    const footerStyles = isActive ? styles.activeFooter : styles.footer;
+
 
     return (
         <div className="bg-white p-5 flex-shrink-0 snap-center rounded-main border-main flex items-center w-full">

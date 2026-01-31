@@ -1,0 +1,22 @@
+import React from 'react';
+
+const TrendUpIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg
+        width="13"
+        height="13"
+        viewBox="0 0 13 13"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        {...props}
+    >
+        <path
+            d="M11.5781 3.96094L7.83064 7.68559C7.324 8.18914 7.0707 8.44086 6.75652 8.44086C6.44228 8.44081 6.18904 8.18898 5.68254 7.68534L5.56097 7.56448C5.05402 7.06037 4.80054 6.80829 4.48613 6.80845C4.17171 6.80855 3.91841 7.06078 3.41182 7.56524L1.42188 9.54688M11.5781 3.96094V6.77716M11.5781 3.96094H8.74343"
+            stroke="currentColor"
+            strokeWidth="1.3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+    </svg>
+);
+
+export default TrendUpIcon;

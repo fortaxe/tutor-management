@@ -10,9 +10,12 @@ import Tag from '../components/Tag';
 import Input from '../components/Input';
 import StatsCard from '../components/StatsCard';
 import ActionIcon from '../components/ActionIcon';
-import SortIcon from '../components/icons/SortIcon';
+import TrendUpIcon from '../components/icons/TrendUpIcon';
 import { Table, Column } from '../components/Table';
 import Drawer from '../components/Drawer';
+
+import CollectBalanceForm from '../components/CollectBalanceForm';
+import RenewPlanForm from '../components/RenewPlanForm';
 
 interface GymOwnerDashboardProps {
   user: User;
@@ -49,17 +52,26 @@ const MemberAvatar: React.FC<{ member: Member }> = ({ member }) => {
     );
   }
 
+  const { remainingDays } = getPlanDates(member);
+  const isExpired = remainingDays < 0;
+  const balance = member.feesAmount - member.paidAmount;
+
+  let themeClass = '';
+
+  if (isExpired) {
+    themeClass = 'red-secondary-bg border-red red-color';
+  } else if (balance > 0) {
+    themeClass = 'orange-secondary-bg border-orange orange-text-color';
+  } else {
+    themeClass = 'green-secondary-bg border-green green-text-color';
+  }
+
   return (
-    <div className={`size-[46px] rounded-main border flex items-center justify-center font-black text-xs uppercase font-bold font-grotesk ${member.memberType === MemberType.DAY_PASS ? 'bg-orange-50 border-orange-200 text-orange-700' : 'bg-brand/10 border-brand/20 text-brand-700'}`}>
+    <div className={`size-[46px] rounded-main border flex items-center justify-center font-black text-[16px] leading-[22px] uppercase font-bold font-grotesk ${themeClass}`}>
       {member.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)}
     </div>
   );
 };
-
-
-
-
-
 
 const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, members, onAddMember, onUpdateMember, onRenewMember, onDeleteMember }) => {
   const [activeTab, setActiveTab] = useState<Tab>('members');
@@ -70,28 +82,21 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [initialType, setInitialType] = useState<MemberType>(MemberType.SUBSCRIPTION);
-  const [collectAmount, setCollectAmount] = useState<string>('');
 
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'planStart', direction: 'desc' });
+  const sortConfig = { key: 'planStart', direction: 'desc' as 'asc' | 'desc' };
 
-  // Renewal State
-  const [renewalFormData, setRenewalFormData] = useState({
-    type: MemberType.SUBSCRIPTION,
-    startDate: new Date().toISOString().split('T')[0],
-    duration: 30,
-    fee: '',
-    paid: '',
-  });
-
-  const [expiryFilter, setExpiryFilter] = useState<number>(7);
+  const expiryFilter = 10;
   const [searchQuery, setSearchQuery] = useState('');
 
   const isTrainer = user.role === UserRole.TRAINER;
 
   const stats = useMemo(() => {
-    const activeMembers = members.filter(m => getPlanDates(m).remainingDays >= 0).length;
-    const expiredMembers = members.length - activeMembers;
-    const duesPendingMembers = members.filter(m => m.feesStatus !== PaymentStatus.PAID);
+    const expiredMembers = members.filter(m => getPlanDates(m).remainingDays < 0).length;
+    const expiringSoon = members.filter(m => {
+      const { remainingDays } = getPlanDates(m);
+      return remainingDays >= 0 && remainingDays <= expiryFilter;
+    }).length;
+    const duesPendingMembers = members.filter(m => (m.feesAmount - m.paidAmount) > 0 && getPlanDates(m).remainingDays >= 0);
     const duesPending = duesPendingMembers.length;
     const totalDuesAmount = duesPendingMembers.reduce((sum, m) => sum + (m.feesAmount - m.paidAmount), 0);
 
@@ -104,16 +109,12 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
       return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
     }).length;
 
-    return { activeMembers, expiredMembers, duesPending, totalDuesAmount, thisMonthMembers };
-  }, [members]);
+    const activeMembers = members.length - expiredMembers;
 
-  const handleSort = React.useCallback((key: string) => {
-    let direction: 'asc' | 'desc' = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key, direction });
-  }, [sortConfig]);
+    return { activeMembers, expiredMembers, duesPending, totalDuesAmount, thisMonthMembers, expiringSoon };
+  }, [members, expiryFilter]);
+
+
 
   const columns: Column<Member>[] = [
     {
@@ -121,21 +122,17 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
       header: (
         <div className="flex items-center gap-[1px]">
           PROFILE
-          <SortIcon active={sortConfig.key === 'name'} direction={sortConfig.direction} />
         </div>
       ),
-      headerClassName: "flex items-center gap-[1px] pl-5 pr-[50px] bg-white cursor-pointer select-none",
-      className: "py-[15px] pl-5 pr-[50px] whitespace-nowrap",
-      onClickHeader: () => handleSort('name'),
+      headerClassName: "table-th pl-5 pr-[50px]",
+      className: "w-1 py-[15px] pl-5 pr-[50px] whitespace-nowrap",
       render: (member) => (
         <div className="flex items-center">
           <MemberAvatar member={member} />
           <div className="ml-2">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center ">
               <div className="dashboard-primary-desc-geist text-black">{member.name}</div>
-              {member.memberType === MemberType.DAY_PASS && (
-                <span className="bg-orange-100 text-orange-700 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-tighter">Pass</span>
-              )}
+
             </div>
             <div className="dashboard-secondary-desc-geist secondary-color pt-[1px]">{member.phone}</div>
           </div>
@@ -147,12 +144,10 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
       header: (
         <div className="flex items-center gap-[1px]">
           EXPIRY DATE
-          <SortIcon active={sortConfig.key === 'endDate'} direction={sortConfig.direction} />
         </div>
       ),
-      headerClassName: "pr-[50px] cursor-pointer select-none",
-      className: "py-5 pr-[50px] whitespace-nowrap text-sm",
-      onClickHeader: () => handleSort('endDate'),
+      headerClassName: "table-th pr-[50px]",
+      className: "w-1 py-5 pr-[50px] whitespace-nowrap text-sm",
       render: (member) => {
         const { endDate, remainingDays } = getPlanDates(member);
         const isExpired = remainingDays < 0;
@@ -169,18 +164,16 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
       header: (
         <div className="flex items-center gap-[1px]">
           DAYS LEFT
-          <SortIcon active={sortConfig.key === 'remainingDays'} direction={sortConfig.direction} />
         </div>
       ),
-      headerClassName: "pr-[50px] cursor-pointer select-none",
-      className: "py-5 pr-[50px] whitespace-nowrap text-sm",
-      onClickHeader: () => handleSort('remainingDays'),
+      headerClassName: "table-th pr-[50px]",
+      className: "w-1 py-5 pr-[50px] whitespace-nowrap text-sm",
       render: (member) => {
         const { remainingDays } = getPlanDates(member);
         const isExpired = remainingDays < 0;
         if (isExpired) return <Tag variant="red">EXPIRED</Tag>;
         return (
-          <span className={`dashboard-primary-desc-geist ${remainingDays <= 10 ? 'red-color' : remainingDays <= 20 ? 'yellow-text-color' : 'green-text-color'}`}>
+          <span className={`dashboard-primary-desc-geist ${remainingDays <= 10 ? 'red-color' : remainingDays <= 20 ? 'orange-text-color' : 'green-text-color'}`}>
             {remainingDays} {remainingDays === 1 ? 'Day' : 'Days'} Left
           </span>
         )
@@ -189,28 +182,27 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
     {
       key: 'payment',
       header: "PAYMENT",
-      headerClassName: "text-left px-8",
-      className: "px-8 py-5 whitespace-nowrap text-sm",
+      headerClassName: "table-th text-left w-full",
+      className: " py-5 whitespace-nowrap text-sm w-full",
       render: (member) => {
         const balance = member.feesAmount - member.paidAmount;
         const { remainingDays } = getPlanDates(member);
         const isExpired = remainingDays < 0;
 
         return (
-          <div className="flex flex-col items-start gap-1">
+          <div className="flex items-center gap-[5px]">
             {isExpired && <Tag variant="red">EXPIRED</Tag>}
             {(member.feesStatus !== PaymentStatus.PAID || !isExpired) && (
-              member.feesStatus === PaymentStatus.PAID ? (
+              (member.feesStatus === PaymentStatus.PAID || balance <= 0) ? (
                 <Tag variant="green">SETTLED</Tag>
               ) : (
                 <div className="flex gap-2">
-                  <Tag variant={member.feesStatus === PaymentStatus.PARTIAL ? 'orange' : 'red'}>
-                    {member.feesStatus === PaymentStatus.PARTIAL ? 'PARTIAL' : 'UNPAID'}
-                  </Tag>
-                  {/* Always show due amount for clarity if there is a balance */}
-                  <Tag variant="blue">DUE : ₹{balance}</Tag>
+                  <Tag variant="orange">DUE : ₹{balance}</Tag>
                 </div>
               )
+            )}
+            {member.memberType === MemberType.DAY_PASS && (
+              <Tag variant="violet">DAY PASS</Tag>
             )}
           </div>
         )
@@ -219,7 +211,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
     {
       key: 'actions',
       header: "ACTIONS",
-      headerClassName: "text-right px-5",
+      headerClassName: "table-th text-right px-5",
       className: "px-5 py-5 whitespace-nowrap text-right text-sm font-medium",
       render: (member) => {
         const { remainingDays, endDate } = getPlanDates(member);
@@ -250,7 +242,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
     }
   ];
 
-  const filteredMembers = useMemo(() => {
+  const filteredMembers = (() => {
     let baseList = members;
 
     if (showThisMonthOnly) {
@@ -266,7 +258,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
         case 'expiry':
           baseList = members.filter(m => {
             const { remainingDays } = getPlanDates(m);
-            return m.memberType === MemberType.SUBSCRIPTION && remainingDays >= 0 && remainingDays <= expiryFilter;
+            return remainingDays >= 0 && remainingDays <= expiryFilter;
           });
           break;
         case 'dues':
@@ -296,37 +288,38 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
       );
     }
 
-    // Sorting
-    return [...baseList].sort((a, b) => {
-      let aValue: any = '';
-      let bValue: any = '';
+    // Prepare sort values to avoid recalculating in sort loop
+    const sortableList = baseList.map(m => {
+      let sortValue: any = '';
+      const dates = getPlanDates(m);
 
       switch (sortConfig.key) {
         case 'name':
-          aValue = a.name.toLowerCase();
-          bValue = b.name.toLowerCase();
+          sortValue = m.name.toLowerCase();
           break;
         case 'endDate':
-          aValue = getPlanDates(a).endDate.getTime();
-          bValue = getPlanDates(b).endDate.getTime();
+          sortValue = dates.endDate.getTime();
           break;
         case 'remainingDays':
-          aValue = getPlanDates(a).remainingDays;
-          bValue = getPlanDates(b).remainingDays;
+          sortValue = dates.remainingDays;
           break;
         case 'planStart':
-          aValue = new Date(a.planStart).getTime();
-          bValue = new Date(b.planStart).getTime();
+          sortValue = new Date(m.planStart).getTime();
           break;
         default:
-          return 0;
+          sortValue = 0;
       }
+      return { member: m, sortValue };
+    });
 
-      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+    sortableList.sort((a, b) => {
+      if (a.sortValue < b.sortValue) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (a.sortValue > b.sortValue) return sortConfig.direction === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [activeTab, members, expiryFilter, searchQuery, showThisMonthOnly, sortConfig]);
+
+    return sortableList.map(item => item.member);
+  })();
 
 
   const handleTabChange = (tab: Tab) => {
@@ -342,24 +335,11 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
 
   const handleOpenCollectModal = (member: Member) => {
     setEditingMember(member);
-    setCollectAmount((member.feesAmount - member.paidAmount).toString());
     setIsCollectModalOpen(true);
   };
 
   const handleOpenRenewModal = (member: Member) => {
-    const { endDate } = getPlanDates(member);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const suggestedStart = endDate > today ? endDate : today;
-
     setEditingMember(member);
-    setRenewalFormData({
-      type: member.memberType,
-      startDate: suggestedStart.toISOString().split('T')[0],
-      duration: member.memberType === MemberType.DAY_PASS ? 1 : (member.planDurationDays || 30),
-      fee: member.feesAmount.toString(),
-      paid: member.feesAmount.toString(),
-    });
     setIsRenewModalOpen(true);
   };
 
@@ -376,9 +356,8 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
     setIsDeleteModalOpen(false);
   };
 
-  const handleFormSubmit = (memberData: Omit<Member, 'id'> | Member) => {
+  const handleFormSubmit = (memberData: Omit<Member, 'id' | '_id'> | Member) => {
     if ('id' in memberData || '_id' in memberData) {
-      // Cast to Member since we know it has an ID, effectively
       onUpdateMember(memberData as Member);
     } else {
       onAddMember({ ...memberData, gymId: gym.id });
@@ -386,11 +365,9 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
     handleCloseModal();
   };
 
-  const handleCollectSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCollectSubmit = (amount: number) => {
     if (!editingMember) return;
 
-    const amount = Number(collectAmount);
     const maxAllowed = editingMember.feesAmount - editingMember.paidAmount;
 
     if (amount <= 0 || amount > maxAllowed) {
@@ -410,26 +387,16 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
     handleCloseModal();
   };
 
-  const handleRenewalSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const onRenewMemberSubmit = (renewalData: {
+    planStart: string;
+    planDurationDays: number;
+    feesAmount: number;
+    paidAmount: number;
+    feesStatus: PaymentStatus;
+    memberType: MemberType;
+  }) => {
     if (!editingMember) return;
-
-    const fee = Number(renewalFormData.fee);
-    const paid = Number(renewalFormData.paid);
-
-    let status = PaymentStatus.UNPAID;
-    if (paid === fee && fee > 0) status = PaymentStatus.PAID;
-    else if (paid > 0) status = PaymentStatus.PARTIAL;
-
-    onRenewMember(editingMember._id || editingMember.id!, {
-      planStart: renewalFormData.startDate,
-      planDurationDays: Number(renewalFormData.duration),
-      feesAmount: fee,
-      paidAmount: paid,
-      feesStatus: status,
-      memberType: renewalFormData.type
-    });
-
+    onRenewMember(editingMember._id || editingMember.id!, renewalData);
     handleCloseModal();
   };
 
@@ -440,19 +407,15 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
     }
   };
 
-
   const handleExportExcel = () => {
     if (!filteredMembers.length) {
       alert('No members to export.');
       return;
     }
 
-    // CSV Header
     const headers = ['Name', 'Phone', 'Email', 'Plan Start', 'Duration (Days)', 'Fee Amount', 'Paid Amount', 'Status', 'Member Type', 'Payment Mode'];
-
-    // CSV Rows
     const rows = filteredMembers.map(m => [
-      `"${m.name}"`, // Quote strings to handle commas
+      `"${m.name}"`,
       `"${m.phone}"`,
       `"${m.email || ''}"`,
       `"${m.planStart}"`,
@@ -469,11 +432,9 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
       ...rows.map(row => row.join(','))
     ].join('\n');
 
-    // Create a Blob and trigger download
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
-
     link.setAttribute('href', url);
     link.setAttribute('download', `members_export_${new Date().toISOString().split('T')[0]}.csv`);
     link.style.visibility = 'hidden';
@@ -505,7 +466,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
             }
           }}
         >
-          <img className='size-[13px]' src="/icons/up.svg" alt="" />
+          <TrendUpIcon className='size-[13px]' />
           {stats.thisMonthMembers} This Month
         </StatsCard>
 
@@ -526,7 +487,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
           <StatsCard
             label="Balance Due"
             value={stats.duesPending < 10 ? `0${stats.duesPending}` : stats.duesPending}
-            variant="blue"
+            variant="orange"
             isActive={!showThisMonthOnly && activeTab === 'dues'}
             onClick={() => {
               setActiveTab('dues');
@@ -552,9 +513,29 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
 
 
             <div className="flex flex-col sm:flex-row gap-[5px] xl:items-center">
-              <button onClick={handleExportExcel} className="h-[46px] w-[46px] flex items-center justify-center rounded-main border border-slate-200 hover:bg-slate-50 transition-colors">
-                {/* <SortIcon className='size-[20px]' /> */}
-              </button>
+              {/* <div className="relative w-full sm:w-auto">
+                <SortIcon active direction={sortConfig.direction} className="absolute left-[15px] top-1/2 -translate-y-1/2 size-4 pointer-events-none z-10" />
+                <select
+                  value={`${sortConfig.key}-${sortConfig.direction}`}
+                  onChange={(e) => {
+                    const [key, direction] = e.target.value.split('-');
+                    setSortConfig({ key, direction: direction as 'asc' | 'desc' });
+                  }}
+                  className="h-[46px] w-full sm:w-[220px] pl-[40px] pr-8 rounded-main border border-slate-200 bg-white outline-none appearance-none font-bold uppercase text-[12px] cursor-pointer hover:bg-slate-50 transition-colors"
+                >
+                  <option value="name-asc">Name A to Z</option>
+                  <option value="name-desc">Name Z to A</option>
+                  <option value="endDate-asc">Expiry: Earliest First</option>
+                  <option value="endDate-desc">Expiry: Latest First</option>
+                  <option value="remainingDays-asc">Days Left: Least First</option>
+                  <option value="remainingDays-desc">Days Left: Most First</option>
+                  <option value="planStart-desc">Newest First (Default)</option>
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <ChevronDownSmallIcon className="size-4" stroke="#64748b" />
+                </div>
+              </div> */}
+
               <button onClick={handleExportExcel} className="h-[46px] w-[46px] flex items-center justify-center rounded-main border border-slate-200 hover:bg-slate-50 transition-colors">
                 <img src="/icons/excel.svg" alt="" className='size-[20px]' />
               </button>
@@ -583,22 +564,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
           </div>
         </div>
 
-        {activeTab === 'expiry' && (
-          <div className="px-10 py-5 bg-brand/5 flex flex-wrap items-center gap-4 border-y border-brand/10">
-            <span className="text-[10px] font-black text-brand-800 uppercase tracking-widest">Expiration Window</span>
-            <div className="flex gap-2">
-              {[3, 7].map(days => (
-                <button
-                  key={days}
-                  onClick={() => setExpiryFilter(days)}
-                  className={`px-5 py-2 text-[10px] font-black uppercase rounded-xl border transition-all ${expiryFilter === days ? 'bg-brand text-charcoal border-brand shadow-sm' : 'bg-white text-brand border-brand/20'}`}
-                >
-                  {days} Days
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+
 
         <Table
           data={filteredMembers}
@@ -619,27 +585,32 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
                     <div className="">
                       <div className="flex items-center gap-[1px]">
                         <h4 className="dashboard-primary-desc-geist ">{member.name}</h4>
-                        {member.memberType === MemberType.DAY_PASS && (
-                          <span className="text-[8px] font-black bg-orange-100 text-orange-700 px-1 rounded">PASS</span>
-                        )}
+
                       </div>
                       <p className="dashboard-secondary-desc-geist secondary-color">{member.phone}</p>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end justify-center">
-                    <span className={`dashboard-primary-desc-geist text-left ${isExpired
+                  <div className="flex flex-col items-start gap-2">
+                    <span className={`dashboard-primary-desc-geist whitespace-nowrap ${isExpired
                       ? 'red-color'
-                      : remainingDays <= 10
-                        ? 'red-color'
-                        : remainingDays <= 20
-                          ? 'yellow-text-color'
-                          : 'green-text-color'
+                      : remainingDays <= 20
+                        ? 'orange-text-color'
+                        : 'green-text-color'
                       }`}>
                       {isExpired ? 'Expired' : `${remainingDays} Days Left`}
                     </span>
-                    <span className="dashboard-secondary-desc-geist secondary-color text-left">
-                      {balance > 0 ? `₹${balance} Due` : endDate.toLocaleDateString()}
-                    </span>
+                    <div className="flex flex-wrap gap-1 items-center">
+                      <span className="dashboard-secondary-desc-geist secondary-color text-left">
+                        {balance > 0 ? (
+                          <div className="flex gap-1 items-center">
+                            <span className="orange-text-color">₹{balance} Due</span>
+                          </div>
+                        ) : endDate.toLocaleDateString()}
+                      </span>
+                      {member.memberType === MemberType.DAY_PASS && (
+                        <Tag variant="violet" className="scale-75 origin-left">DAY PASS</Tag>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -690,179 +661,25 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
         <MemberForm member={editingMember} initialType={initialType} onSubmit={handleFormSubmit} onCancel={handleCloseModal} />
       </Drawer>
 
-      {/* Collect Balance Modal */}
-      <Modal isOpen={isCollectModalOpen} onClose={handleCloseModal} title="Collect Pending Balance">
+      <Drawer isOpen={isCollectModalOpen} onClose={handleCloseModal} title="Collect Pending Balance">
         {editingMember && (
-          <form onSubmit={handleCollectSubmit} className="space-y-6">
-            <div className="bg-brand/5 p-6 rounded-3xl border border-brand/10">
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Original Fee</span>
-                <span className="text-sm font-black text-slate-950">₹{editingMember.feesAmount}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Paid Already</span>
-                <span className="text-sm font-black text-brand-700">₹{editingMember.paidAmount}</span>
-              </div>
-              <div className="mt-5 pt-5 border-t border-brand/10 flex justify-between items-center">
-                <span className="text-xs font-black text-slate-900 uppercase tracking-widest">Total Remaining</span>
-                <span className="text-2xl font-black text-orange-600">₹{editingMember.feesAmount - editingMember.paidAmount}</span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Payment Amount (INR)</label>
-              <div className="relative">
-                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  autoFocus
-                  value={collectAmount}
-                  onChange={(e) => setCollectAmount(e.target.value.replace(/\D/g, ''))}
-                  className="w-full pl-10 pr-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-xl font-black text-slate-950 focus:ring-4 focus:ring-brand/5 focus:border-brand outline-none transition-all"
-                  placeholder="0"
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-4 pt-4">
-              <button type="button" onClick={handleCloseModal} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-colors">Cancel</button>
-              <button type="submit" className="flex-1 py-4 bg-brand text-charcoal rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-brand/20 active:scale-95 transition-all">Collect Payment</button>
-            </div>
-          </form>
+          <CollectBalanceForm
+            member={editingMember}
+            onSubmit={handleCollectSubmit}
+            onCancel={handleCloseModal}
+          />
         )}
-      </Modal>
+      </Drawer>
 
-      {/* Renewal / Upgrade / New Plan Modal */}
-      <Modal isOpen={isRenewModalOpen} onClose={handleCloseModal} title="Configure Membership Term">
+      <Drawer isOpen={isRenewModalOpen} onClose={handleCloseModal} title="RENEW / NEW PLAN">
         {editingMember && (
-          <form onSubmit={handleRenewalSubmit} className="space-y-6">
-            {/* Type Switcher */}
-            <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200">
-              <button
-                type="button"
-                onClick={() => setRenewalFormData({ ...renewalFormData, type: MemberType.SUBSCRIPTION, duration: 29 })}
-                className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${renewalFormData.type === MemberType.SUBSCRIPTION ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-              >
-                Full Subscription
-              </button>
-              <button
-                type="button"
-                onClick={() => setRenewalFormData({ ...renewalFormData, type: MemberType.DAY_PASS, duration: 1 })}
-                className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${renewalFormData.type === MemberType.DAY_PASS ? 'bg-white text-orange-700 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-              >
-                Day Pass
-              </button>
-            </div>
-
-            {/* Term Display Card */}
-            <div className={`p-8 rounded-[2rem] text-white relative overflow-hidden transition-colors ${renewalFormData.type === MemberType.DAY_PASS ? 'bg-orange-600' : 'bg-slate-900'}`}>
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-3xl"></div>
-              <p className="text-[10px] font-black text-white/50 uppercase tracking-widest mb-4">Calculated Coverage</p>
-              {(() => {
-                if (!renewalFormData.startDate) return null;
-                const start = new Date(renewalFormData.startDate);
-                const end = new Date(start);
-                end.setDate(start.getDate() + (Number(renewalFormData.duration) || 0));
-
-                return (
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Starts From</p>
-                      <p className="text-base font-black">{start.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</p>
-                    </div>
-                    <div className="h-px w-10 bg-white/20"></div>
-                    <div className="text-right">
-                      <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Ends On</p>
-                      <p className="text-base font-black text-white">{end.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</p>
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
-
-            <div className="space-y-5">
-              <div className="grid grid-cols-2 gap-4">
-                {/* Custom Start Date Picker */}
-                <div>
-                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-2">Effective Start</label>
-                  <input
-                    type="date"
-                    value={renewalFormData.startDate}
-                    onChange={(e) => setRenewalFormData({ ...renewalFormData, startDate: e.target.value })}
-                    className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black focus:ring-4 focus:ring-brand/5 outline-none transition-all"
-                  />
-                </div>
-
-                {/* Duration Picker */}
-                <div>
-                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-2">Duration</label>
-                  {renewalFormData.type === MemberType.DAY_PASS ? (
-                    <div className="relative">
-                      <input
-                        type="number"
-                        min="1"
-                        value={renewalFormData.duration}
-                        onChange={(e) => setRenewalFormData({ ...renewalFormData, duration: Number(e.target.value) })}
-                        className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black focus:ring-4 focus:ring-brand/5 outline-none"
-                      />
-                      <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 uppercase">Days</span>
-                    </div>
-                  ) : (
-                    <select
-                      value={renewalFormData.duration}
-                      onChange={(e) => setRenewalFormData({ ...renewalFormData, duration: Number(e.target.value) })}
-                      className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black focus:ring-4 focus:ring-brand/5 outline-none transition-all"
-                    >
-                      <option value={29}>Monthly (30 days)</option>
-                      <option value={89}>Quarterly (90 days)</option>
-                      <option value={179}>Half Yearly (180 days)</option>
-                      <option value={364}>Yearly (365 days)</option>
-                      {[29, 89, 179, 364].includes(Number(renewalFormData.duration)) ? null : (
-                        <option value={renewalFormData.duration}>{renewalFormData.duration} Days (Custom)</option>
-                      )}
-                    </select>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-2">Total Fee (₹)</label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={renewalFormData.fee}
-                      onChange={(e) => setRenewalFormData({ ...renewalFormData, fee: e.target.value.replace(/\D/g, '') })}
-                      className="w-full pl-8 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black focus:ring-4 focus:ring-brand/5 outline-none"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-2">Paid Today (₹)</label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-500 font-bold">₹</span>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={renewalFormData.paid}
-                      onChange={(e) => setRenewalFormData({ ...renewalFormData, paid: e.target.value.replace(/\D/g, '') })}
-                      className="w-full pl-8 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black text-brand-700 focus:ring-4 focus:ring-brand/5 outline-none"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-4 pt-4">
-              <button type="button" onClick={handleCloseModal} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-colors">Cancel</button>
-              <button type="submit" className="flex-1 py-4 bg-brand text-charcoal rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-brand/20 active:scale-95 transition-all">Confirm Plan</button>
-            </div>
-          </form>
+          <RenewPlanForm
+            member={editingMember}
+            onSubmit={onRenewMemberSubmit}
+            onCancel={handleCloseModal}
+          />
         )}
-      </Modal>
+      </Drawer>
 
       <Modal
         isOpen={isDeleteModalOpen}

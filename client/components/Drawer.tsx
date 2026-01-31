@@ -39,7 +39,7 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, title, children, width
                         animate={{ x: 0 }}
                         exit={{ x: '100%' }}
                         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                        className={`fixed inset-y-0 right-0 z-[101] w-full ${width} bg-white shadow-2xl flex flex-col h-full p-[30px]`}
+                        className={`fixed inset-y-0 right-0 z-[101] w-full ${width} bg-white shadow-2xl flex flex-col h-full pt-[30px] px-[30px] pb-[20px]`}
                     >
                         {/* Header */}
                         <div className="flex items-center justify-between bg-white">
@@ -55,7 +55,7 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, title, children, width
                         </div>
 
                         {/* Content - Scrollable */}
-                        <div className="flex-1 overflow-y-auto pt-[30px] bg-white">
+                        <div className="flex-1 overflow-y-auto pt-5 bg-white">
                             {children}
                         </div>
                     </motion.div>

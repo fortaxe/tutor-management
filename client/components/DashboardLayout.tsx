@@ -4,6 +4,7 @@ import { User, UserRole } from '../types';
 import Modal from './Modal';
 import DashboardSidebar from './DashboardSidebar';
 import BorderButton from './BorderButton';
+import Input from './Input';
 
 interface DashboardLayoutProps {
   user: User;
@@ -27,12 +28,32 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isChangePassOpen, setChangePassOpen] = useState(false);
   const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passError, setPassError] = useState('');
   const [isCollapsed, setIsCollapsed] = useState(false);
 
+  const handlePassSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      setPassError('Passwords do not match');
+      return;
+    }
+    setPassError('');
+    onChangePassword?.(newPassword);
+    setChangePassOpen(false);
+    setNewPassword('');
+    setConfirmPassword('');
+  };
+
+  const closePassModal = () => {
+    setChangePassOpen(false);
+    setNewPassword('');
+    setConfirmPassword('');
+    setPassError('');
+  };
 
   return (
     <div className="h-screen bg-slate-50 flex flex-col lg:flex-row overflow-hidden bg-[#F4F7FB]">
-      {/* Mobile Header */}
       <DashboardSidebar
         user={user}
         isSidebarOpen={isSidebarOpen}
@@ -44,7 +65,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         isCollapsed={isCollapsed}
       />
 
-      {/* Backdrop for mobile */}
       {isSidebarOpen && (
         <div
           className="fixed inset-0 bg-charcoal/80 z-30 lg:hidden transition-opacity backdrop-blur-md"
@@ -52,7 +72,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         />
       )}
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden pl-[32px] py-5 pr-5">
         <header className=" flex justify-between items-start sticky top-0 z-10 ">
           <div className="flex flex-col items-start ">
@@ -75,9 +94,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             </div>
           </div>
 
-
-
-
           <div className="hidden sm:block">
             <BorderButton variant="green">
               {user.role === UserRole.SUPER_ADMIN ? 'Platform Administrator' :
@@ -92,23 +108,37 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           </div>
         </main>
       </div >
-      <Modal isOpen={isChangePassOpen} onClose={() => { setChangePassOpen(false); setNewPassword(''); }} title="Change Password">
-        <form onSubmit={(e) => { e.preventDefault(); onChangePassword?.(newPassword); setChangePassOpen(false); setNewPassword(''); }} className="space-y-6">
-          <div>
-            <label className="block text-xs font-black text-slate-500 uppercase tracking-widest ml-1 mb-2">New Password</label>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
-              minLength={6}
-              className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-brand/5 outline-none transition-all text-slate-900"
-              placeholder="••••••••"
-            />
-          </div>
-          <div className="flex gap-4 pt-2">
-            <button type="button" onClick={() => { setChangePassOpen(false); setNewPassword(''); }} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-colors">Cancel</button>
-            <button type="submit" className="flex-1 py-4 bg-charcoal text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-charcoal/20 active:scale-95 transition-all">Update</button>
+
+      <Modal isOpen={isChangePassOpen} onClose={closePassModal} title="Security Settings">
+        <form onSubmit={handlePassSubmit} className="space-y-[15px]">
+          <Input
+            label="New Password"
+            type="password"
+            value={newPassword}
+            onChange={(e) => {
+              setNewPassword(e.target.value);
+              if (passError) setPassError('');
+            }}
+            required
+            minLength={6}
+            placeholder="Min 6 characters"
+          />
+          <Input
+            label="Confirm Password"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => {
+              setConfirmPassword(e.target.value);
+              if (passError) setPassError('');
+            }}
+            required
+            minLength={6}
+            placeholder="Re-enter password"
+            error={passError}
+          />
+          <div className="flex gap-4 pt-4">
+            <button type="button" onClick={closePassModal} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-colors">Cancel</button>
+            <button type="submit" className="flex-1 py-4 bg-charcoal text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-charcoal/20 active:scale-95 transition-all">Update Password</button>
           </div>
         </form>
       </Modal>

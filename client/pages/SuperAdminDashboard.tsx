@@ -24,6 +24,7 @@ interface SuperAdminDashboardProps {
   onDeleteGym: (gymId: number) => void;
   onAddGym: (gymData: Omit<Gym, 'id' | 'paymentHistory'>, password?: string) => void;
   onUpdateGym: (gym: Gym, password?: string) => void;
+  onChangePassword?: (password: string) => void;
 }
 
 const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
@@ -34,7 +35,8 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
   onToggleGymStatus,
   onDeleteGym,
   onAddGym,
-  onUpdateGym
+  onUpdateGym,
+  onChangePassword
 }) => {
   const [modalType, setModalType] = useState<'add' | 'edit' | 'payment' | 'history' | 'delete' | null>(null);
   const [selectedGym, setSelectedGym] = useState<Gym | null>(null);
@@ -157,7 +159,7 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
   };
 
   return (
-    <DashboardLayout user={user} onLogout={onLogout} pageTitle="SaaS Admin">
+    <DashboardLayout user={user} onLogout={onLogout} pageTitle="SaaS Admin" onChangePassword={onChangePassword}>
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-8">
         <div className="bg-white p-5 lg:p-6 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-brand-600">

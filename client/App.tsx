@@ -331,6 +331,7 @@ const App: React.FC = () => {
           onDeleteGym={(id) => deleteGymMutation.mutate(id)}
           onAddGym={(gym, password) => addGymMutation.mutate({ gym, password })}
           onUpdateGym={(gym, password) => updateGymMutation.mutate({ gym, password })}
+          onChangePassword={(password) => changePasswordMutation.mutate(password)}
         />
         {toast && (
           <Toast

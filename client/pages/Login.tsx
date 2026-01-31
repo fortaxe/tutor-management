@@ -88,22 +88,22 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, backendError }) => {
       <div className="relative w-full lg:w-1/2 h-full flex flex-col justify-center items-center p-4 lg:p-[25px] bg-transparent lg:bg-[#F8FAFC]">
         {/* Top Left */}
         <div className="absolute top-4 lg:top-[25px] left-4 lg:left-[25px]">
-          <span className="text-white lg:text-black font-semibold text-[18px] lg:text-[24px] leading-[22px] lg:leading-[24px]" >Gym <span className="text-brand-500">Stack</span></span>
+          <span className="text-white lg:text-black font-semibold text-[18px] lg:text-[24px] leading-[22px] lg:leading-[24px] " >Gym <span className="text-brand-500">Stack</span></span>
         </div>
 
         {/* Top Right */}
         <div className="absolute top-4 lg:top-[25px] right-4 lg:right-[25px]">
-          <a href="tel:+919676675576" className="text-white lg:!text-[#0F172A] primary-description underline decoration-[1px] outline-none ring-none">Contact us</a>
+          <a href="tel:+919676675576" className="text-white lg:!text-[#0F172A] primary-description underline decoration-[1px] outline-none ring-none font-semibold">Contact us</a>
         </div>
 
         {/* Bottom Left */}
         <div className="absolute bottom-4 lg:bottom-[25px] left-4 lg:left-[25px]">
-          <span className="text-white lg:!text-[#0F172A] primary-description underline decoration-[1px]">Terms of use</span>
+          <span className="text-white lg:!text-[#0F172A] primary-description underline decoration-[1px] font-semibold">Terms of use</span>
         </div>
 
         {/* Bottom Right */}
         <div className="absolute bottom-4 lg:bottom-[25px] right-4 lg:right-[25px]">
-          <a href="tel:+919676675576" className="text-white lg:!text-[#0F172A] primary-description underline decoration-[1px] outline-none ring-none">Book a Demo</a>
+          <a href="tel:+919676675576" className="text-white lg:!text-[#0F172A] primary-description underline decoration-[1px] outline-none ring-none font-semibold">Book a Demo</a>
         </div>
         <LoginCard
           phone={phone}

@@ -33,3 +33,7 @@ export const objectToFormData = (obj: any): FormData => {
 
     return formData;
 };
+
+export function cn(...inputs: any[]) {
+    return inputs.filter(Boolean).join(' ');
+}

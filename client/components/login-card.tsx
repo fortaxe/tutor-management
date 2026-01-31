@@ -26,8 +26,8 @@ const LoginCard: React.FC<LoginCardProps> = ({
     return (
         <div className="w-full max-w-[420px] bg-white border-main p-5 md:p-[30px] rounded-main bg-white" >
             <div className="mb-[15px]">
-                <h2 className="secondary-heading text-black mb-[10px] ">Dashboard Login</h2>
-                <p className="text-[#9CA3AF] text-[14px] md:text-[16px]  leading-[20px] md:leading-[22px] tracking-[0em]">Manage members, payments, and daily operations in one place.</p>
+                <h2 className="secondary-heading text-black mb-[10px] font-grotesk !font-bold">Dashboard Login</h2>
+                <p className="text-[#9CA3AF] text-[14px] md:text-[16px]  leading-[20px] md:leading-[22px] tracking-[0em] font-semibold">Manage members, payments, and daily operations in one place.</p>
             </div>
 
             <form onSubmit={handleSubmit} >
@@ -38,44 +38,42 @@ const LoginCard: React.FC<LoginCardProps> = ({
                     </div>
                 )}
 
-                <div className="space-y-2">
-                    <div className="space-y-[5px]">
-                        <Input
-                            id="phone"
-                            type="tel"
-                            inputMode="numeric"
-                            required
-                            maxLength={10}
-                            value={phone}
-                            onChange={handlePhoneChange}
-                            placeholder="Enter mobile number"
-                        />
-                        {errors.phone && <p className="tertiary-description red-color">{errors.phone}</p>}
-                    </div>
+                <div className="space-y-[6px] md:space-y-[8px]">
+                    <Input
+                        label="Username"
+                        id="phone"
+                        type="tel"
+                        inputMode="numeric"
+                        required
+                        maxLength={10}
+                        value={phone}
+                        onChange={handlePhoneChange}
+                        placeholder="Enter mobile number"
+                        error={errors.phone}
+                    />
 
-                    <div className="space-y-[5px]">
-                        <div className="relative">
-                            <Input
-                                id="password"
-                                type={isPasswordVisible ? "text" : "password"}
-                                required
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                placeholder="Enter your password"
-                            />
+                    <Input
+                        label="Password"
+                        id="password"
+                        type={isPasswordVisible ? "text" : "password"}
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Enter your password"
+                        error={errors.password}
+                        endContent={
                             <button
                                 type="button"
                                 onClick={() => setIsPasswordVisible(!isPasswordVisible)}
-                                className="absolute right-[15px] top-1/2 -translate-y-1/2"
+                                className="focus:outline-none"
                             >
                                 <img src="/icons/eye.svg" alt="Show Password" className="size-[18px]" />
                             </button>
-                        </div>
-                        {errors.password && <p className="tertiary-description red-color">{errors.password}</p>}
-                    </div>
+                        }
+                    />
                 </div>
 
-                <div className="flex items-center secondary-description py-[15px]">
+                <div className="flex items-center  py-[15px] primary-description font-semibold secondary-color">
                     <img src="/icons/lock.svg" alt="Lock" className="w-6 h-6" />
                     <span>Your data is securely encrypted.</span>
                 </div>

@@ -33,3 +33,10 @@ export const objectToFormData = (obj: any): FormData => {
 
     return formData;
 };
+
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs: ClassValue[]) {
+    return twMerge(clsx(inputs));
+}

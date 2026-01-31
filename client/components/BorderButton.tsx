@@ -1,7 +1,8 @@
 import React from 'react';
+import { cn } from '../lib/utils';
 
 interface BorderButtonProps {
-    variant?: 'red' | 'green';
+    variant?: 'red' | 'green' | 'outline';
     onClick?: () => void;
     children: React.ReactNode;
     className?: string;
@@ -16,15 +17,20 @@ const BorderButton: React.FC<BorderButtonProps> = ({
     type = 'button'
 }) => {
     const variantStyles = {
-        red: 'bg-[#EF44441A] !text-[#EF4444] border-[#EF444433]',
-        green: 'bg-[#22C55E1A] !text-[#22C55E] border-[#22C55E33]'
+        red: 'bg-[#EF44441A] text-[#EF4444] border-[#EF444433]',
+        green: 'bg-[#22C55E1A] text-[#22C55E] border-[#22C55E33]',
+        outline: 'bg-transparent border border-[#E2E8F0] text-[#9CA3AF]'
     };
 
     return (
         <button
             type={type}
             onClick={onClick}
-            className={`w-full px-5 py-3 border rounded-[10px] primary-description flex items-center justify-center transition-all  font-grotesk uppercase font-bold ${variantStyles[variant]} ${className}`}
+            className={cn(
+                "w-full px-5 py-3 border rounded-[10px] flex items-center justify-center transition-all font-grotesk uppercase font-bold",
+                variantStyles[variant],
+                className
+            )}
         >
             {children}
         </button>

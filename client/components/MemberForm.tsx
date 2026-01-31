@@ -1,39 +1,21 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Member, PaymentStatus, MemberType, PaymentMode } from '../types';
 import CameraCapture from './CameraCapture';
 import Input from './Input';
 import Button from './Button';
 import BorderButton from './BorderButton';
+import DateInput from './DateInput';
+import {
+  PhotoPlaceholderIcon,
+  GalleryIcon,
+  CameraIcon,
+  ChevronDownSmallIcon,
+  ArrowRightIcon,
+  ArrowLeftIcon,
+  SubmitArrowIcon
+} from './icons/FormIcons';
 
-const compressImage = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 600;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > MAX_WIDTH) {
-          height *= MAX_WIDTH / width;
-          width = MAX_WIDTH;
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', 0.6));
-      };
-      img.onerror = reject;
-      img.src = e.target?.result as string;
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-};
+import { compressImage } from '../lib/imageUtils';
 
 interface MemberFormProps {
   member?: Member | null;
@@ -42,10 +24,14 @@ interface MemberFormProps {
   onCancel: () => void;
 }
 
-const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberType.SUBSCRIPTION, onSubmit, onCancel }) => {
+const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberType.SUBSCRIPTION, onSubmit, onCancel: _onCancel }) => {
   const [showCamera, setShowCamera] = useState(false);
   const [step, setStep] = useState(1);
   const [activeType, setActiveType] = useState<MemberType>(member?.memberType || initialType);
+  const [errors, setErrors] = useState<{ name?: string; phone?: string }>({});
+
+  const [feesFocus, setFeesFocus] = useState(false);
+  const [paidFocus, setPaidFocus] = useState(false);
 
   const [formData, setFormData] = useState(() => {
     if (member) {
@@ -112,6 +98,12 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
       return;
     }
 
+    if (name === 'name' || name === 'phone') {
+      if (value.trim()) {
+        setErrors(prev => ({ ...prev, [name]: undefined }));
+      }
+    }
+
     if (name === 'feesAmount' || name === 'paidToday') {
       if (value === '' || /^\d+$/.test(value)) {
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -141,16 +133,17 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
   };
 
   const validateStep1 = () => {
-    if (!formData.name.trim()) return false;
-    if (formData.phone.length !== 10) return false;
-    return true;
+    const newErrors: { name?: string; phone?: string } = {};
+    if (!formData.name.trim()) newErrors.name = "Name is required";
+    if (formData.phone.length !== 10) newErrors.phone = "Phone number must be 10 digits";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleNext = () => {
     if (validateStep1()) {
       setStep(2);
-    } else {
-      alert("Please fill in all required fields (Name, Mobile).");
     }
   };
 
@@ -207,9 +200,9 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
 
           <span className={` dashboard-primary-desc ${step >= 1 ? 'text-black' : 'secondary-color'}`}>Member Details</span>
         </div>
-        <div className="h-px border border-[#E2E8F0] border-dashed w-8 md:w-[71px] mx-[5px]"></div>
+        <div className=" border-[1px] border-[#E2E8F0] border-dashed w-8 md:w-[71px] mx-[5px]"></div>
         <div className="flex items-center gap-[5px]">
-          <div className={`size-6 rounded-full flex items-center justify-center text-[12px] leading-[16px] font-grotesk font-bold ${step >= 2 ? 'primary-bg-green text-white' : 'border border-slate-200 text-slate-400'}`}>02</div>
+          <div className={`size-6 rounded-full flex items-center justify-center text-[12px] leading-[16px] font-grotesk font-bold ${step >= 2 ? 'bg-[#22C55E1A]  border border-[#22C55E33] text-[#22C55E]' : ' secondary-color  border-main'}`}>02</div>
           <span className={`dashboard-primary-desc ${step >= 2 ? 'text-black' : 'secondary-color'}`}>Membership Details</span>
         </div>
       </div>
@@ -245,29 +238,18 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
                   </>
                 ) : (
                   <div className="text-slate-300">
-                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    <PhotoPlaceholderIcon />
                   </div>
                 )}
               </div>
 
               <div className="flex w-full gap-2 mb-[30px] ">
-                <BorderButton variant="green" className="flex-1 !bg-white !text-[#22C55E] !border-[#22C55E]" onClick={() => fileInputRef.current?.click()}>
-                  <svg className="w-4 h-4 mr-[5px]" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M1.75 8C1.75 5.05372 1.75 3.58058 2.66529 2.66529C3.58058 1.75 5.05372 1.75 8 1.75C10.9462 1.75 12.4194 1.75 13.3347 2.66529C14.25 3.58058 14.25 5.05372 14.25 8C14.25 10.9462 14.25 12.4194 13.3347 13.3347C12.4194 14.25 10.9462 14.25 8 14.25C5.05372 14.25 3.58058 14.25 2.66529 13.3347C1.75 12.4194 1.75 10.9462 1.75 8Z" stroke="#22C55E" stroke-width="1.3" />
-                    <path d="M9.25 5.5C9.25 5.83152 9.3817 6.14946 9.61612 6.38388C9.85054 6.6183 10.1685 6.75 10.5 6.75C10.8315 6.75 11.1495 6.6183 11.3839 6.38388C11.6183 6.14946 11.75 5.83152 11.75 5.5C11.75 5.16848 11.6183 4.85054 11.3839 4.61612C11.1495 4.3817 10.8315 4.25 10.5 4.25C10.1685 4.25 9.85054 4.3817 9.61612 4.61612C9.3817 4.85054 9.25 5.16848 9.25 5.5Z" stroke="#22C55E" stroke-width="1.3" />
-                    <path d="M1.75 6.84605L2.36296 6.75805C6.72435 6.13177 10.4524 9.89448 9.78569 14.2499" stroke="#22C55E" stroke-width="1.3" stroke-linecap="round" />
-                    <path d="M14.2499 8.86562L13.6415 8.78137C11.8641 8.53524 10.2559 9.42012 9.42773 10.8128" stroke="#22C55E" stroke-width="1.3" stroke-linecap="round" />
-                  </svg>
-
+                <BorderButton variant="green" className="flex-1 bg-white border-[#22C55E] text-[#22C55E]" onClick={() => fileInputRef.current?.click()}>
+                  <GalleryIcon className="w-4 h-4 mr-[5px]" />
                   Gallery
                 </BorderButton>
-                <BorderButton variant="green" className="flex-1 !bg-white !text-[#22C55E] !border-[#22C55E]" onClick={() => setShowCamera(true)}>
-                  <svg className="w-4 h-4 mr-[5px]" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M6.125 8.625C6.125 9.12228 6.32254 9.59919 6.67417 9.95083C7.02581 10.3025 7.50272 10.5 8 10.5C8.49728 10.5 8.97419 10.3025 9.32583 9.95083C9.67746 9.59919 9.875 9.12228 9.875 8.625C9.875 8.12772 9.67746 7.65081 9.32583 7.29917C8.97419 6.94754 8.49728 6.75 8 6.75C7.50272 6.75 7.02581 6.94754 6.67417 7.29917C6.32254 7.65081 6.125 8.12772 6.125 8.625Z" stroke="#22C55E" stroke-width="1.3" />
-                    <path d="M6.61111 13.625H9.38888C11.3396 13.625 12.3149 13.625 13.0155 13.1654C13.3188 12.9664 13.5792 12.7107 13.7819 12.4129C14.25 11.7251 14.25 10.7674 14.25 8.85225C14.25 6.93713 14.25 5.97951 13.7819 5.29163C13.5792 4.99384 13.3188 4.73815 13.0155 4.53918C12.5653 4.24383 12.0017 4.13827 11.1388 4.10054C10.7269 4.10054 10.3724 3.79418 10.2917 3.39773C10.1705 2.80306 9.63869 2.375 9.02106 2.375H6.97894C6.36128 2.375 5.82947 2.80306 5.70833 3.39773C5.62757 3.79418 5.27303 4.10054 4.86125 4.10054C3.99833 4.13827 3.43472 4.24383 2.98452 4.53918C2.68122 4.73815 2.4208 4.99384 2.21814 5.29163C1.75 5.97951 1.75 6.93713 1.75 8.85225C1.75 10.7674 1.75 11.7251 2.21814 12.4129C2.4208 12.7107 2.68122 12.9664 2.98452 13.1654C3.68515 13.625 4.66047 13.625 6.61111 13.625Z" stroke="#22C55E" stroke-width="1.3" />
-                    <path d="M12.375 6.75H11.75" stroke="#22C55E" stroke-width="1.3" stroke-linecap="round" />
-                  </svg>
-
+                <BorderButton variant="green" className="flex-1 bg-white border-[#22C55E] text-[#22C55E]" onClick={() => setShowCamera(true)}>
+                  <CameraIcon className="w-4 h-4 mr-[5px]" />
                   Camera
                 </BorderButton>
                 <input type="file" ref={fileInputRef} onChange={handleFileSelect} accept="image/*" className="hidden" />
@@ -275,59 +257,47 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
             </div>
 
             <div className="space-y-[10px]">
-              <div>
-                <label className={labelClasses}>Full Name{requiredStar}</label>
-                <Input name="name" value={formData.name} onChange={handleChange} placeholder="e.g. name" required />
-              </div>
-              <div>
-                <label className={labelClasses}>Mobile{requiredStar}</label>
-                <Input name="phone" value={formData.phone} onChange={handleChange} placeholder="10 digit number" maxLength={10} required inputMode="numeric" />
-              </div>
-              <div>
-                <label className={labelClasses}>Email</label>
-                <Input name="email" value={formData.email} onChange={handleChange} placeholder="Email" type="email" />
-              </div>
-              <div className="relative">
-                <label className={labelClasses}>Date of Birth{requiredStar}</label>
-                <div className="relative w-full">
-                  <Input
-                    name="dob_display"
-                    value={formData.dob ? formData.dob.split('-').reverse().join('-') : ''}
-                    readOnly
-                    placeholder="DD-MM-YYYY"
-                    className="pr-10 bg-[#F8FAFC]"
-                  />
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M1.75 8C1.75 5.64298 1.75 4.46447 2.48223 3.73223C3.21447 3 4.39298 3 6.75 3H9.25C11.607 3 12.7856 3 13.5177 3.73223C14.25 4.46447 14.25 5.64298 14.25 8V9.25C14.25 11.607 14.25 12.7856 13.5177 13.5177C12.7856 14.25 11.607 14.25 9.25 14.25H6.75C4.39298 14.25 3.21447 14.25 2.48223 13.5177C1.75 12.7856 1.75 11.607 1.75 9.25V8Z" stroke="black" strokeWidth="1.3" />
-                      <path d="M4.875 3V2.0625" stroke="black" strokeWidth="1.3" strokeLinecap="round" />
-                      <path d="M11.125 3V2.0625" stroke="black" strokeWidth="1.3" strokeLinecap="round" />
-                      <path d="M2.0625 6.125H13.9375" stroke="black" strokeWidth="1.3" strokeLinecap="round" />
-                    </svg>
-                  </div>
-                  <input
-                    type="date"
-                    name="dob"
-                    value={formData.dob}
-                    onChange={handleChange}
-                    onClick={(e) => { try { e.currentTarget.showPicker(); } catch { } }}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-                  />
-                </div>
-              </div>
+              <Input
+                label="Full Name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="e.g. name"
+                required
+                error={errors.name}
+              />
+              <Input
+                label="Mobile"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="10 digit number"
+                maxLength={10}
+                required
+                inputMode="numeric"
+                error={errors.phone}
+              />
+              <Input
+                label="Email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Email"
+                type="email"
+              />
+              <DateInput
+                label="Date of Birth"
+                name="dob"
+                value={formData.dob}
+                onChange={handleChange}
+              />
+
             </div>
           </div>
         )}
 
         {step === 2 && (
-          <div className="space-y-6">
-
-
-            <div className="flex items-center gap-2">
-
-
-            </div>
-
+          <div className="space-y-[10px]">
             <div>
               <label className={labelClasses}>Duration (Days){requiredStar}</label>
               {activeType === MemberType.DAY_PASS ? (
@@ -341,73 +311,67 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
                     <option value={364}>Yearly (365 Days)</option>
                   </select>
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12.375 6.125L8 9.875L3.625 6.125" stroke="#0F172A" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
+                    <ChevronDownSmallIcon stroke="#0F172A" />
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="relative">
-              <label className={labelClasses}>Start Date{requiredStar}</label>
-              <div className="relative w-full">
-                <Input
-                  name="planStart_display"
-                  value={formData.planStart ? formData.planStart.split('-').reverse().join('-') : ''}
-                  readOnly
-                  className="pr-10 bg-[#F8FAFC]"
-                />
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer z-10 w-5 h-5">
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-                    <path d="M1.75 8C1.75 5.64298 1.75 4.46447 2.48223 3.73223C3.21447 3 4.39298 3 6.75 3H9.25C11.607 3 12.7856 3 13.5177 3.73223C14.25 4.46447 14.25 5.64298 14.25 8V9.25C14.25 11.607 14.25 12.7856 13.5177 13.5177C12.7856 14.25 11.607 14.25 9.25 14.25H6.75C4.39298 14.25 3.21447 14.25 2.48223 13.5177C1.75 12.7856 1.75 11.607 1.75 9.25V8Z" stroke="black" strokeWidth="1.3" />
-                    <path d="M4.875 3V2.0625" stroke="black" strokeWidth="1.3" strokeLinecap="round" />
-                    <path d="M11.125 3V2.0625" stroke="black" strokeWidth="1.3" strokeLinecap="round" />
-                    <path d="M2.0625 6.125H13.9375" stroke="black" strokeWidth="1.3" strokeLinecap="round" />
-                  </svg>
-                </div>
-                <input
-                  type="date"
-                  name="planStart"
-                  value={formData.planStart}
-                  onChange={handleChange}
-                  onClick={(e) => { try { e.currentTarget.showPicker(); } catch { } }}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-                />
-              </div>
+            <DateInput
+              label="Start Date"
+              name="planStart"
+              value={formData.planStart}
+              onChange={handleChange}
+              required
+            />
+
+            <div>
+              <Input
+                label="Total Fee"
+                startContent={<span className={`text-[14px] md:text-[16px] leading-[20px] md:leading-[22px] font-semibold ${feesFocus || formData.feesAmount ? 'text-[#0F172A]' : 'secondary-color'}`}>&#8377;</span>}
+                name="feesAmount"
+                value={formData.feesAmount}
+                onChange={handleChange}
+                onFocus={() => setFeesFocus(true)}
+                onBlur={() => setFeesFocus(false)}
+                placeholder="0"
+                inputMode="numeric"
+                required
+              />
             </div>
 
             <div>
-              <label className={labelClasses}>Total Fee{requiredStar}</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">₹</span>
-                <Input className="pl-8" name="feesAmount" value={formData.feesAmount} onChange={handleChange} placeholder="0" inputMode="numeric" required />
-              </div>
-            </div>
-
-            <div>
-              <label className={labelClasses}>Paid Today{requiredStar}</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">₹</span>
-                <Input className="pl-8" name="paidToday" value={formData.paidToday} onChange={handleChange} placeholder="0" inputMode="numeric" required />
-              </div>
+              <Input
+                label="Paid Today"
+                startContent={<span className={`text-[14px] md:text-[16px] leading-[20px] md:leading-[22px] font-semibold ${paidFocus || formData.paidToday ? 'text-[#0F172A]' : 'secondary-color'}`}>&#8377;</span>}
+                name="paidToday"
+                value={formData.paidToday}
+                onChange={handleChange}
+                onFocus={() => setPaidFocus(true)}
+                onBlur={() => setPaidFocus(false)}
+                placeholder="0"
+                inputMode="numeric"
+                required
+              />
             </div>
 
             <div>
               <label className={labelClasses}>Payment Method{requiredStar}</label>
-              <div className="grid grid-cols-2 gap-4 mt-2">
-                <div
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <BorderButton
+                  variant="outline"
+                  className={`h-[46px] ${formData.paymentMode === PaymentMode.CASH ? 'bg-white border-[#22C55E] text-[#22C55E]' : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#9CA3AF]'}`}
                   onClick={() => setFormData(p => ({ ...p, paymentMode: PaymentMode.CASH }))}
-                  className={`border rounded-main h-[46px] flex items-center justify-center cursor-pointer uppercase font-bold text-sm transition-all ${formData.paymentMode === PaymentMode.CASH ? 'border-[#22C55E] bg-[#22C55E]/5 text-[#22C55E]' : 'bg-[#F8FAFC] border-main secondary-color hover:bg-slate-100'}`}
                 >
                   Cash
-                </div>
-                <div
+                </BorderButton>
+                <BorderButton
+                  variant="outline"
+                  className={`h-[46px] ${formData.paymentMode === PaymentMode.UPI ? 'bg-white border-[#22C55E] text-[#22C55E]' : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#9CA3AF]'}`}
                   onClick={() => setFormData(p => ({ ...p, paymentMode: PaymentMode.UPI }))}
-                  className={`border rounded-main h-[46px] flex items-center justify-center cursor-pointer uppercase font-bold text-sm transition-all ${formData.paymentMode === PaymentMode.UPI ? 'border-[#22C55E] bg-[#22C55E]/5 text-[#22C55E]' : 'bg-[#F8FAFC] border-main secondary-color hover:bg-slate-100'}`}
                 >
                   Online
-                </div>
+                </BorderButton>
               </div>
             </div>
           </div>
@@ -417,22 +381,20 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
       <div className="pt-5 mt-auto">
         {step === 1 ? (
           <Button type="button" onClick={handleNext} block>
-            Next <svg className="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+            Next <ArrowRightIcon className="size-4 ml-2" />
           </Button>
         ) : (
           <div className="flex gap-2">
             <Button
               type="button" onClick={() => setStep(1)}
-              className="!bg-[#F8FAFC] !w-fit border-main secondary-color gap-[5px] px-6">
-              <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+              variant="secondary"
+              className="gap-[5px] ">
+              <ArrowLeftIcon className="size-4" />
               <span>Back</span>
             </Button>
             <Button type="submit" className="flex-1 ">
               {member ? 'Update Member' : 'Register Member'}
-              <svg className='ml-[5px]' width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 8H13M13 8L9.25 4.25M13 8L9.25 11.75" stroke="white" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-
+              <SubmitArrowIcon className="ml-[5px]" stroke="white" />
             </Button>
           </div>
         )}

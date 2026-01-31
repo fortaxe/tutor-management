@@ -107,15 +107,15 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
     return { activeMembers, expiredMembers, duesPending, totalDuesAmount, thisMonthMembers };
   }, [members]);
 
-  const handleSort = (key: string) => {
+  const handleSort = React.useCallback((key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
     if (sortConfig.key === key && sortConfig.direction === 'asc') {
       direction = 'desc';
     }
     setSortConfig({ key, direction });
-  };
+  }, [sortConfig]);
 
-  const columns: Column<Member>[] = useMemo(() => [
+  const columns: Column<Member>[] = [
     {
       key: 'profile',
       header: (
@@ -248,7 +248,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
         )
       }
     }
-  ], [sortConfig, activeTab]);
+  ];
 
   const filteredMembers = useMemo(() => {
     let baseList = members;
@@ -552,7 +552,9 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
 
 
             <div className="flex flex-col sm:flex-row gap-[5px] xl:items-center">
-
+              <button onClick={handleExportExcel} className="h-[46px] w-[46px] flex items-center justify-center rounded-main border border-slate-200 hover:bg-slate-50 transition-colors">
+                {/* <SortIcon className='size-[20px]' /> */}
+              </button>
               <button onClick={handleExportExcel} className="h-[46px] w-[46px] flex items-center justify-center rounded-main border border-slate-200 hover:bg-slate-50 transition-colors">
                 <img src="/icons/excel.svg" alt="" className='size-[20px]' />
               </button>
@@ -569,12 +571,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
               </div>
 
               <div className="flex gap-2 w-full sm:w-auto">
-                <Button
-                  onClick={() => handleOpenModal(null, MemberType.DAY_PASS)}
-                  className="!bg-[#FFFBEB] !border-[#FBD691] !text-[#F59E0B] border  flex-1 sm:flex-none uppercase  "
-                >
-                  <img src="/icons/calendar.svg" alt="" className="w-5 h-5 mr-2" /> DAY PASS
-                </Button>
+
                 <Button
                   onClick={() => handleOpenModal(null, MemberType.SUBSCRIPTION)}
                   className="flex-1 sm:flex-none uppercase "

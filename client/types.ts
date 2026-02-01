@@ -97,3 +97,14 @@ export interface MemberPayment {
   paymentDate: string;
   note: string;
 }
+
+export interface Lead {
+  _id?: string;
+  id?: string;
+  gymOwnerName: string;
+  gymName: string;
+  phone: string;
+  status: 'new' | 'contacted' | 'converted' | 'rejected';
+  createdAt?: string;
+  updatedAt?: string;
+}

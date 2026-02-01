@@ -6,7 +6,8 @@ import { User } from './models/User';
 import { Gym } from './models/Gym';
 import { Member } from './models/Member';
 import { MemberPaymentRecord } from './models/MemberPayment';
-import { loginSchema, gymSchemaValidation, memberSchemaValidation } from './validators/schemas';
+import { Lead } from './models/Lead';
+import { loginSchema, gymSchemaValidation, memberSchemaValidation, leadSchemaValidation } from './validators/schemas';
 import { UserRole, SubscriptionStatus, PaymentStatus, GymStatus } from './types';
 import multer from 'multer';
 import { uploadToR2 } from './utils/storage';
@@ -283,5 +284,48 @@ app.delete('/api/staff/:id', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// Leads (Public & Super Admin)
+app.get('/api/leads', async (req, res) => {
+  try {
+    await connectDB();
+    const leads = await Lead.find().sort({ createdAt: -1 });
+    res.json(leads);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/leads', async (req, res) => {
+  try {
+    const validatedLead = leadSchemaValidation.parse(req.body);
+    await connectDB();
+    const lead = await Lead.create(validatedLead);
+    res.status(201).json(lead);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.patch('/api/leads/:id', async (req, res) => {
+  try {
+    await connectDB();
+    const lead = await Lead.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(lead);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.delete('/api/leads/:id', async (req, res) => {
+  try {
+    await connectDB();
+    await Lead.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
 export default app;

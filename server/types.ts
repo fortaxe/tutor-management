@@ -92,3 +92,14 @@ export interface MemberPayment {
   note: string;
   paymentMode?: PaymentMode;
 }
+
+export interface Lead {
+  _id?: string;
+  id?: string;
+  gymOwnerName: string;
+  gymName: string;
+  phone: string;
+  status: 'new' | 'contacted' | 'converted' | 'rejected';
+  createdAt?: string;
+  updatedAt?: string;
+}

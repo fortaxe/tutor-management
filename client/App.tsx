@@ -11,14 +11,22 @@ import Toast from './components/Toast';
 import client from './lib/client';
 import { objectToFormData } from './lib/utils';
 import { useMyGym } from './hooks/useMyGym';
+import DemoPage from './pages/DemoPage';
+
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 
 const STORAGE_KEY = 'gym_mgmt_session';
 const SESSION_EXPIRY_DAYS = 30;
 
-const App: React.FC = () => {
+// Main App Component with all dashboard logic
+const MainApp: React.FC = () => {
   const queryClient = useQueryClient();
-  const [activeView, setActiveView] = useState<string>('dashboard');
+  const navigate = useNavigate();
+  const location = useLocation();
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+
+  // Initial View State - syncing with URL if possible or default
+  const [activeView, setActiveView] = useState<string>('dashboard');
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     setToast({ message, type });
@@ -27,7 +35,6 @@ const App: React.FC = () => {
   // --- Auth State ---
   const [loginError, setLoginError] = useState<string>('');
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    // ... existing initialization ...
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
@@ -439,5 +446,15 @@ const App: React.FC = () => {
     </DashboardLayout>
   );
 };
+
+const App: React.FC = () => {
+  return (
+    <Routes>
+      <Route path="/demo" element={<DemoPage />} />
+      <Route path="/*" element={<MainApp />} />
+    </Routes>
+  );
+};
+
 
 export default App;

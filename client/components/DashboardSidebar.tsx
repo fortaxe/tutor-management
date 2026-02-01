@@ -36,6 +36,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         ] : []),
     ] : [
         { id: 'dashboard', label: 'Gym Ledger', icon: '/icons/sidebar/members.svg' },
+        { id: 'leads', label: 'Leads', icon: '/icons/sidebar/staffs.svg' }, // Reusing staffs icon for leads for now or generic
     ];
 
     return (

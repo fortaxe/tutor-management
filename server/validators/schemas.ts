@@ -34,3 +34,9 @@ export const memberSchemaValidation = z.object({
   dob: z.string().optional(),
   paymentMode: z.nativeEnum(PaymentMode).optional(),
 });
+
+export const leadSchemaValidation = z.object({
+  gymOwnerName: z.string().min(2),
+  gymName: z.string().min(2),
+  phone: z.string().length(10),
+});

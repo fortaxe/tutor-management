@@ -14,6 +14,7 @@ import { useMyGym } from './hooks/useMyGym';
 import DemoPage from './pages/DemoPage';
 
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 
 const STORAGE_KEY = 'gym_mgmt_session';
 const SESSION_EXPIRY_DAYS = 30;
@@ -447,12 +448,16 @@ const MainApp: React.FC = () => {
   );
 };
 
+
 const App: React.FC = () => {
   return (
-    <Routes>
-      <Route path="/demo" element={<DemoPage />} />
-      <Route path="/*" element={<MainApp />} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/demo" element={<DemoPage />} />
+        <Route path="/*" element={<MainApp />} />
+      </Routes>
+      <Analytics />
+    </>
   );
 };
 

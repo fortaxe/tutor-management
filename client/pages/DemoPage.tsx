@@ -85,8 +85,10 @@ const DemoPage: React.FC = () => {
                         onPlay={() => setIsPlaying(true)}
                         onPause={() => setIsPlaying(false)}
                         className="w-full h-auto max-h-[80vh] object-contain opacity-90 group-hover:opacity-100 transition-opacity duration-300"
-                        src="/demo.mp4"
-                    />
+                    >
+                        <source src="/demo.mp4#t=0.001" type="video/mp4" />
+                        Your browser does not support the video tag.
+                    </video>
 
                     {/* Play Button Overlay - Hide when playing (mobile) or always show on desktop (as it opens modal) */}
                     {(!isPlaying || window.innerWidth >= 640) && (

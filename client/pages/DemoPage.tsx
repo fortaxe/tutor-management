@@ -80,6 +80,7 @@ const DemoPage: React.FC = () => {
                         ref={videoRef}
                         loop
                         playsInline
+                        preload="metadata"
                         controls={typeof window !== 'undefined' && window.innerWidth < 640}
                         onPlay={() => setIsPlaying(true)}
                         onPause={() => setIsPlaying(false)}

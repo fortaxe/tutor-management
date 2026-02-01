@@ -71,7 +71,7 @@ const MemberRow: React.FC<{
   activeTab: string
 }> = ({ member, onEdit, onDelete, onCollect, onRenew, activeTab }) => {
   const { endDate, remainingDays } = getPlanDates(member);
-  const isExpired = remainingDays < 0;
+  const isExpired = remainingDays <= 0;
   const balance = member.feesAmount - member.paidAmount;
 
   const handleWhatsApp = () => {
@@ -178,7 +178,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
   const isTrainer = user.role === UserRole.TRAINER;
 
   const stats = useMemo(() => {
-    const activeMembers = members.filter(m => getPlanDates(m).remainingDays >= 0).length;
+    const activeMembers = members.filter(m => getPlanDates(m).remainingDays > 0).length;
     const expiredMembers = members.length - activeMembers;
     const duesPendingMembers = members.filter(m => m.feesStatus !== PaymentStatus.PAID);
     const duesPending = duesPendingMembers.length;
@@ -212,7 +212,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
         case 'expiry':
           baseList = members.filter(m => {
             const { remainingDays } = getPlanDates(m);
-            return m.memberType === MemberType.SUBSCRIPTION && remainingDays >= 0 && remainingDays <= expiryFilter;
+            return m.memberType === MemberType.SUBSCRIPTION && remainingDays > 0 && remainingDays <= expiryFilter;
           });
           break;
         case 'dues':
@@ -222,7 +222,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
           baseList = members.filter(m => m.memberType === MemberType.DAY_PASS);
           break;
         case 'expired':
-          baseList = members.filter(m => getPlanDates(m).remainingDays < 0);
+          baseList = members.filter(m => getPlanDates(m).remainingDays <= 0);
           break;
         case 'members':
         default:
@@ -493,7 +493,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
         <div className="lg:hidden divide-y divide-slate-50">
           {filteredMembers.map(member => {
             const { endDate, remainingDays } = getPlanDates(member);
-            const isExpired = remainingDays < 0;
+            const isExpired = remainingDays <= 0;
             const balance = member.feesAmount - member.paidAmount;
             return (
               <div key={member._id || member.id} className="p-6 space-y-4 hover:bg-slate-50 transition-colors">

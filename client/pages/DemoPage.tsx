@@ -9,6 +9,8 @@ import Button from '../components/Button';
 import Modal from '../components/Modal';
 
 const DemoPage: React.FC = () => {
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const [isPlaying, setIsPlaying] = useState(false);
     const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
     const [formData, setFormData] = useState({
         gymOwnerName: '',
@@ -47,33 +49,54 @@ const DemoPage: React.FC = () => {
         <div className="w-full h-full md:h-screen bg-white relative flex flex-col lg:flex-row overflow-hidden font-sans">
             {/* Left Side - Video Section */}
             {/* Left Side - Video Section */}
-            <div className="relative w-full lg:w-1/2 h-full bg-black flex items-center justify-center p-4 md:p-8 lg:p-12">
-                {/* Video Container - Trigger Modal */}
+            <div className="relative w-full lg:w-1/2 h-full bg-black flex flex-col items-center justify-center p-4 md:p-8 lg:p-12">
+                {/* Video Label - Aligned with Video */}
+                <div className="w-full max-w-[600px] mb-4 text-left">
+                    <span className="text-white/80 font-bold text-lg md:text-2xl uppercase tracking-normal drop-shadow-md">Demo Video</span>
+                </div>
+
+                {/* Video Container */}
                 <div
                     className="relative w-full max-w-[600px] bg-[#101010] rounded-3xl overflow-hidden shadow-2xl border border-white/20 group cursor-pointer hover:border-white/30 transition-all"
-                    onClick={() => setIsVideoModalOpen(true)}
+                    onClick={() => {
+                        // Mobile: Play inline
+                        if (window.innerWidth < 640) {
+                            if (videoRef.current) {
+                                if (videoRef.current.paused) {
+                                    videoRef.current.play();
+                                    setIsPlaying(true);
+                                } else {
+                                    videoRef.current.pause();
+                                    setIsPlaying(false);
+                                }
+                            }
+                        } else {
+                            // Desktop: Open Modal
+                            setIsVideoModalOpen(true);
+                        }
+                    }}
                 >
                     <video
+                        ref={videoRef}
                         loop
-                        muted
                         playsInline
-                        className="w-full h-auto max-h-[80vh] object-contain opacity-90 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                        controls={typeof window !== 'undefined' && window.innerWidth < 640}
+                        onPlay={() => setIsPlaying(true)}
+                        onPause={() => setIsPlaying(false)}
+                        className="w-full h-auto max-h-[80vh] object-contain opacity-90 group-hover:opacity-100 transition-opacity duration-300"
                         src="https://pub-690b36db005d4893847aa0c6474898d6.r2.dev/demo.mp4"
                     />
 
-                    {/* Play Button Overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[1px] group-hover:bg-black/10 transition-all">
-                        <div className="w-20 h-20 bg-white backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 shadow-xl group-hover:scale-110 transition-transform duration-300">
-                            <svg className="size-12 text-black ml-1" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M8 5v14l11-7z" />
-                            </svg>
+                    {/* Play Button Overlay - Hide when playing (mobile) or always show on desktop (as it opens modal) */}
+                    {(!isPlaying || window.innerWidth >= 640) && (
+                        <div className={`absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[1px] group-hover:bg-black/10 transition-all ${isPlaying && window.innerWidth < 640 ? 'hidden' : ''}`}>
+                            <div className="w-20 h-20 bg-white backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 shadow-xl group-hover:scale-110 transition-transform duration-300">
+                                <svg className="size-12 text-black ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z" />
+                                </svg>
+                            </div>
                         </div>
-                    </div>
-                </div>
-
-                {/* Brand Overlay Top Left */}
-                <div className="absolute top-4 left-4 z-10">
-
+                    )}
                 </div>
             </div>
 
@@ -158,6 +181,7 @@ const DemoPage: React.FC = () => {
                     <video
                         controls
                         autoPlay
+                        playsInline
                         className="w-full h-full object-contain"
                         src="https://pub-690b36db005d4893847aa0c6474898d6.r2.dev/demo.mp4"
                     />

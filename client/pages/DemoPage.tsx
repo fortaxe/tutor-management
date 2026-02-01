@@ -80,7 +80,7 @@ const DemoPage: React.FC = () => {
                         ref={videoRef}
                         loop
                         playsInline
-                        preload="metadata"
+                        preload="auto"
                         controls={typeof window !== 'undefined' && window.innerWidth < 640}
                         onPlay={() => setIsPlaying(true)}
                         onPause={() => setIsPlaying(false)}
@@ -184,7 +184,7 @@ const DemoPage: React.FC = () => {
                         autoPlay
                         playsInline
                         className="w-full h-full object-contain"
-                        src="https://pub-690b36db005d4893847aa0c6474898d6.r2.dev/demo.mp4"
+                        src="/demo.mp4"
                     />
                 </div>
             </Modal>

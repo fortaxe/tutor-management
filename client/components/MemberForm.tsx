@@ -43,6 +43,12 @@ interface MemberFormProps {
 const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberType.SUBSCRIPTION, onSubmit, onCancel }) => {
   const [showCamera, setShowCamera] = useState(false);
   const [activeType, setActiveType] = useState<MemberType>(member?.memberType || initialType);
+  const [showCustomDuration, setShowCustomDuration] = useState(() => {
+    if (member) {
+      return ![29, 89, 179, 364].includes(member.planDurationDays);
+    }
+    return false;
+  });
 
   const [formData, setFormData] = useState(() => {
     if (member) {
@@ -72,6 +78,13 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
       paymentMode: PaymentMode.CASH,
       photo: undefined as string | undefined,
     };
+  });
+
+  const [customMonths, setCustomMonths] = useState<string>(() => {
+    if (member && ![29, 89, 179, 364].includes(member.planDurationDays)) {
+      return Math.round((member.planDurationDays + 1) / 30).toString();
+    }
+    return '';
   });
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -140,6 +153,36 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
       } catch (error) {
         console.error("Image compression error:", error);
       }
+    }
+  };
+
+  const handleDurationSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    if (value === 'custom') {
+      setShowCustomDuration(true);
+      setCustomMonths('');
+      // Set to 0 temporarily so if they don't type anything it's invalid
+      if ([29, 89, 179, 364].includes(formData.planDurationDays)) {
+        setFormData(prev => ({ ...prev, planDurationDays: 0 }));
+      }
+    } else {
+      setShowCustomDuration(false);
+      setCustomMonths('');
+      setFormData(prev => ({ ...prev, planDurationDays: Number(value) }));
+    }
+  };
+
+  const handleCustomMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setCustomMonths(val);
+
+    if (val === '') {
+      setFormData(prev => ({ ...prev, planDurationDays: 0 }));
+      return;
+    }
+    const months = parseInt(val);
+    if (!isNaN(months) && months > 0 && months <= 16) {
+      setFormData(prev => ({ ...prev, planDurationDays: (months * 30) - 1 }));
     }
   };
 
@@ -300,12 +343,36 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
               {activeType === MemberType.DAY_PASS ? (
                 <input type="number" name="planDurationDays" value={formData.planDurationDays} onChange={handleChange} className={inputClasses} min="1" />
               ) : (
-                <select name="planDurationDays" value={formData.planDurationDays} onChange={handleChange} required className={inputClasses}>
-                  <option value={29}>Monthly (30 days)</option>
-                  <option value={89}>Quarterly (90 days)</option>
-                  <option value={179}>Half Yearly (180 days)</option>
-                  <option value={364}>Yearly (365 days)</option>
-                </select>
+                <div className="space-y-2">
+                  <select
+                    name="planDurationDays"
+                    value={showCustomDuration || ![29, 89, 179, 364].includes(formData.planDurationDays) ? 'custom' : formData.planDurationDays}
+                    onChange={handleDurationSelect}
+                    required
+                    className={inputClasses}
+                  >
+                    <option value={29}>Monthly (30 days)</option>
+                    <option value={89}>Quarterly (90 days)</option>
+                    <option value={179}>Half Yearly (180 days)</option>
+                    <option value={364}>Yearly (365 days)</option>
+                    <option value="custom">Custom</option>
+                  </select>
+                  {(showCustomDuration || ![29, 89, 179, 364].includes(formData.planDurationDays)) && (
+                    <div className="animate-fade-in-down">
+                      <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold ml-1">Months </label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="16"
+                        required
+                        value={customMonths}
+                        onChange={handleCustomMonthChange}
+                        className={inputClasses}
+                        placeholder="Enter months..."
+                      />
+                    </div>
+                  )}
+                </div>
               )}
             </div>
             <div>
@@ -357,13 +424,37 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
               {activeType === MemberType.DAY_PASS ? (
                 <input type="number" name="planDurationDays" value={formData.planDurationDays} onChange={handleChange} className={inputClasses} min="1" />
               ) : (
-                <select name="planDurationDays" value={formData.planDurationDays} onChange={handleChange} required className={inputClasses}>
-                  <option value={29}>Monthly (30 days)</option>
-                  <option value={89}>Quarterly (90 days)</option>
-                  <option value={179}>Half Yearly (180 days)</option>
-                  <option value={364}>Yearly (365 days)</option>
-                  <option value={formData.planDurationDays}>{formData.planDurationDays} Days (Custom)</option>
-                </select>
+                <div className="space-y-2">
+                  <select
+                    name="planDurationDays"
+                    value={showCustomDuration || ![29, 89, 179, 364].includes(formData.planDurationDays) ? 'custom' : formData.planDurationDays}
+                    onChange={handleDurationSelect}
+                    required
+                    className={inputClasses}
+                  >
+                    <option value={29}>Monthly (30 days)</option>
+                    <option value={89}>Quarterly (90 days)</option>
+                    <option value={179}>Half Yearly (180 days)</option>
+                    <option value={364}>Yearly (365 days)</option>
+                    <option value="custom">Custom</option>
+                  </select>
+                  {(showCustomDuration || ![29, 89, 179, 364].includes(formData.planDurationDays)) && (
+                    <div className="animate-fade-in-down">
+                      <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold ml-1">Months</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="16"
+                        required
+                        value={customMonths}
+                        onChange={handleCustomMonthChange}
+                        className={inputClasses}
+                        placeholder="Enter months..."
+                      />
+
+                    </div>
+                  )}
+                </div>
               )}
             </div>
             <div>

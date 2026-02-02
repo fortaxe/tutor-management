@@ -174,6 +174,8 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
 
   const [expiryFilter, setExpiryFilter] = useState<number>(7);
   const [searchQuery, setSearchQuery] = useState('');
+  const [renewalCustomMonths, setRenewalCustomMonths] = useState('');
+  const [isCustomRenewal, setIsCustomRenewal] = useState(false);
 
   const isTrainer = user.role === UserRole.TRAINER;
 
@@ -262,18 +264,73 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
   const handleOpenRenewModal = (member: Member) => {
     const { endDate } = getPlanDates(member);
     const today = new Date();
+    // Reset time to ensure we compare dates only
     today.setHours(0, 0, 0, 0);
-    const suggestedStart = endDate > today ? endDate : today;
+
+    // Normalize endDate to midnight for proper comparison
+    const endDateMidnight = new Date(endDate);
+    endDateMidnight.setHours(0, 0, 0, 0);
+
+    const nextDay = new Date(endDateMidnight);
+    nextDay.setDate(endDateMidnight.getDate() + 1);
+
+    // If endDate is in the past (yesterday or before), suggestedStart is today
+    // If endDate is today or in future, suggestedStart is endDate + 1
+    const suggestedStart = (endDateMidnight >= today) ? nextDay : today;
+
+    // Ensure we handle local timezone offset correctly for the input[type="date"]
+    // A simple trick is to use the local date string components
+    const offset = suggestedStart.getTimezoneOffset() * 60000;
+    const localISOTime = (new Date(suggestedStart.getTime() - offset)).toISOString().split('T')[0];
 
     setEditingMember(member);
+    const durationDays = member.memberType === MemberType.DAY_PASS ? 1 : (member.planDurationDays || 30);
+
     setRenewalFormData({
       type: member.memberType,
-      startDate: suggestedStart.toISOString().split('T')[0],
-      duration: member.memberType === MemberType.DAY_PASS ? 1 : (member.planDurationDays || 30),
+      startDate: localISOTime,
+      duration: durationDays,
       fee: member.feesAmount.toString(),
       paid: member.feesAmount.toString(),
     });
+
+    // Check if it's a custom duration
+    // Standardize to MemberForm values: 29, 89, 179, 364
+    if (member.memberType === MemberType.SUBSCRIPTION && ![29, 89, 179, 364].includes(durationDays)) {
+      setRenewalCustomMonths(Math.round((durationDays + 1) / 30).toString());
+      setIsCustomRenewal(true);
+    } else {
+      setRenewalCustomMonths('');
+      setIsCustomRenewal(false);
+    }
+
     setIsRenewModalOpen(true);
+  };
+
+  const handleRenewalDurationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    if (value === 'custom') {
+      setIsCustomRenewal(true);
+      setRenewalCustomMonths('');
+      setRenewalFormData(prev => ({ ...prev, duration: 0 }));
+    } else {
+      setIsCustomRenewal(false);
+      setRenewalCustomMonths('');
+      setRenewalFormData(prev => ({ ...prev, duration: Number(value) }));
+    }
+  };
+
+  const handleRenewalCustomMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setRenewalCustomMonths(val);
+    if (val === '') {
+      setRenewalFormData(prev => ({ ...prev, duration: 0 }));
+      return;
+    }
+    const months = parseInt(val);
+    if (!isNaN(months) && months > 0 && months <= 16) {
+      setRenewalFormData(prev => ({ ...prev, duration: (months * 30) - 1 }));
+    }
   };
 
   const handleOpenDeleteConfirm = (member: Member) => {
@@ -618,7 +675,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
             <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200">
               <button
                 type="button"
-                onClick={() => setRenewalFormData({ ...renewalFormData, type: MemberType.SUBSCRIPTION, duration: 30 })}
+                onClick={() => setRenewalFormData({ ...renewalFormData, type: MemberType.SUBSCRIPTION, duration: 29 })}
                 className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${renewalFormData.type === MemberType.SUBSCRIPTION ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
               >
                 Full Subscription
@@ -684,16 +741,35 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
                       <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 uppercase">Days</span>
                     </div>
                   ) : (
-                    <select
-                      value={renewalFormData.duration}
-                      onChange={(e) => setRenewalFormData({ ...renewalFormData, duration: Number(e.target.value) })}
-                      className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black focus:ring-4 focus:ring-brand/5 outline-none transition-all"
-                    >
-                      <option value={30}>Monthly (30 days)</option>
-                      <option value={90}>Quarterly (90 days)</option>
-                      <option value={180}>Half Yearly (180 days)</option>
-                      <option value={365}>Yearly (365 days)</option>
-                    </select>
+                    <div>
+                      <select
+                        value={isCustomRenewal ? 'custom' : renewalFormData.duration}
+                        onChange={handleRenewalDurationChange}
+                        className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black focus:ring-4 focus:ring-brand/5 outline-none transition-all"
+                      >
+                        <option value={29}>Monthly (30 days)</option>
+                        <option value={89}>Quarterly (90 days)</option>
+                        <option value={179}>Half Yearly (180 days)</option>
+                        <option value={364}>Yearly (365 days)</option>
+                        <option value="custom">Custom</option>
+                      </select>
+                      {isCustomRenewal && (
+                        <div className="animate-in fade-in slide-in-from-top-2 duration-300 mt-2">
+                          <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-1">Months</label>
+                          <input
+                            type="number"
+                            min="1"
+                            max="16"
+                            required
+                            value={renewalCustomMonths}
+                            onChange={handleRenewalCustomMonthChange}
+                            placeholder="Enter months..."
+                            className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black focus:ring-4 focus:ring-brand/5 outline-none"
+                          />
+
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -732,9 +808,9 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
               <button type="button" onClick={handleCloseModal} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-colors">Cancel</button>
               <button type="submit" className="flex-1 py-4 bg-brand text-charcoal rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-brand/20 active:scale-95 transition-all">Confirm Plan</button>
             </div>
-          </form>
+          </form >
         )}
-      </Modal>
+      </Modal >
 
       <Modal
         isOpen={isDeleteModalOpen}
@@ -765,7 +841,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
           </div>
         </div>
       </Modal>
-    </div>
+    </div >
   );
 };
 

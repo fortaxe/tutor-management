@@ -86,7 +86,7 @@ const DemoPage: React.FC = () => {
                         onPause={() => setIsPlaying(false)}
                         className="w-full h-auto max-h-[80vh] object-contain opacity-90 group-hover:opacity-100 transition-opacity duration-300"
                     >
-                        <source src="/demo.mp4#t=0.001" type="video/mp4" />
+                        <source src="/demo-compatible.mp4#t=0.001" type="video/mp4" />
                         Your browser does not support the video tag.
                     </video>
 
@@ -186,7 +186,7 @@ const DemoPage: React.FC = () => {
                         autoPlay
                         playsInline
                         className="w-full h-full object-contain"
-                        src="/demo.mp4"
+                        src="/demo-compatible.mp4"
                     />
                 </div>
             </Modal>

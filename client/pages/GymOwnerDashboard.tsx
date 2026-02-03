@@ -200,7 +200,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
             {balance > 0 && (
               <ActionIcon variant="card" onClick={() => handleOpenCollectModal(member)} title="Collect Balance" />
             )}
-            {/* <ActionIcon variant="pdf" onClick={() => console.log('Download invoice')} title="Download Invoice" /> */}
+            {/* <ActionIcon variant="pdf" onClick={() => generateInvoice(gym, member)} title="Download Invoice" /> */}
             <ActionIcon variant="edit" onClick={() => handleOpenModal(member)} />
             <ActionIcon variant="delete" onClick={() => handleOpenDeleteConfirm(member)} />
           </div>
@@ -255,37 +255,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
       );
     }
 
-    // Prepare sort values to avoid recalculating in sort loop
-    const sortableList = baseList.map(m => {
-      let sortValue: any = '';
-      const dates = getPlanDates(m);
-
-      switch (sortConfig.key) {
-        case 'name':
-          sortValue = m.name.toLowerCase();
-          break;
-        case 'endDate':
-          sortValue = dates.endDate.getTime();
-          break;
-        case 'remainingDays':
-          sortValue = dates.remainingDays;
-          break;
-        case 'planStart':
-          sortValue = new Date(m.planStart).getTime();
-          break;
-        default:
-          sortValue = 0;
-      }
-      return { member: m, sortValue };
-    });
-
-    sortableList.sort((a, b) => {
-      if (a.sortValue < b.sortValue) return sortConfig.direction === 'asc' ? -1 : 1;
-      if (a.sortValue > b.sortValue) return sortConfig.direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-
-    return sortableList.map(item => item.member);
+    return baseList;
   })();
 
 

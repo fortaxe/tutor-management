@@ -505,7 +505,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
         <button onClick={() => handleTabChange('passes')} className={`${tabClasses('passes')} rounded-main min-w-fit `}>DayPass</button>
       </div>
 
-      <div className="md:bg-white md:rounded-main  md:border-main md:overflow-hidden bg-transparent">
+      <div className="md:bg-white rmd:overflow-hidden bg-transparent">
         <div className=" space-y-4 md:space-y-8">
           <div className="flex flex-col xl:flex-row justify-between xl:items-end md:space-y-4 xl:space-y-0  border-b border-[#E2E8F0] p-[15px] hidden md:flex md:p-5">
 
@@ -581,6 +581,14 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
               onEdit={handleOpenModal}
               onCollect={handleOpenCollectModal}
               onDelete={handleOpenDeleteConfirm}
+              onWhatsApp={(m) => {
+                const { endDate, remainingDays } = getPlanDates(m);
+                const isExpired = remainingDays < 0;
+                const text = isExpired
+                  ? `Hello ${m.name}, your gym membership has expired on ${endDate.toLocaleDateString()}. Please renew to continue your workout.`
+                  : `Hello ${m.name}, your gym membership is ending in ${remainingDays} days. Please renew to continue your workout.`;
+                window.open(`https://wa.me/91${m.phone}?text=${encodeURIComponent(text)}`, '_blank');
+              }}
             />
           ))}
         </div>

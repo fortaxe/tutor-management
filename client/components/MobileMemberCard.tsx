@@ -11,9 +11,10 @@ interface MobileMemberCardProps {
     onEdit: (member: Member) => void;
     onCollect: (member: Member) => void;
     onDelete: (member: Member) => void;
+    onWhatsApp?: (member: Member) => void;
 }
 
-const MobileMemberCard: React.FC<MobileMemberCardProps> = ({ member, onRenew, onEdit, onCollect, onDelete }) => {
+const MobileMemberCard: React.FC<MobileMemberCardProps> = ({ member, onRenew, onEdit, onCollect, onDelete, onWhatsApp }) => {
     const { endDate, remainingDays } = getPlanDates(member);
     const isExpired = remainingDays <= 0;
     const balance = member.feesAmount - member.paidAmount;
@@ -24,7 +25,7 @@ const MobileMemberCard: React.FC<MobileMemberCardProps> = ({ member, onRenew, on
     if (isExpired) {
         statusVariant = 'red';
         statusText = 'EXPIRED';
-    } else if (remainingDays <= 5) {
+    } else if (remainingDays <= 10) {
         statusVariant = 'orange';
     }
 
@@ -67,6 +68,7 @@ const MobileMemberCard: React.FC<MobileMemberCardProps> = ({ member, onRenew, on
             <div className="flex justify-between items-center">
                 <div className="flex gap-[5px]">
                     <ActionIcon variant="reload" onClick={() => onRenew(member)} title="Renew" />
+                    {remainingDays <= 10 && <ActionIcon variant="whatsup" onClick={() => onWhatsApp?.(member)} title="WhatsApp" />}
                     <ActionIcon variant="edit" onClick={() => onEdit(member)} title="Edit" />
                     {balance > 0 && <ActionIcon variant="card" onClick={() => onCollect(member)} title="Collect" />}
                 </div>

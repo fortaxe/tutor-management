@@ -9,7 +9,7 @@ import Button from './Button';
 import { useDispatch } from 'react-redux';
 import { openAddMemberModal } from '../store/uiSlice';
 import { MemberType } from '../types';
-import SidebarIcon from './icons/SidebarIcon';
+import MenuIcon from './icons/MenuIcon';
 
 interface DashboardLayoutProps {
   user: User;
@@ -84,17 +84,18 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden pl-0 lg:pl-[32px] pb-[10px] md:py-5 pr-0 lg:pr-5">
         <div className="lg:hidden flex  bg-black md:bg-transparent items-center justify-between px-4 md:px-5 py-[10px] md:pb-5">
           <div className='flex  items-center gap-2 md:gap-3'>
-            <SidebarIcon
-              className='text-white md:text-black cursor-pointer'
-              onClick={() => setIsSidebarOpen(true)}
-            />
+            <div>
+              <img src="/profile.png" alt="" className="size-[36px] rounded-main border-main" />
+            </div>
 
             <span className="text-[16px] leading-[22px] text-white font-semibold">{pageTitle}</span>
           </div>
 
-          <div>
-            <img src="/profile.png" alt="" className="size-[36px] rounded-main border-main" />
-          </div>
+          <MenuIcon
+            className='text-white md:text-black cursor-pointer'
+            onClick={() => setIsSidebarOpen(true)}
+          />
+
         </div>
 
         <header className="hidden lg:flex justify-between items-start sticky top-0 z-10 ">

@@ -20,7 +20,7 @@ interface TableProps<T> {
 
 export function Table<T>({ data, columns, keyExtractor, className, onRowClick }: TableProps<T>) {
     return (
-        <div className={`overflow-x-auto md:pt-5 no-scrollbar ${className || ''}`}>
+        <div className={`overflow-x-auto md:pt-5 no-scrollbar  ${className || ''}`}>
             <table className="min-w-full">
                 <thead>
                     <tr>

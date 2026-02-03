@@ -1,3 +1,15 @@
+import { Member } from '../types';
+
+export const getPlanDates = (member: Member) => {
+    if (!member) return { startDate: new Date(), endDate: new Date(), remainingDays: 0 };
+    const startDate = new Date(member.planStart);
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + Number(member.planDurationDays));
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const remainingDays = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
+    return { startDate, endDate, remainingDays };
+};
 
 export const objectToFormData = (obj: any): FormData => {
     const formData = new FormData();

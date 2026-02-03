@@ -58,7 +58,7 @@ const GymEarnings: React.FC<GymEarningsProps> = ({ gym, members, payments }) => 
   }, [payments, searchQuery]);
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 px-4 md:px-0">
       {/* Revenue High-Level Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
         <div className="bg-charcoal p-8 rounded-[2rem] shadow-2xl shadow-charcoal/20 flex flex-col justify-between relative overflow-hidden group">

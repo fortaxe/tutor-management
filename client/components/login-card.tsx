@@ -26,8 +26,8 @@ const LoginCard: React.FC<LoginCardProps> = ({
     return (
         <div className="w-full max-w-[420px] bg-white border-main p-5 md:p-[30px] rounded-main bg-white" >
             <div className="mb-[15px]">
-                <h2 className="secondary-heading text-black mb-[10px] ">Dashboard Login</h2>
-                <p className="text-[#9CA3AF] text-[14px] md:text-[16px]  leading-[20px] md:leading-[22px] tracking-[0em]">Manage members, payments, and daily operations in one place.</p>
+                <h2 className="secondary-heading text-black mb-[10px] font-grotesk !font-bold uppercase">Dashboard Login</h2>
+                <p className="text-[#9CA3AF] text-[14px] md:text-[16px]  leading-[20px] md:leading-[22px] tracking-[0em] font-semibold">Manage members, payments, and daily operations in one place.</p>
             </div>
 
             <form onSubmit={handleSubmit} >
@@ -38,45 +38,38 @@ const LoginCard: React.FC<LoginCardProps> = ({
                     </div>
                 )}
 
-                <div className="space-y-2">
-                    <div className="space-y-[5px]">
-                        <Input
-                            id="phone"
-                            type="tel"
-                            inputMode="numeric"
-                            required
-                            maxLength={10}
-                            value={phone}
-                            onChange={handlePhoneChange}
-                            placeholder="Enter mobile number"
-                        />
-                        {errors.phone && <p className="tertiary-description red-color">{errors.phone}</p>}
-                    </div>
+                <div className="space-y-[6px] md:space-y-[8px]">
+                    <Input
+                        label="Username"
+                        id="phone"
+                        type="tel"
+                        inputMode="numeric"
+                        required
+                        maxLength={10}
+                        value={phone}
+                        onChange={handlePhoneChange}
+                        placeholder="Enter mobile number"
+                        error={errors.phone}
+                    />
 
-                    <div className="space-y-[5px]">
-                        <div className="relative">
-                            <Input
-                                id="password"
-                                type={isPasswordVisible ? "text" : "password"}
-                                required
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                placeholder="Enter your password"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setIsPasswordVisible(!isPasswordVisible)}
-                                className="absolute right-[15px] top-1/2 -translate-y-1/2"
-                            >
-                                <img src="/icons/eye.svg" alt="Show Password" className="size-[18px]" />
-                            </button>
-                        </div>
-                        {errors.password && <p className="tertiary-description red-color">{errors.password}</p>}
-                    </div>
+                    <Input
+                        label="Password"
+                        id="password"
+                        type="password"
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Enter your password"
+                        error={errors.password}
+                    />
                 </div>
 
-                <div className="flex items-center secondary-description py-[15px]">
-                    <img src="/icons/lock.svg" alt="Lock" className="w-6 h-6" />
+                <div className="flex items-center  py-[15px] primary-description font-semibold secondary-color">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5.75 14.5C5.75 12.7322 5.75 11.8484 6.29918 11.2992C6.84835 10.75 7.73223 10.75 9.5 10.75H14.5C16.2678 10.75 17.1516 10.75 17.7008 11.2992C18.25 11.8484 18.25 12.7322 18.25 14.5C18.25 16.2678 18.25 17.1516 17.7008 17.7008C17.1516 18.25 16.2678 18.25 14.5 18.25H9.5C7.73223 18.25 6.84835 18.25 6.29918 17.7008C5.75 17.1516 5.75 16.2678 5.75 14.5Z" stroke="#9CA3AF" stroke-width="1.2" />
+                        <path d="M8.25 10.75V9.5C8.25 7.42893 9.92893 5.75 12 5.75C14.0711 5.75 15.75 7.42893 15.75 9.5V10.75" stroke="#9CA3AF" stroke-width="1.3" stroke-linecap="round" />
+                    </svg>
+
                     <span>Your data is securely encrypted.</span>
                 </div>
 

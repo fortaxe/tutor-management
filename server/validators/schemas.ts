@@ -9,7 +9,10 @@ export const loginSchema = z.object({
 
 export const gymSchemaValidation = z.object({
   name: z.string().min(2),
+  ownerName: z.string().min(2).optional(),
   ownerPhone: z.string().length(10),
+  state: z.string().optional(),
+  pincode: z.string().length(6).optional(),
   status: z.nativeEnum(GymStatus),
   subscriptionStatus: z.nativeEnum(SubscriptionStatus),
   subscriptionStartDate: z.string(),
@@ -30,4 +33,10 @@ export const memberSchemaValidation = z.object({
   photo: z.string().optional(),
   dob: z.string().optional(),
   paymentMode: z.nativeEnum(PaymentMode).optional(),
+});
+
+export const leadSchemaValidation = z.object({
+  gymOwnerName: z.string().min(2),
+  gymName: z.string().min(2),
+  phone: z.string().length(10),
 });

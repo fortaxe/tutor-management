@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useMembershipDuration } from '../hooks/useMembershipDuration';
 import { Member, PaymentStatus, MemberType, PaymentMode } from '../types';
 import CameraCapture from './CameraCapture';
 import Input from './Input';
@@ -63,12 +64,25 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
     };
   });
 
+  const {
+    isCustomRenewal,
+    customMonths,
+    handleDurationChange,
+    handleCustomMonthChange,
+    setIsCustomRenewal,
+    setCustomMonths
+  } = useMembershipDuration(formData.planDurationDays, (newDuration) => {
+    setFormData(prev => ({ ...prev, planDurationDays: newDuration }));
+  });
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSetSubscription = () => {
     setActiveType(MemberType.SUBSCRIPTION);
     setFormData(prev => {
       if (prev.planDurationDays === 1) {
+        setIsCustomRenewal(false);
+        setCustomMonths('');
         return {
           ...prev,
           planDurationDays: 29,
@@ -80,11 +94,12 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
     });
   };
 
+  /* Step 2: Set stored duration to 0 for Day Pass, effectively 1 day (Start + 0) */
   const handleSetDayPass = () => {
     setActiveType(MemberType.DAY_PASS);
     setFormData(prev => ({
       ...prev,
-      planDurationDays: 1,
+      planDurationDays: 0,
       feesAmount: '100',
       paidToday: '100'
     }));
@@ -295,18 +310,36 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
                   <div className="h-[48px] rounded-main border-main bg-[#F8FAFC] flex items-center px-[15px] text-[#0F172A] font-grotesk font-bold">1 Day</div>
                 </div>
               ) : (
-                <Select
-                  label="Duration (Days)"
-                  name="planDurationDays"
-                  value={formData.planDurationDays}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value={29}>Monthly (30 Days)</option>
-                  <option value={89}>Quarterly (90 Days)</option>
-                  <option value={179}>Half Yearly (180 Days)</option>
-                  <option value={364}>Yearly (365 Days)</option>
-                </Select>
+                <div>
+                  <Select
+                    label="Duration (Days)"
+                    name="planDurationDays"
+                    value={isCustomRenewal ? 'custom' : formData.planDurationDays}
+                    onChange={handleDurationChange}
+                    required
+                  >
+                    <option value={29}>Monthly (30 Days)</option>
+                    <option value={89}>Quarterly (90 Days)</option>
+                    <option value={179}>Half Yearly (180 Days)</option>
+                    <option value={364}>Yearly (365 Days)</option>
+                    <option value="custom">Custom</option>
+                  </Select>
+                  {isCustomRenewal && (
+                    <div className="mt-[10px] animate-in fade-in slide-in-from-top-2 duration-300">
+                      <Input
+                        label="Months"
+                        type="number"
+                        min="1"
+                        max="16"
+                        value={customMonths}
+                        onChange={handleCustomMonthChange}
+                        placeholder="Enter months..."
+                        required
+                      />
+
+                    </div>
+                  )}
+                </div>
               )}
 
               <DateInput

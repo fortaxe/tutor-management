@@ -8,6 +8,7 @@ export enum UserRole {
 export interface User {
   id: number;
   phone: string;
+  name?: string;
   password?: string;
   role: UserRole;
   gymId?: number;
@@ -37,7 +38,10 @@ export interface SubscriptionPayment {
 export interface Gym {
   id: number;
   name: string;
+  ownerName?: string;
   ownerPhone: string;
+  state?: string;
+  pincode?: string;
   status: GymStatus;
   subscriptionStatus: SubscriptionStatus;
   subscriptionStartDate: string;
@@ -87,4 +91,15 @@ export interface MemberPayment {
   paymentDate: string;
   note: string;
   paymentMode?: PaymentMode;
+}
+
+export interface Lead {
+  _id?: string;
+  id?: string;
+  gymOwnerName: string;
+  gymName: string;
+  phone: string;
+  status: 'new' | 'contacted' | 'converted' | 'rejected';
+  createdAt?: string;
+  updatedAt?: string;
 }

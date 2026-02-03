@@ -79,7 +79,7 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
   };
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 px-4 md:px-0">
       <div className="flex justify-between items-center">
         <div>
           <h3 className="text-sm font-black text-slate-950 uppercase tracking-[0.2em] mb-1">Team Roster</h3>

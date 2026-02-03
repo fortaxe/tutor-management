@@ -26,6 +26,18 @@ interface MemberFormProps {
   onCancel: () => void;
 }
 
+const formatDate = (dateStr: string | Date) => {
+  const d = new Date(dateStr);
+  let month = '' + (d.getMonth() + 1);
+  let day = '' + d.getDate();
+  const year = d.getFullYear();
+
+  if (month.length < 2) month = '0' + month;
+  if (day.length < 2) day = '0' + day;
+
+  return [year, month, day].join('-');
+};
+
 const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberType.SUBSCRIPTION, onSubmit, onCancel: _onCancel }) => {
   const [showCamera, setShowCamera] = useState(false);
   const [step, setStep] = useState(1);
@@ -42,7 +54,7 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
         email: member.email || '',
         phone: member.phone,
         dob: member.dob || '',
-        planStart: member.planStart,
+        planStart: formatDate(member.planStart),
         planDurationDays: member.planDurationDays,
         feesAmount: member.feesAmount.toString(),
         paidToday: member.paidAmount.toString(),

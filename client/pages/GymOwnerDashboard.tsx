@@ -200,6 +200,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
             {balance > 0 && (
               <ActionIcon variant="card" onClick={() => handleOpenCollectModal(member)} title="Collect Balance" />
             )}
+            {/* <ActionIcon variant="pdf" onClick={() => console.log('Download invoice')} title="Download Invoice" /> */}
             <ActionIcon variant="edit" onClick={() => handleOpenModal(member)} />
             <ActionIcon variant="delete" onClick={() => handleOpenDeleteConfirm(member)} />
           </div>

@@ -6,7 +6,9 @@ import CardIcon from './icons/card';
 import DeleteIcon from './icons/delete';
 import WhatsAppIcon from './icons/WhatsAppIcon';
 
-export type ActionVariant = 'reload' | 'edit' | 'card' | 'delete' | 'whatsup';
+import PdfIcon from './icons/PdfIcon';
+
+export type ActionVariant = 'reload' | 'edit' | 'card' | 'delete' | 'whatsup' | 'pdf';
 
 interface ActionIconProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     variant: ActionVariant;
@@ -32,6 +34,10 @@ const variants = {
     whatsup: {
         icon: WhatsAppIcon,
         className: "bg-[#22C55E1A] border-[#22C55E33] text-[#22C55E] hover:bg-[#22C55E] hover:text-white hover:border-transparent"
+    },
+    pdf: {
+        icon: PdfIcon,
+        className: "bg-[#F1F5F9] border-[#CBD5E1] text-[#64748B] hover:bg-[#64748B] hover:text-white hover:border-transparent"
     }
 };
 

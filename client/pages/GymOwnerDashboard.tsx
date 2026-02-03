@@ -505,7 +505,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
         <button onClick={() => handleTabChange('passes')} className={`${tabClasses('passes')} rounded-main min-w-fit `}>DayPass</button>
       </div>
 
-      <div className="md:bg-white rmd:overflow-hidden bg-transparent">
+      <div className="md:bg-white rmd:overflow-hidden bg-transparent md:border md:border-[#E2E8F0] md:rounded-[10px]">
         <div className=" space-y-4 md:space-y-8">
           <div className="flex flex-col xl:flex-row justify-between xl:items-end md:space-y-4 xl:space-y-0  border-b border-[#E2E8F0] p-[15px] hidden md:flex md:p-5">
 

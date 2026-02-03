@@ -7,14 +7,15 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
     required?: boolean;
     startContent?: React.ReactNode;
     endContent?: React.ReactNode;
+    wrapperClassName?: string;
 }
 
-const Input: React.FC<InputProps> = ({ className = '', label, error, required, startContent, endContent, type, ...props }) => {
+const Input: React.FC<InputProps> = ({ className = '', wrapperClassName = '', label, error, required, startContent, endContent, type, ...props }) => {
     const [showPassword, setShowPassword] = useState(false);
     const isPassword = type === 'password';
 
     return (
-        <div className="space-y-[5px] overflow-visible">
+        <div className={cn("space-y-[5px] overflow-visible", wrapperClassName)}>
             {label && (
                 <label className="block text-[14px] leading-[20px] md:text-[16px] md:leading-[22px] font-bold font-grotesk secondary-color uppercase mb-[5px]">
                     {label}

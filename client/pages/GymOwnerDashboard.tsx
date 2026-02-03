@@ -483,6 +483,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
         <Input
           type="text"
           placeholder="SEARCH..."
+          wrapperClassName="flex-1"
           className="block w-full sm:w-[191px] pl-[45px] font-grotesk secondary-color   font-bold uppercase  bg-white"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}

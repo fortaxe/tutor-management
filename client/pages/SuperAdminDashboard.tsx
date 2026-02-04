@@ -1,5 +1,5 @@
-
 import React, { useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { User, Gym, Member, GymStatus, SubscriptionStatus, SubscriptionPayment } from '../types';
 import DashboardLayout from '../components/DashboardLayout';
 import Badge from '../components/Badge';
@@ -42,7 +42,8 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
   const [modalType, setModalType] = useState<'add' | 'edit' | 'payment' | 'history' | 'delete' | null>(null);
   const [selectedGym, setSelectedGym] = useState<Gym | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeView, setActiveView] = useState(() => window.location.pathname.includes('leads') ? 'leads' : 'dashboard');
+  const location = useLocation();
+  const activeView = location.pathname.includes('leads') ? 'leads' : 'dashboard';
 
   const getMemberCount = React.useCallback((gymId: number) => {
     return members.filter(member => member.gymId === gymId).length;
@@ -165,9 +166,7 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
       user={user}
       onLogout={onLogout}
       pageTitle={activeView === 'leads' ? 'Lead Management' : 'SaaS Admin'}
-      onChangePassword={onChangePassword}
-      activeView={activeView}
-      onViewChange={setActiveView}
+      onChangePasswordRequest={onChangePassword}
     >
       {activeView === 'leads' ? (
         <LeadsManager />

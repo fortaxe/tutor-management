@@ -45,6 +45,11 @@ export interface Gym {
   ownerPhone: string;
   state?: string;
   pincode?: string;
+  gstNumber?: string;
+  instagramId?: string;
+  address?: string;
+  city?: string;
+  logo?: string;
   status: GymStatus;
   subscriptionStatus: SubscriptionStatus;
   subscriptionStartDate: string;
@@ -85,17 +90,21 @@ export interface Member {
   photo?: string; // Base64 encoded image
   dob?: string;
   paymentMode?: PaymentMode;
+  createdAt?: string;
 }
 
 
 export interface MemberPayment {
-  id: number;
-  memberId: number;
+  _id?: string;
+  id?: number;
+  memberId: number | string;
   memberName: string;
   gymId: number;
   amount: number;
   paymentDate: string;
   note: string;
+  paymentMode?: string;
+  createdAt?: string;
 }
 
 export interface Lead {

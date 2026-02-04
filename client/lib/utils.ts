@@ -20,7 +20,9 @@ export const objectToFormData = (obj: any): FormData => {
         // Skip undefined or null values
         if (value === undefined || value === null) return;
 
-        if (key === 'photo' && typeof value === 'string' && value.startsWith('data:image')) {
+        if (value instanceof File || value instanceof Blob) {
+            formData.append(key, value);
+        } else if (key === 'photo' && typeof value === 'string' && value.startsWith('data:image')) {
             try {
                 // Convert base64 to blob
                 const byteString = atob(value.split(',')[1]);

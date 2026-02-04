@@ -22,6 +22,7 @@ import Drawer from '../components/Drawer';
 
 import CollectBalanceForm from '../components/CollectBalanceForm';
 import RenewPlanForm from '../components/RenewPlanForm';
+import { generateInvoice } from '@/lib/invoiceGenerator';
 
 interface GymOwnerDashboardProps {
   user: User;
@@ -38,7 +39,6 @@ type Tab = 'members' | 'expiry' | 'expired' | 'dues' | 'passes';
 
 const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, members, onAddMember, onUpdateMember, onRenewMember, onDeleteMember }) => {
   const [activeTab, setActiveTab] = useState<Tab>('members');
-  const [showThisMonthOnly, setShowThisMonthOnly] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const isAddMemberModalOpen = useSelector((state: RootState) => state.ui.isAddMemberModalOpen);
   const dispatch = useDispatch();
@@ -50,7 +50,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
 
   const sortConfig = { key: 'planStart', direction: 'desc' as 'asc' | 'desc' };
 
-  const expiryFilter = 10;
+  const expiryFilter = 5;
   const [searchQuery, setSearchQuery] = useState('');
 
 
@@ -202,7 +202,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
             )}
             {/* <ActionIcon variant="pdf" onClick={() => generateInvoice(gym, member)} title="Download Invoice" /> */}
             <ActionIcon variant="edit" onClick={() => handleOpenModal(member)} />
-            <ActionIcon variant="delete" onClick={() => handleOpenDeleteConfirm(member)} />
+            {!isTrainer && <ActionIcon variant="delete" onClick={() => handleOpenDeleteConfirm(member)} />}
           </div>
         )
       }
@@ -212,39 +212,32 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
   const filteredMembers = (() => {
     let baseList = members;
 
-    if (showThisMonthOnly) {
-      const now = new Date();
-      const currentMonth = now.getMonth();
-      const currentYear = now.getFullYear();
-      baseList = baseList.filter(m => {
-        const d = new Date(m.planStart);
-        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-      });
-    } else {
-      switch (activeTab) {
-        case 'expiry':
-          baseList = members.filter(m => {
+    switch (activeTab) {
+      case 'expiry':
+        baseList = members
+          .filter(m => {
             const { remainingDays } = getPlanDates(m);
             return remainingDays >= 0 && remainingDays <= expiryFilter;
-          });
-          break;
-        case 'dues':
-          baseList = members.filter(m => {
-            const { remainingDays } = getPlanDates(m);
-            return (m.feesAmount - m.paidAmount) > 0 && remainingDays >= 0;
-          });
-          break;
-        case 'passes':
-          baseList = members.filter(m => m.memberType === MemberType.DAY_PASS);
-          break;
-        case 'expired':
-          baseList = members.filter(m => getPlanDates(m).remainingDays <= 0);
-          break;
-        case 'members':
-        default:
-          baseList = members;
-      }
+          })
+          .sort((a, b) => getPlanDates(a).remainingDays - getPlanDates(b).remainingDays);
+        break;
+      case 'dues':
+        baseList = members.filter(m => {
+          const { remainingDays } = getPlanDates(m);
+          return (m.feesAmount - m.paidAmount) > 0 && remainingDays >= 0;
+        });
+        break;
+      case 'passes':
+        baseList = members.filter(m => m.memberType === MemberType.DAY_PASS);
+        break;
+      case 'expired':
+        baseList = members.filter(m => getPlanDates(m).remainingDays <= 0);
+        break;
+      case 'members':
+      default:
+        baseList = members;
     }
+
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -261,7 +254,6 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
 
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab);
-    setShowThisMonthOnly(false);
   };
 
   const handleOpenModal = (member: Member | null = null, type: MemberType = MemberType.SUBSCRIPTION) => {
@@ -385,112 +377,98 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
 
   const tabClasses = (tabName: Tab) => `
     flex-1 text-center px-[15px] py-[5px] uppercase  dashboard-primary-desc font-black transition-all duration-300 w-fit  
-    ${!showThisMonthOnly && activeTab === tabName ? 'bg-black text-white  z-10' : 'secondary-color border-main'}
+    ${activeTab === tabName ? 'bg-black text-white  z-10' : 'secondary-color border-main'}
   `;
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-4 md:space-y-5 px-4 md:px-5 lg:px-0">
-      {/* Stats Cards */}
-      <div className={`flex overflow-x-auto md:pb-4 gap-2 md:gap-4 snap-x snap-mandatory no-scrollbar sm:grid sm:pb-0 sm:gap-[15px] ${isTrainer ? 'sm:grid-cols-2' : 'sm:grid-cols-3'}`}>
-        <StatsCard
-          label="Active Now"
-          value={stats.activeMembers}
-          variant="green"
-          isActive={showThisMonthOnly}
-          onClick={() => {
-            if (showThisMonthOnly) {
-              setShowThisMonthOnly(false);
-            } else {
-              setActiveTab('members');
-              setShowThisMonthOnly(true);
-            }
-          }}
-        >
-          <TrendUpIcon className='size-[13px]' />
-          {stats.thisMonthMembers} This Month
-        </StatsCard>
-
-        <StatsCard
-          label="Expired List"
-          value={stats.expiredMembers}
-          variant="red"
-          isActive={!showThisMonthOnly && activeTab === 'expired'}
-          onClick={() => {
-            setActiveTab('expired');
-            setShowThisMonthOnly(false);
-          }}
-        >
-          View List
-        </StatsCard>
-
-        {!isTrainer && (
+    <>
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-4 md:space-y-0 px-4 md:px-5 lg:px-0 no-scrollbar">
+        {/* Stats Cards */}
+        <div className={`flex overflow-x-auto md:pb-4 gap-2 md:gap-4 snap-x snap-mandatory no-scrollbar sm:grid sm:pb-0 sm:gap-[15px] ${isTrainer ? 'sm:grid-cols-2' : 'sm:grid-cols-3'}`}>
           <StatsCard
-            label="Balance Due"
-            value={stats.duesPending < 10 ? `0${stats.duesPending}` : stats.duesPending}
-            variant="orange"
-            isActive={!showThisMonthOnly && activeTab === 'dues'}
-            onClick={() => {
-              setActiveTab('dues');
-              setShowThisMonthOnly(false);
-            }}
+            label="Active Now"
+            value={stats.activeMembers}
+            variant="green"
           >
-            Due : ₹{stats.totalDuesAmount}
+            <TrendUpIcon className='size-[13px]' />
+            {stats.thisMonthMembers} This Month
           </StatsCard>
-        )}
-      </div>
 
-      {/* Mobile Add Member Button */}
-      <div className="md:hidden">
-        <Button
-          onClick={() => dispatch(openAddMemberModal())}
-          className="w-full"
-        >
-          <img src="/icons/plus.svg" alt="" className="w-5 h-5 mr-2" /> ADD MEMBER
-        </Button>
-      </div>
+          <StatsCard
+            label="Expired List"
+            value={stats.expiredMembers}
+            variant="red"
+            isActive={activeTab === 'expired'}
+            onClick={() => setActiveTab('expired')}
+          >
+            View List
+          </StatsCard>
 
-      <div className="relative flex gap-[5px] md:hidden w-full sm:w-auto">
-        <img src="/icons/search.svg" alt="" className="absolute left-[15px] size-5 top-1/2 -translate-y-1/2 size-5 z-10" />
-        <Input
-          type="text"
-          placeholder="SEARCH..."
-          wrapperClassName="flex-1"
-          className="block w-full sm:w-[191px] pl-[45px] font-grotesk secondary-color   font-bold uppercase  bg-white"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+          {!isTrainer && (
+            <StatsCard
+              label="Balance Due"
+              value={stats.duesPending < 10 ? `0${stats.duesPending}` : stats.duesPending}
+              variant="orange"
+              isActive={activeTab === 'dues'}
+              onClick={() => setActiveTab('dues')}
+            >
+              View List
+            </StatsCard>
+          )}
+        </div>
 
+        {/* Mobile Add Member Button */}
+        <div className="md:hidden">
+          <Button
+            onClick={() => dispatch(openAddMemberModal())}
+            className="w-full"
+          >
+            <img src="/icons/plus.svg" alt="" className="w-5 h-5 mr-2" /> ADD MEMBER
+          </Button>
+        </div>
 
-        {!isTrainer && (
-          <button onClick={handleExportExcel} className="size-[42px] md:size-[46px] flex items-center justify-center rounded-main border border-slate-200 hover:bg-slate-50 transition-colors">
-            <img src="/icons/excel.svg" alt="" className='size-4 md:size-[20px]' />
-          </button>
-        )}
-      </div>
-
-      <div className='flex gap-[5px] flex-row md:flex-wrap items-end md:hidden overflow-x-auto no-scrollbar'>
-        <button onClick={() => handleTabChange('members')} className={`${tabClasses('members')} rounded-main min-w-fit `}>All</button>
-        <button onClick={() => handleTabChange('expiry')} className={`${tabClasses('expiry')} rounded-main min-w-fit `}>Expiring</button>
-        <button onClick={() => handleTabChange('expired')} className={`${tabClasses('expired')} rounded-main min-w-fit `}>Expired</button>
-        <button onClick={() => handleTabChange('dues')} className={`${tabClasses('dues')} rounded-main min-w-fit `}>Balance Due</button>
-        <button onClick={() => handleTabChange('passes')} className={`${tabClasses('passes')} rounded-main min-w-fit `}>DayPass</button>
-      </div>
-
-      <div className="md:bg-white rmd:overflow-hidden bg-transparent md:border md:border-[#E2E8F0] md:rounded-[10px]">
-        <div className=" space-y-4 md:space-y-8">
-          <div className="flex flex-col xl:flex-row justify-between xl:items-end md:space-y-4 xl:space-y-0  border-b border-[#E2E8F0] p-[15px] hidden md:flex md:p-5">
-
-            <div className=' gap-[5px] flex-wrap items-end hidden md:flex'>
-              <button onClick={() => handleTabChange('members')} className={`${tabClasses('members')} rounded-main min-w-fit px-6`}>All</button>
-              <button onClick={() => handleTabChange('expiry')} className={`${tabClasses('expiry')} rounded-main min-w-fit px-6`}>Expiring</button>
-              <button onClick={() => handleTabChange('expired')} className={`${tabClasses('expired')} rounded-main min-w-fit px-6`}>Expired</button>
-              <button onClick={() => handleTabChange('dues')} className={`${tabClasses('dues')} rounded-main min-w-fit px-6`}>Balance Due</button>
-              <button onClick={() => handleTabChange('passes')} className={`${tabClasses('passes')} rounded-main min-w-fit px-6`}>DayPass</button>
-            </div>
+        <div className="relative flex gap-[5px] md:hidden w-full sm:w-auto">
+          <img src="/icons/search.svg" alt="" className="absolute left-[15px] size-5 top-1/2 -translate-y-1/2 size-5 z-10" />
+          <Input
+            type="text"
+            placeholder="SEARCH..."
+            wrapperClassName="flex-1"
+            className="block w-full sm:w-[191px] pl-[45px] font-grotesk secondary-color   font-bold uppercase  bg-white"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
 
 
-            <div className="flex flex-row gap-[5px] xl:items-center">
-              {/* <div className="relative w-full sm:w-auto">
+          {!isTrainer && (
+            <button onClick={handleExportExcel} className="size-[42px] md:size-[46px] flex items-center justify-center rounded-main border border-slate-200 hover:bg-slate-50 transition-colors">
+              <img src="/icons/excel.svg" alt="" className='size-4 md:size-[20px]' />
+            </button>
+          )}
+        </div>
+
+        <div className='flex gap-[5px] flex-row md:flex-wrap items-end md:hidden overflow-x-auto no-scrollbar'>
+          <button onClick={() => handleTabChange('members')} className={`${tabClasses('members')} rounded-main min-w-fit `}>All</button>
+          <button onClick={() => handleTabChange('expiry')} className={`${tabClasses('expiry')} rounded-main min-w-fit `}>Expiring</button>
+          <button onClick={() => handleTabChange('expired')} className={`${tabClasses('expired')} rounded-main min-w-fit `}>Expired</button>
+          <button onClick={() => handleTabChange('dues')} className={`${tabClasses('dues')} rounded-main min-w-fit `}>Balance Due</button>
+          <button onClick={() => handleTabChange('passes')} className={`${tabClasses('passes')} rounded-main min-w-fit `}>DayPass</button>
+        </div>
+
+        <div className="md:bg-white rmd:overflow-hidden bg-transparent md:border md:border-[#E2E8F0] md:rounded-[10px]">
+          <div className=" space-y-4 md:space-y-8">
+            <div className="flex flex-col xl:flex-row justify-between xl:items-end md:space-y-4 xl:space-y-0  border-b border-[#E2E8F0] p-[15px] hidden md:flex md:p-5">
+
+              <div className=' gap-[5px] flex-wrap items-end hidden md:flex'>
+                <button onClick={() => handleTabChange('members')} className={`${tabClasses('members')} rounded-main min-w-fit px-6`}>All</button>
+                <button onClick={() => handleTabChange('expiry')} className={`${tabClasses('expiry')} rounded-main min-w-fit px-6`}>Expiring</button>
+                <button onClick={() => handleTabChange('expired')} className={`${tabClasses('expired')} rounded-main min-w-fit px-6`}>Expired</button>
+                <button onClick={() => handleTabChange('dues')} className={`${tabClasses('dues')} rounded-main min-w-fit px-6`}>Balance Due</button>
+                <button onClick={() => handleTabChange('passes')} className={`${tabClasses('passes')} rounded-main min-w-fit px-6`}>DayPass</button>
+              </div>
+
+
+              <div className="flex flex-row gap-[5px] xl:items-center">
+                {/* <div className="relative w-full sm:w-auto">
                 <SortIcon active direction={sortConfig.direction} className="absolute left-[15px] top-1/2 -translate-y-1/2 size-4 pointer-events-none z-10" />
                 <select
                   value={`${sortConfig.key}-${sortConfig.direction}`}
@@ -514,68 +492,70 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
               </div> */}
 
 
-              <div className="relative hidden md:block w-full sm:w-auto">
-                <img src="/icons/search.svg" alt="" className="absolute left-[15px] top-1/2 -translate-y-1/2 size-5 z-10" />
-                <Input
-                  type="text"
-                  placeholder="SEARCH..."
-                  className="block w-full sm:w-[191px] pl-[45px] pr-4 h-[46px] font-bold uppercase  bg-white"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+                <div className="relative hidden md:block w-full sm:w-auto">
+                  <img src="/icons/search.svg" alt="" className="absolute left-[15px] top-1/2 -translate-y-1/2 size-5 z-10" />
+                  <Input
+                    type="text"
+                    placeholder="SEARCH..."
+                    className="block w-full sm:w-[191px] pl-[45px] pr-4 h-[46px] font-bold uppercase  bg-white"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+
+                {!isTrainer && (
+                  <button onClick={handleExportExcel} className="size-[42px] md:size-[46px] flex items-center justify-center rounded-main border border-slate-200 hover:bg-slate-50 transition-colors">
+                    <img src="/icons/excel.svg" alt="" className='size-4 md:size-[20px]' />
+                  </button>
+                )}
+
               </div>
-
-              {!isTrainer && (
-                <button onClick={handleExportExcel} className="size-[42px] md:size-[46px] flex items-center justify-center rounded-main border border-slate-200 hover:bg-slate-50 transition-colors">
-                  <img src="/icons/excel.svg" alt="" className='size-4 md:size-[20px]' />
-                </button>
-              )}
-
             </div>
           </div>
-        </div>
 
-        <div className="hidden md:block">
-          <Table
-            data={filteredMembers}
-            columns={columns}
-            keyExtractor={(item) => item._id || item.id!}
-          />
-        </div>
-
-        <div className="md:hidden space-y-[10px] pb-10 bg-[#F4F7FB] ">
-          {filteredMembers.map(member => (
-            <MobileMemberCard
-              key={member._id || member.id}
-              member={member}
-              onRenew={handleOpenRenewModal}
-              onEdit={handleOpenModal}
-              onCollect={handleOpenCollectModal}
-              onDelete={handleOpenDeleteConfirm}
-              onWhatsApp={(m) => {
-                const { endDate, remainingDays } = getPlanDates(m);
-                const isExpired = remainingDays < 0;
-                const text = isExpired
-                  ? `Hello ${m.name}, your gym membership has expired on ${endDate.toLocaleDateString()}. Please renew to continue your workout.`
-                  : `Hello ${m.name}, your gym membership is ending in ${remainingDays} days. Please renew to continue your workout.`;
-                window.open(`https://wa.me/91${m.phone}?text=${encodeURIComponent(text)}`, '_blank');
-              }}
+          <div className="hidden md:block">
+            <Table
+              data={filteredMembers}
+              columns={columns}
+              keyExtractor={(item) => item._id || item.id!}
             />
-          ))}
-        </div>
+          </div>
 
-        {
-          filteredMembers.length === 0 && (
-            <div className="text-center py-32">
-              <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                <UserGroupIcon className="w-8 h-8 text-slate-200" />
+          <div className="md:hidden space-y-[10px] pb-10 bg-[#F4F7FB] ">
+            {filteredMembers.map(member => (
+              <MobileMemberCard
+                key={member._id || member.id}
+                member={member}
+                onRenew={handleOpenRenewModal}
+                onEdit={handleOpenModal}
+                onCollect={handleOpenCollectModal}
+                onDelete={!isTrainer ? handleOpenDeleteConfirm : undefined}
+                showWhatsApp={activeTab === 'expiry' || activeTab === 'expired'}
+                onWhatsApp={(m) => {
+                  const { endDate, remainingDays } = getPlanDates(m);
+                  const isExpired = remainingDays < 0;
+                  const text = isExpired
+                    ? `Hello ${m.name}, your gym membership has expired on ${endDate.toLocaleDateString()}. Please renew to continue your workout.`
+                    : `Hello ${m.name}, your gym membership is ending in ${remainingDays} days. Please renew to continue your workout.`;
+                  window.open(`https://wa.me/91${m.phone}?text=${encodeURIComponent(text)}`, '_blank');
+                }}
+              />
+            ))}
+          </div>
+
+          {
+            filteredMembers.length === 0 && (
+              <div className="text-center py-32">
+                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <UserGroupIcon className="w-8 h-8 text-slate-200" />
+                </div>
+                <p className="text-slate-400 font-black uppercase text-[10px] tracking-widest">No matching records</p>
               </div>
-              <p className="text-slate-400 font-black uppercase text-[10px] tracking-widest">No matching records</p>
-            </div>
-          )
-        }
-      </div >
+            )
+          }
+        </div >
 
+      </div>
       <Drawer isOpen={isEditModalOpen || isAddMemberModalOpen} onClose={handleCloseModal} title={editingMember ? 'Edit Member' : 'Add New Member'} >
         <MemberForm member={editingMember} initialType={initialType} onSubmit={handleFormSubmit} onCancel={handleCloseModal} />
       </Drawer>
@@ -629,7 +609,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
           </div>
         </div>
       </Modal>
-    </div >
+    </>
   );
 };
 

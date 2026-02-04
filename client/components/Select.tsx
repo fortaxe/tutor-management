@@ -16,13 +16,13 @@ const Select: React.FC<SelectProps> = ({ label, required, children, className = 
             )}
             <div className="relative">
                 <select
-                    className={`h-[48px] rounded-main border border-[#E2E8F0] bg-[#F8FAFC] w-full px-[15px] outline-none appearance-none text-[#0F172A] focus:border-brand font-grotesk font-bold transition-all ${className}`}
+                    className={`h-[48px] rounded-main border border-[#E2E8F0] bg-[#F8FAFC] w-full px-[15px] outline-none appearance-none text-black focus:border-brand font-grotesk font-bold transition-all ${className}`}
                     {...props}
                 >
                     {children}
                 </select>
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <ChevronDownSmallIcon stroke="#0F172A" />
+                    <ChevronDownSmallIcon stroke="#000000" />
                 </div>
             </div>
         </div>

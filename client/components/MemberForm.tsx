@@ -224,33 +224,16 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
     <form onSubmit={handleSubmit} className="h-full flex flex-col">
 
       <div className="flex-1 overflow-y-auto no-scrollbar">
-        {step === 1 && (
-          <div className="">
-            {!member && (
-              <div className="flex gap-2 pb-5">
-                <Button
-                  type="button"
-                  onClick={handleSetSubscription}
-                  className={`flex-1 transition-colors ${activeType === MemberType.SUBSCRIPTION ? '!primary-bg-green !text-white' : '!bg-[#F8FAFC] !text-[#9CA3AF] border-main hover:!bg-slate-100'}`}
-                >
-                  Subscription
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleSetDayPass}
-                  className={`flex-1 transition-colors ${activeType === MemberType.DAY_PASS ? '!bg-[#4F46E5] !text-white' : '!bg-[#F8FAFC] !text-[#9CA3AF] border-main hover:!bg-slate-100'}`}
-                >
-                  Day Pass
-                </Button>
-              </div>
-            )}
-
-            <div className="flex flex-col items-center gap-6 ">
+        {/* EDIT MODE: Single View */}
+        {member ? (
+          <div className="space-y-[20px] pt-2">
+            {/* Photo Section */}
+            <div className="flex flex-col items-center gap-6">
               <div className="size-[120px] rounded-main bg-[#F8FAFC] border border-dashed border-[#E2E8F0] flex items-center justify-center overflow-hidden relative group">
                 {formData.photo ? (
                   <>
                     <img src={formData.photo} alt="Preview" className="h-full w-full object-cover" />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer text-white text-xs font-bold" onClick={() => setFormData(p => ({ ...p, photo: undefined }))}>REMOVE</div>
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer text-white text-xs font-bold" onClick={() => setFormData(p => ({ ...p, photo: '' }))}>REMOVE</div>
                   </>
                 ) : (
                   <div className="text-slate-300">
@@ -259,20 +242,21 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
                 )}
               </div>
 
-              <div className="flex w-full gap-2 pb-[30px] ">
+              <div className="flex w-full gap-2 pb-[10px]">
                 <BorderButton variant="green" className="flex-1 bg-white border-[#22C55E] text-[#22C55E]" onClick={() => fileInputRef.current?.click()}>
                   <GalleryIcon className="w-4 h-4 mr-[5px]" />
-                  Gallery
+                  UPLOAD
                 </BorderButton>
                 <BorderButton variant="green" className="flex-1 bg-white border-[#22C55E] text-[#22C55E]" onClick={() => setShowCamera(true)}>
                   <CameraIcon className="w-4 h-4 mr-[5px]" />
-                  Camera
+                  CAMERA
                 </BorderButton>
                 <input type="file" ref={fileInputRef} onChange={handleFileSelect} accept="image/*" className="hidden" />
               </div>
             </div>
 
-            <div className="space-y-[10px]">
+            {/* Fields */}
+            <div className="space-y-[15px]">
               <Input
                 label="Full Name"
                 name="name"
@@ -293,66 +277,47 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
                 inputMode="numeric"
                 error={errors.phone}
               />
-              <Input
-                label="Email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="Email"
-                type="email"
-              />
-              <DateInput
-                label="Date of Birth"
-                name="dob"
-                value={formData.dob}
-                onChange={handleChange}
-              />
 
-            </div>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div className="space-y-5">
-
-            <div className="space-y-[10px]">
-              {activeType === MemberType.DAY_PASS ? (
-                <div className="space-y-[10px]">
-                  <label className={labelClasses}>Duration (Days){requiredStar}</label>
-                  <div className="h-[48px] rounded-main border-main bg-[#F8FAFC] flex items-center px-[15px] text-[#0F172A] font-grotesk font-bold">1 Day</div>
-                </div>
-              ) : (
-                <div>
-                  <Select
-                    label="Duration (Days)"
-                    name="planDurationDays"
-                    value={isCustomRenewal ? 'custom' : formData.planDurationDays}
-                    onChange={handleDurationChange}
-                    required
-                  >
-                    <option value={29}>Monthly (30 Days)</option>
-                    <option value={89}>Quarterly (90 Days)</option>
-                    <option value={179}>Half Yearly (180 Days)</option>
-                    <option value={364}>Yearly (365 Days)</option>
-                    <option value="custom">Custom</option>
-                  </Select>
-                  {isCustomRenewal && (
-                    <div className="mt-[10px] animate-in fade-in slide-in-from-top-2 duration-300">
-                      <Input
-                        label="Months"
-                        type="number"
-                        min="1"
-                        max="16"
-                        value={customMonths}
-                        onChange={handleCustomMonthChange}
-                        placeholder="Enter months..."
-                        required
-                      />
-
-                    </div>
-                  )}
-                </div>
-              )}
+              {/* Duration Logic */}
+              <div>
+                <Select
+                  label="Duration (Days)"
+                  name="planDurationDays"
+                  value={formData.planDurationDays === 0 ? 'custom' : (isCustomRenewal ? 'custom' : formData.planDurationDays)}
+                  onChange={(e) => {
+                    if (e.target.value === 'custom') {
+                      setIsCustomRenewal(true);
+                    } else {
+                      handleDurationChange(e);
+                    }
+                  }}
+                  required
+                >
+                  <option value={29}>Monthly (30 Days)</option>
+                  <option value={89}>Quarterly (90 Days)</option>
+                  <option value={179}>Half Yearly (180 Days)</option>
+                  <option value={364}>Yearly (365 Days)</option>
+                  <option value="custom">Custom</option>
+                </Select>
+                {/* Show custom input if explicit custom state OR if value doesn't match presets (and isn't 0/empty initial) - simplified to isCustomRenewal since hook handles it mostly, 
+                      but for edit mode we need to ensure existing custom values show input.
+                      The 'useMembershipDuration' hook handles 'isCustomRenewal' initialization if we passed simpler logic? 
+                      Actually the hook initializes based on duration match. So it should work. */}
+                {isCustomRenewal && (
+                  <div className="mt-[10px] animate-in fade-in slide-in-from-top-2 duration-300">
+                    <Input
+                      label="Months"
+                      type="number"
+                      min="1"
+                      max="16"
+                      value={customMonths}
+                      onChange={handleCustomMonthChange}
+                      placeholder="Enter months..."
+                      required
+                    />
+                  </div>
+                )}
+              </div>
 
               <DateInput
                 label="Start Date"
@@ -362,93 +327,272 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
                 required
               />
 
-              <div>
-                <Input
-                  label="Total Fee"
-                  startContent={<span className={`text-[14px] md:text-[16px] leading-[20px] md:leading-[22px] font-semibold ${feesFocus || formData.feesAmount ? 'text-[#0F172A]' : 'secondary-color'}`}>&#8377;</span>}
-                  name="feesAmount"
-                  value={formData.feesAmount}
-                  onChange={handleChange}
-                  onFocus={() => setFeesFocus(true)}
-                  onBlur={() => setFeesFocus(false)}
-                  placeholder="0"
-                  inputMode="numeric"
-                  required
-                />
-              </div>
+              <Input
+                label="Total Fee"
+                startContent={<span className={`text-[14px] md:text-[16px] leading-[20px] md:leading-[22px] font-semibold ${feesFocus || formData.feesAmount ? 'text-black' : 'secondary-color'}`}>&#8377;</span>}
+                name="feesAmount"
+                value={formData.feesAmount}
+                onChange={handleChange}
+                onFocus={() => setFeesFocus(true)}
+                onBlur={() => setFeesFocus(false)}
+                placeholder="0"
+                inputMode="numeric"
+                required
+              />
 
-              <div>
-                <Input
-                  label="Paid Today"
-                  startContent={<span className={`text-[14px] md:text-[16px] leading-[20px] md:leading-[22px] font-semibold ${paidFocus || formData.paidToday ? 'text-[#0F172A]' : 'secondary-color'}`}>&#8377;</span>}
-                  name="paidToday"
-                  value={formData.paidToday}
-                  onChange={handleChange}
-                  onFocus={() => setPaidFocus(true)}
-                  onBlur={() => setPaidFocus(false)}
-                  placeholder="0"
-                  inputMode="numeric"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className={labelClasses}>Payment Method{requiredStar}</label>
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  <BorderButton
-                    variant="outline"
-                    className={`h-[46px] ${formData.paymentMode === PaymentMode.CASH ? 'bg-white border-[#22C55E] text-[#22C55E]' : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#9CA3AF]'}`}
-                    onClick={() => setFormData(p => ({ ...p, paymentMode: PaymentMode.CASH }))}
-                  >
-                    Cash
-                  </BorderButton>
-                  <BorderButton
-                    variant="outline"
-                    className={`h-[46px] ${formData.paymentMode === PaymentMode.UPI ? 'bg-white border-[#22C55E] text-[#22C55E]' : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#9CA3AF]'}`}
-                    onClick={() => setFormData(p => ({ ...p, paymentMode: PaymentMode.UPI }))}
-                  >
-                    Online
-                  </BorderButton>
-                </div>
-              </div>
+              <Input
+                label="Paid Today"
+                startContent={<span className={`text-[14px] md:text-[16px] leading-[20px] md:leading-[22px] font-semibold ${paidFocus || formData.paidToday ? 'text-black' : 'secondary-color'}`}>&#8377;</span>}
+                name="paidToday"
+                value={formData.paidToday}
+                onChange={handleChange}
+                onFocus={() => setPaidFocus(true)}
+                onBlur={() => setPaidFocus(false)}
+                placeholder="0"
+                inputMode="numeric"
+                required
+              />
             </div>
           </div>
+        ) : (
+          /* ADD MEMBER MODE (Original Steps) */
+          <>
+            {step === 1 && (
+              <div className="">
+                {!member && (
+                  <div className="flex gap-2 pb-5">
+                    <Button
+                      type="button"
+                      onClick={handleSetSubscription}
+                      className={`flex-1 transition-colors ${activeType === MemberType.SUBSCRIPTION ? '!primary-bg-green !text-white' : '!bg-[#F8FAFC] !text-[#9CA3AF] border-main hover:!bg-slate-100'}`}
+                    >
+                      Subscription
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleSetDayPass}
+                      className={`flex-1 transition-colors ${activeType === MemberType.DAY_PASS ? '!bg-[#4F46E5] !text-white' : '!bg-[#F8FAFC] !text-[#9CA3AF] border-main hover:!bg-slate-100'}`}
+                    >
+                      Day Pass
+                    </Button>
+                  </div>
+                )}
+
+                <div className="flex flex-col items-center gap-6 ">
+                  <div className="size-[120px] rounded-main bg-[#F8FAFC] border border-dashed border-[#E2E8F0] flex items-center justify-center overflow-hidden relative group">
+                    {formData.photo ? (
+                      <>
+                        <img src={formData.photo} alt="Preview" className="h-full w-full object-cover" />
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer text-white text-xs font-bold" onClick={() => setFormData(p => ({ ...p, photo: '' }))}>REMOVE</div>
+                      </>
+                    ) : (
+                      <div className="text-slate-300">
+                        <PhotoPlaceholderIcon />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex w-full gap-2 pb-[30px] ">
+                    <BorderButton variant="green" className="flex-1 bg-white border-[#22C55E] text-[#22C55E]" onClick={() => fileInputRef.current?.click()}>
+                      <GalleryIcon className="w-4 h-4 mr-[5px]" />
+                      Gallery
+                    </BorderButton>
+                    <BorderButton variant="green" className="flex-1 bg-white border-[#22C55E] text-[#22C55E]" onClick={() => setShowCamera(true)}>
+                      <CameraIcon className="w-4 h-4 mr-[5px]" />
+                      Camera
+                    </BorderButton>
+                    <input type="file" ref={fileInputRef} onChange={handleFileSelect} accept="image/*" className="hidden" />
+                  </div>
+                </div>
+
+                <div className="space-y-[10px]">
+                  <Input
+                    label="Full Name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="e.g. name"
+                    required
+                    error={errors.name}
+                  />
+                  <Input
+                    label="Mobile"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder="10 digit number"
+                    maxLength={10}
+                    required
+                    inputMode="numeric"
+                    error={errors.phone}
+                  />
+                  <Input
+                    label="Email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="Email"
+                    type="email"
+                  />
+                  <DateInput
+                    label="Date of Birth"
+                    name="dob"
+                    value={formData.dob}
+                    onChange={handleChange}
+                  />
+
+                </div>
+              </div>
+            )}
+
+            {step === 2 && (
+              <div className="space-y-5">
+
+                <div className="space-y-[10px]">
+                  {activeType === MemberType.DAY_PASS ? (
+                    <div className="space-y-[10px]">
+                      <label className={labelClasses}>Duration (Days){requiredStar}</label>
+                      <div className="h-[48px] rounded-main border-main bg-[#F8FAFC] flex items-center px-[15px] text-black font-grotesk font-bold">1 Day</div>
+                    </div>
+                  ) : (
+                    <div>
+                      <Select
+                        label="Duration (Days)"
+                        name="planDurationDays"
+                        value={isCustomRenewal ? 'custom' : formData.planDurationDays}
+                        onChange={handleDurationChange}
+                        required
+                      >
+                        <option value={29}>Monthly (30 Days)</option>
+                        <option value={89}>Quarterly (90 Days)</option>
+                        <option value={179}>Half Yearly (180 Days)</option>
+                        <option value={364}>Yearly (365 Days)</option>
+                        <option value="custom">Custom</option>
+                      </Select>
+                      {isCustomRenewal && (
+                        <div className="mt-[10px] animate-in fade-in slide-in-from-top-2 duration-300">
+                          <Input
+                            label="Months"
+                            type="number"
+                            min="1"
+                            max="16"
+                            value={customMonths}
+                            onChange={handleCustomMonthChange}
+                            placeholder="Enter months..."
+                            required
+                          />
+
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <DateInput
+                    label="Start Date"
+                    name="planStart"
+                    value={formData.planStart}
+                    onChange={handleChange}
+                    required
+                  />
+
+                  <div>
+                    <Input
+                      label="Total Fee"
+                      startContent={<span className={`text-[14px] md:text-[16px] leading-[20px] md:leading-[22px] font-semibold ${feesFocus || formData.feesAmount ? 'text-black' : 'secondary-color'}`}>&#8377;</span>}
+                      name="feesAmount"
+                      value={formData.feesAmount}
+                      onChange={handleChange}
+                      onFocus={() => setFeesFocus(true)}
+                      onBlur={() => setFeesFocus(false)}
+                      placeholder="0"
+                      inputMode="numeric"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Input
+                      label="Paid Today"
+                      startContent={<span className={`text-[14px] md:text-[16px] leading-[20px] md:leading-[22px] font-semibold ${paidFocus || formData.paidToday ? 'text-black' : 'secondary-color'}`}>&#8377;</span>}
+                      name="paidToday"
+                      value={formData.paidToday}
+                      onChange={handleChange}
+                      onFocus={() => setPaidFocus(true)}
+                      onBlur={() => setPaidFocus(false)}
+                      placeholder="0"
+                      inputMode="numeric"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className={labelClasses}>Payment Method{requiredStar}</label>
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <BorderButton
+                        variant="outline"
+                        className={`h-[46px] ${formData.paymentMode === PaymentMode.CASH ? 'bg-white border-[#22C55E] text-[#22C55E]' : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#9CA3AF]'}`}
+                        onClick={() => setFormData(p => ({ ...p, paymentMode: PaymentMode.CASH }))}
+                      >
+                        Cash
+                      </BorderButton>
+                      <BorderButton
+                        variant="outline"
+                        className={`h-[46px] ${formData.paymentMode === PaymentMode.UPI ? 'bg-white border-[#22C55E] text-[#22C55E]' : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#9CA3AF]'}`}
+                        onClick={() => setFormData(p => ({ ...p, paymentMode: PaymentMode.UPI }))}
+                      >
+                        UPI / CARD
+                      </BorderButton>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
       <div className="pt-5 mt-auto">
-        {step === 1 ? (
-          <div className="flex gap-2">
-            <Button
-              key="cancel-btn"
-              type="button"
-              onClick={_onCancel}
-              variant="secondary"
-              className="flex-1 max-w-[120px]"
-            >
-              Cancel
-            </Button>
-            <Button key="next-btn" type="button" onClick={handleNext} className="flex-1">
-              Next <ArrowRightIcon className="size-4 ml-2" />
-            </Button>
-          </div>
+        {member ? (
+          /* EDIT Member Footer */
+          <Button key="submit-btn" type="submit" className="flex-1 w-full">
+            Update Member
+            <SubmitArrowIcon className="ml-[5px]" stroke="white" />
+          </Button>
         ) : (
-          <div className="flex gap-2">
-            <Button
-              key="back-btn"
-              type="button"
-              onClick={() => setStep(1)}
-              variant="secondary"
-              className="flex-1 max-w-[120px] gap-[5px]"
-            >
-              <ArrowLeftIcon className="size-4" />
-              <span>Back</span>
-            </Button>
-            <Button key="submit-btn" type="submit" className="flex-1">
-              {member ? 'Update Member' : 'Register Member'}
-              <SubmitArrowIcon className="ml-[5px]" stroke="white" />
-            </Button>
-          </div>
+          /* ADD Member Footer */
+          step === 1 ? (
+            <div className="flex gap-2">
+              <Button
+                key="cancel-btn"
+                type="button"
+                onClick={_onCancel}
+                variant="secondary"
+                className="flex-1 max-w-[120px]"
+              >
+                Cancel
+              </Button>
+              <Button key="next-btn" type="button" onClick={handleNext} className="flex-1">
+                Next <ArrowRightIcon className="size-4 ml-2" />
+              </Button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Button
+                key="back-btn"
+                type="button"
+                onClick={() => setStep(1)}
+                variant="secondary"
+                className="flex-1 max-w-[120px] gap-[5px]"
+              >
+                <ArrowLeftIcon className="size-4" />
+                <span>Back</span>
+              </Button>
+              <Button key="submit-btn" type="submit" className="flex-1">
+                Register Member
+                <SubmitArrowIcon className="ml-[5px]" stroke="white" />
+              </Button>
+            </div>
+          )
         )}
       </div>
     </form>

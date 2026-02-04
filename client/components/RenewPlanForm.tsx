@@ -8,6 +8,7 @@ import Select from './Select';
 import DateInput from './DateInput';
 import { getPlanDates } from '@/lib/utils';
 import { SubmitArrowIcon } from './icons/FormIcons';
+import MemberAvatar from './MemberAvatar';
 
 interface RenewPlanFormProps {
     member: Member;
@@ -101,6 +102,8 @@ const RenewPlanForm: React.FC<RenewPlanFormProps> = ({ member, onSubmit, onCance
     return (
         <form onSubmit={handleSubmit} className="h-full flex flex-col">
             <div className="flex-1 overflow-y-auto no-scrollbar space-y-5">
+
+
                 <div className="flex gap-2">
                     <Button
                         type="button"
@@ -124,6 +127,14 @@ const RenewPlanForm: React.FC<RenewPlanFormProps> = ({ member, onSubmit, onCance
                     >
                         DAY PASS
                     </Button>
+                </div>
+
+                <div className="flex items-center gap-3 p-2 bg-slate-50 rounded-main border border-slate-100">
+                    <MemberAvatar member={member} />
+                    <div>
+                        <h3 className="font-bold font-grotesk text-slate-900 leading-tight">{member.name}</h3>
+                        <p className="text-sm font-semibold text-slate-500 font-geist">{member.phone}</p>
+                    </div>
                 </div>
 
                 <div className="space-y-[15px]">

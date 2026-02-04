@@ -1,5 +1,5 @@
-
 import React, { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { User, UserRole } from '../types';
 import Modal from './Modal';
 import DashboardSidebar from './DashboardSidebar';
@@ -15,22 +15,20 @@ interface DashboardLayoutProps {
   user: User;
   onLogout: () => void;
   pageTitle: string;
-  activeView?: string;
-  onViewChange?: (view: string) => void;
-  onChangePassword?: (password: string) => void;
+  onChangePasswordRequest?: (password: string) => void;
   children: React.ReactNode;
   gymName?: string;
+  gymLogo?: string;
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   user,
   onLogout,
   pageTitle,
-  activeView = 'Overview',
-  onViewChange,
-  onChangePassword,
+  onChangePasswordRequest,
   children,
-  gymName
+  gymName,
+  gymLogo
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isChangePassOpen, setChangePassOpen] = useState(false);
@@ -40,6 +38,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const dispatch = useDispatch();
 
+  const location = useLocation();
+  const navigate = useNavigate();
+  const activeView = location.pathname === '/' ? 'dashboard' : location.pathname.substring(1);
+
   const handlePassSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
@@ -47,7 +49,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       return;
     }
     setPassError('');
-    onChangePassword?.(newPassword);
+    onChangePasswordRequest?.(newPassword);
     setChangePassOpen(false);
     setNewPassword('');
     setConfirmPassword('');
@@ -66,12 +68,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         user={user}
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
-        activeView={activeView}
-        onViewChange={onViewChange}
         onLogout={onLogout}
         onChangePasswordRequest={() => setChangePassOpen(true)}
         isCollapsed={isCollapsed}
         gymName={gymName}
+        gymLogo={gymLogo}
       />
 
       {isSidebarOpen && (
@@ -85,7 +86,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         <div className="lg:hidden flex  bg-black md:bg-transparent items-center justify-between px-4 md:px-5 py-[10px] md:pb-5">
           <div className='flex  items-center gap-2 md:gap-3'>
             <div>
-              <img src="/profile.png" alt="" className="size-[36px] rounded-main border-main" />
+              <img src={gymLogo || "/profile.png"} alt="" className="size-[36px] rounded-main border-main object-cover" />
             </div>
 
             <span className="text-[16px] leading-[22px] text-white font-semibold">{pageTitle}</span>
@@ -110,7 +111,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 Dashboard / <span className='text-black'>
                   {activeView === 'dashboard' ? 'Members' :
                     activeView === 'staff' ? 'Staff' :
-                      activeView === 'earnings' ? 'Earnings' : 'Overview'}
+                      activeView === 'earnings' ? 'Earnings' :
+                        activeView === 'profile' ? "Owner's Profile" : 'Overview'}
                 </span>
               </h2>
             </div>
@@ -119,14 +121,34 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
 
 
-          <div className="hidden sm:block pb-[10px]">
+          <div className="hidden sm:block pb-[10px] ">
             {(user.role === UserRole.GYM_OWNER || user.role === UserRole.TRAINER) ? (
-              <Button
-                onClick={() => dispatch(openAddMemberModal())}
-                className="uppercase"
-              >
-                <img src="/icons/plus.svg" alt="" className="w-5 h-5 mr-2" /> ADD MEMBER
-              </Button>
+              activeView === 'dashboard' ? (
+                <Button
+                  onClick={() => dispatch(openAddMemberModal())}
+                  className="uppercase"
+                >
+                  <img src="/icons/plus.svg" alt="" className="w-5 h-5 mr-2" /> ADD MEMBER
+                </Button>
+              ) : (
+                user.role === UserRole.GYM_OWNER && activeView === 'profile' && (
+                  <div className='flex gap-[5px]'>
+                    <Button
+                      variant="secondary"
+                      className='border border-[#22C55E] text-[#22C55E]'
+                      onClick={() => setChangePassOpen(true)}
+                    >
+                      Change Password
+                    </Button>
+                    <Button
+                      variant="primary"
+                      onClick={() => navigate('/profile')}
+                    >
+                      BILLING DETAILS
+                    </Button>
+                  </div>
+                )
+              )
             ) : (
               <BorderButton variant="green">
                 {user.role === UserRole.SUPER_ADMIN ? 'Platform Administrator' : 'Staff Trainer'}
@@ -135,8 +157,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto md:px-5 lg:px-0">
-          <div className=' pb-5'>
+        <main className="flex-1 overflow-y-auto md:px-5 lg:px-0 no-scrollbar">
+          <div className='pt-4 md:pt-[20px] pb-5'>
             <h2 className="hidden md:block text-[32px] leading-[32px] font-semibold text-black">
               {pageTitle}
             </h2>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { User, Gym, UserRole, GymStatus } from './types';
+import { User, Gym, UserRole, GymStatus, Member, MemberPayment } from './types';
 import Login from './pages/Login';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import GymOwnerDashboard from './pages/GymOwnerDashboard';
@@ -12,8 +12,10 @@ import client from './lib/client';
 import { objectToFormData } from './lib/utils';
 import { useMyGym } from './hooks/useMyGym';
 import DemoPage from './pages/DemoPage';
+import OwnerProfile from './pages/OwnerProfile';
+import { generateInvoice } from './lib/invoiceGenerator';
 
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 
 const STORAGE_KEY = 'gym_mgmt_session';
@@ -27,7 +29,8 @@ const MainApp: React.FC = () => {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
   // Initial View State - syncing with URL if possible or default
-  const [activeView, setActiveView] = useState<string>('dashboard');
+  // const [activeView, setActiveView] = useState<string>('dashboard'); -> Removed
+
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     setToast({ message, type });
@@ -65,7 +68,7 @@ const MainApp: React.FC = () => {
     enabled: currentUser?.role === UserRole.SUPER_ADMIN,
   });
 
-  const { data: members = [], isLoading: membersLoading } = useQuery({
+  const { data: members = [], isLoading: membersLoading } = useQuery<Member[]>({
     queryKey: ['members', currentUser?.role === UserRole.SUPER_ADMIN ? 'all' : currentUser?.gymId],
     queryFn: async () => {
       const params = currentUser?.role === UserRole.SUPER_ADMIN ? {} : { gymId: currentUser?.gymId };
@@ -84,7 +87,7 @@ const MainApp: React.FC = () => {
     enabled: !!currentUser?.gymId,
   });
 
-  const { data: payments = [], isLoading: paymentsLoading } = useQuery({
+  const { data: payments = [], isLoading: paymentsLoading } = useQuery<MemberPayment[]>({
     queryKey: ['payments', currentUser?.gymId],
     queryFn: async () => {
       const res = await client.get(`/payments?gymId=${currentUser?.gymId}`);
@@ -93,7 +96,7 @@ const MainApp: React.FC = () => {
     enabled: !!currentUser?.gymId,
   });
 
-  const { data: myGym } = useMyGym(currentUser);
+  const { data: myGym, isLoading: gymLoading } = useMyGym(currentUser);
 
   // --- Mutations ---
   const loginMutation = useMutation({
@@ -134,11 +137,13 @@ const MainApp: React.FC = () => {
 
   const updateGymMutation = useMutation({
     mutationFn: async ({ gym, password }: any) => {
-      const res = await client.patch(`/gyms/${gym.id}`, { ...gym, password });
+      const formData = objectToFormData({ ...gym, password });
+      const res = await client.patch(`/gyms/${gym.id}`, formData);
       return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['gyms'] });
+      queryClient.invalidateQueries({ queryKey: ['myGym'] });
       showToast('Gym updated successfully', 'success');
     },
     onError: (error: any) => {
@@ -186,8 +191,11 @@ const MainApp: React.FC = () => {
       ]);
       return { previousMembers };
     },
-    onSuccess: () => {
+    onSuccess: (newMember) => {
       showToast('Member added successfully', 'success');
+      if (currentGym && newMember && newMember.paidAmount > 0) {
+        generateInvoice(currentGym, newMember);
+      }
     },
     onError: (error: any, newMember, context) => {
       if (context?.previousMembers) {
@@ -235,9 +243,18 @@ const MainApp: React.FC = () => {
       const res = await client.post(`/members/${memberId}/renew`, { renewalData });
       return res.data;
     },
-    onSuccess: () => {
+    onSuccess: (updatedMember) => {
       queryClient.invalidateQueries({ queryKey: ['members'] });
       queryClient.invalidateQueries({ queryKey: ['payments'] });
+      if (currentGym && updatedMember && updatedMember.paidAmount > 0) {
+        // Technically renewal might only set paid amount for that transaction, 
+        // but updatedMember returns the whole member object where paidAmount accumulates.
+        // Ideally we check the transaction amount, but for now checking if they paid *anything* is safe enough 
+        // or we can rely on the user to manual download if it was 0.
+        // However, specifically for renewal, we might want to pass the specific renewal amount if we had it.
+        // For simplicity: if total paid > 0 (which it must be if they just paid), generate.
+        generateInvoice(currentGym, updatedMember, new Date().toISOString(), 'Plan Renewal');
+      }
     }
   });
 
@@ -352,30 +369,67 @@ const MainApp: React.FC = () => {
     );
   }
 
-  const effectiveView = isTrainer ? 'dashboard' : activeView;
+
 
   return (
     <DashboardLayout
       user={currentUser}
       onLogout={handleLogout}
-      pageTitle={effectiveView === 'earnings' ? 'Earnings & Reports' : effectiveView === 'staff' ? 'Staff Management' : currentGym?.name || 'Overview'}
-      activeView={effectiveView}
-      onViewChange={setActiveView}
-      onChangePassword={(pwd) => changePasswordMutation.mutate(pwd)}
+      pageTitle={currentGym?.name || 'Overview'}
+      onChangePasswordRequest={(pwd) => changePasswordMutation.mutate(pwd)}
       gymName={currentGym?.name}
+      gymLogo={currentGym?.logo}
     >
-      {effectiveView === 'dashboard' && (
-        <GymOwnerDashboard
-          user={currentUser}
-          gym={currentGym || { name: 'Loading...' } as Gym}
-          members={members}
-          onLogout={handleLogout}
-          onAddMember={(m) => addMemberMutation.mutate(m)}
-          onUpdateMember={(m) => updateMemberMutation.mutate(m)}
-          onRenewMember={(id, renewalData) => renewMemberMutation.mutate({ memberId: id, renewalData })}
-          onDeleteMember={(id) => deleteMemberMutation.mutate(id)}
-        />
-      )}
+      <Routes>
+        <Route path="/" element={
+          <GymOwnerDashboard
+            user={currentUser}
+            gym={currentGym || { name: 'Loading...' } as Gym}
+            members={members}
+            onLogout={handleLogout}
+            onAddMember={(m) => addMemberMutation.mutate(m)}
+            onUpdateMember={(m) => updateMemberMutation.mutate(m)}
+            onRenewMember={(id, renewalData) => renewMemberMutation.mutate({ memberId: id, renewalData })}
+            onDeleteMember={(id) => deleteMemberMutation.mutate(id)}
+          />
+        } />
+
+        <Route path="/earnings" element={
+          !isTrainer ? (
+            <GymEarnings
+              gym={currentGym || {} as Gym}
+              members={members}
+              payments={payments}
+            />
+          ) : <Navigate to="/" replace />
+        } />
+
+        <Route path="/staff" element={
+          !isTrainer ? (
+            <StaffManagement
+              gym={currentGym || {} as Gym}
+              staff={staff}
+              onAddTrainer={(t) => addStaffMutation.mutate(t)}
+              onUpdateTrainer={(t) => updateStaffMutation.mutate(t)}
+              onDeleteUser={(id) => deleteStaffMutation.mutate(id)}
+            />
+          ) : <Navigate to="/" replace />
+        } />
+
+        <Route path="/profile" element={
+          isTrainer ? <Navigate to="/" replace /> :
+            gymLoading ? <div className="flex justify-center items-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div></div> :
+              currentGym ? (
+                <OwnerProfile
+                  gym={currentGym}
+                  user={currentUser}
+                  onChangePasswordRequest={() => { }} // Placeholder, will rely on Layout modal
+                  onUpdateGym={(gymData) => updateGymMutation.mutate({ gym: { id: currentGym.id, ...gymData } })}
+                  isLoading={updateGymMutation.isPending}
+                />
+              ) : <Navigate to="/" replace />
+        } />
+      </Routes>
 
       {/* Subscription Expired / Suspended Block - Global Overlay */}
       {(currentUser.role === UserRole.GYM_OWNER || currentUser.role === UserRole.TRAINER) && currentGym && (
@@ -416,22 +470,7 @@ const MainApp: React.FC = () => {
           return null;
         })()
       )}
-      {effectiveView === 'earnings' && !isTrainer && (
-        <GymEarnings
-          gym={currentGym || {} as Gym}
-          members={members}
-          payments={payments}
-        />
-      )}
-      {effectiveView === 'staff' && !isTrainer && (
-        <StaffManagement
-          gym={currentGym || {} as Gym}
-          staff={staff}
-          onAddTrainer={(t) => addStaffMutation.mutate(t)}
-          onUpdateTrainer={(t) => updateStaffMutation.mutate(t)}
-          onDeleteUser={(id) => deleteStaffMutation.mutate(id)}
-        />
-      )}
+
       {(gymsLoading || membersLoading || staffLoading || paymentsLoading) && (
         <div className="fixed bottom-4 right-4 bg-white px-4 py-2 rounded-full shadow-lg border border-slate-100 flex items-center space-x-2 animate-pulse-subtle">
           <div className="w-2 h-2 bg-brand rounded-full"></div>

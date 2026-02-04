@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { Gym, GymStatus, SubscriptionStatus } from '../types';
 import Input from './Input';
 import Button from './Button';
+import { INDIAN_STATES } from '../data';
 
 interface GymFormProps {
   gym?: Gym | null;
@@ -10,14 +11,7 @@ interface GymFormProps {
   onCancel: () => void;
 }
 
-const INDIAN_STATES = [
-  "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana",
-  "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur",
-  "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu",
-  "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Andaman and Nicobar Islands",
-  "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Jammu and Kashmir", "Ladakh",
-  "Lakshadweep", "Puducherry"
-];
+
 
 const GymForm: React.FC<GymFormProps> = ({ gym, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState(() => {
@@ -153,7 +147,7 @@ const GymForm: React.FC<GymFormProps> = ({ gym, onSubmit, onCancel }) => {
                 filteredStates.map(state => (
                   <div
                     key={state}
-                    className="px-4 py-2 hover:bg-[#F8FAFC] cursor-pointer text-[#0F172A] text-sm font-medium"
+                    className="px-4 py-2 hover:bg-[#F8FAFC] cursor-pointer text-black text-sm font-medium"
                     onClick={() => {
                       setFormData(prev => ({ ...prev, state: state }));
                       setStateSearch(state);
@@ -235,7 +229,7 @@ const GymForm: React.FC<GymFormProps> = ({ gym, onSubmit, onCancel }) => {
               id="subscriptionStatus"
               value={formData.subscriptionStatus}
               onChange={handleChange}
-              className="h-[48px] rounded-main border-main bg-[#F8FAFC] w-full px-[15px] outline-none transition-all text-[#0F172A] font-semibold"
+              className="h-[48px] rounded-main border-main bg-[#F8FAFC] w-full px-[15px] outline-none transition-all text-black font-semibold"
             >
               <option value={SubscriptionStatus.ACTIVE}>Active (Paid)</option>
               <option value={SubscriptionStatus.PENDING}>Pending (Payment Due)</option>
@@ -252,7 +246,7 @@ const GymForm: React.FC<GymFormProps> = ({ gym, onSubmit, onCancel }) => {
           id="status"
           value={formData.status}
           onChange={handleChange}
-          className="h-[48px] rounded-main border-main bg-[#F8FAFC] w-full px-[15px] outline-none transition-all text-[#0F172A] font-semibold"
+          className="h-[48px] rounded-main border-main bg-[#F8FAFC] w-full px-[15px] outline-none transition-all text-black font-semibold"
         >
           <option value={GymStatus.ACTIVE}>Active</option>
           <option value={GymStatus.SUSPENDED}>Suspended</option>

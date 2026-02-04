@@ -10,11 +10,12 @@ interface MobileMemberCardProps {
     onRenew: (member: Member) => void;
     onEdit: (member: Member) => void;
     onCollect: (member: Member) => void;
-    onDelete: (member: Member) => void;
+    onDelete?: (member: Member) => void;
     onWhatsApp?: (member: Member) => void;
+    showWhatsApp?: boolean;
 }
 
-const MobileMemberCard: React.FC<MobileMemberCardProps> = ({ member, onRenew, onEdit, onCollect, onDelete, onWhatsApp }) => {
+const MobileMemberCard: React.FC<MobileMemberCardProps> = ({ member, onRenew, onEdit, onCollect, onDelete, onWhatsApp, showWhatsApp }) => {
     const { endDate, remainingDays } = getPlanDates(member);
     const isExpired = remainingDays <= 0;
     const balance = member.feesAmount - member.paidAmount;
@@ -25,7 +26,7 @@ const MobileMemberCard: React.FC<MobileMemberCardProps> = ({ member, onRenew, on
     if (isExpired) {
         statusVariant = 'red';
         statusText = 'EXPIRED';
-    } else if (remainingDays <= 10) {
+    } else if (remainingDays <= 5) {
         statusVariant = 'orange';
     }
 
@@ -68,12 +69,12 @@ const MobileMemberCard: React.FC<MobileMemberCardProps> = ({ member, onRenew, on
             <div className="flex justify-between items-center">
                 <div className="flex gap-[5px]">
                     <ActionIcon variant="reload" onClick={() => onRenew(member)} title="Renew" />
-                    {remainingDays <= 10 && <ActionIcon variant="whatsup" onClick={() => onWhatsApp?.(member)} title="WhatsApp" />}
+                    {showWhatsApp && <ActionIcon variant="whatsup" onClick={() => onWhatsApp?.(member)} title="WhatsApp" />}
                     <ActionIcon variant="edit" onClick={() => onEdit(member)} title="Edit" />
-                    {balance > 0 && <ActionIcon variant="card" onClick={() => onCollect(member)} title="Collect" />}
+                    {balance > 0 && <ActionIcon variant="card" onClick={() => onCollect(member)} title="Collect Balance" />}
                 </div>
                 <div>
-                    <ActionIcon variant="delete" onClick={() => onDelete(member)} title="Delete" />
+                    {onDelete && <ActionIcon variant="delete" onClick={() => onDelete(member)} title="Delete" />}
                 </div>
             </div>
         </div>

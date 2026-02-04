@@ -45,7 +45,7 @@ const SummaryCard: React.FC<SummaryCardProps> = ({ title, items, highlightValue,
         );
     }
 
-    const bgClass = variant === 'dark' ? 'bg-[#0F172A]' : 'bg-[#F59E0B]';
+    const bgClass = variant === 'dark' ? 'bg-black' : 'bg-[#F59E0B]';
 
     return (
         <div className={`p-8 rounded-main text-white relative overflow-hidden transition-colors ${bgClass}`}>

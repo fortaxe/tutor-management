@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface TagProps {
-    variant: 'green' | 'red' | 'blue' | 'orange' | 'violet';
+    variant: 'green' | 'red' | 'blue' | 'orange' | 'violet' | 'slate';
     isActive?: boolean;
     onClick?: () => void;
     children: React.ReactNode;
@@ -29,6 +29,10 @@ const Tag: React.FC<TagProps> = ({ variant, isActive = false, onClick, children,
         violet: {
             default: 'violet-secondary-bg violet-text-color border-violet',
             active: 'bg-[#4F46E5] text-white border-[#4F46E5]'
+        },
+        slate: {
+            default: 'bg-[#F8FAFC] text-[#475569] border-[#E2E8F0]',
+            active: 'bg-[#475569] text-white border-[#475569]'
         }
     };
 

@@ -29,7 +29,7 @@ const Input: React.FC<InputProps> = ({ className = '', wrapperClassName = '', la
                 {startContent && <div className="flex-shrink-0 mr-2">{startContent}</div>}
                 <input
                     type={isPassword ? (showPassword ? 'text' : 'password') : type}
-                    className="w-full h-full bg-transparent outline-none placeholder:text-[#9CA3AF] placeholder:text-[14px] placeholder:leading-[20px] md:placeholder:text-[16px] md:placeholder:leading-[22px] text-[#0F172A] font-semibold"
+                    className="w-full h-full bg-transparent outline-none placeholder:text-[#9CA3AF] placeholder:text-[14px] placeholder:leading-[20px] md:placeholder:text-[16px] md:placeholder:leading-[22px] text-black font-semibold"
                     {...props}
                 />
                 {isPassword ? (

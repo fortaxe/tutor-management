@@ -24,7 +24,7 @@ const Button: React.FC<ButtonProps> = ({
 
     const variants = {
         primary: 'primary-bg-green hover:bg-[#16A34A] active:bg-[#15803D] text-white',
-        secondary: 'bg-[#F8FAFC] border-main secondary-color hover:bg-slate-100 text-[#9CA3AF]'
+        secondary: 'bg-[#F8FAFC] border-main hover:bg-slate-100 text-[16px] leading-[22px] text-[#9CA3AF]'
     };
 
     const combinedClassName = cn(

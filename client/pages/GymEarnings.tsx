@@ -1,8 +1,10 @@
 
 import React, { useMemo, useState } from 'react';
-import { Gym, MemberPayment, Member, PaymentStatus } from '../types';
+import { Gym, MemberPayment, Member, PaymentMode } from '../types';
 import SearchIcon from '../components/icons/SearchIcon';
-import Badge from '../components/Badge';
+import Tag from '../components/Tag';
+import ActionIcon from '../components/ActionIcon';
+import { generateInvoice } from '@/lib/invoiceGenerator';
 
 interface GymEarningsProps {
   gym: Gym;
@@ -140,48 +142,113 @@ const GymEarnings: React.FC<GymEarningsProps> = ({ gym, members, payments }) => 
                   <tr>
                     <th className="px-10 py-5 text-left text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Settled Date</th>
                     <th className="px-10 py-5 text-left text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Member</th>
+                    <th className="px-10 py-5 text-left text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Mode</th>
                     <th className="px-10 py-5 text-left text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Reference</th>
                     <th className="px-10 py-5 text-right text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Amount</th>
+                    <th className="px-10 py-5 text-right text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 bg-white">
-                  {filteredTransactions.map(p => (
-                    <tr key={p.id} className="hover:bg-slate-50 transition-colors group">
-                      <td className="px-10 py-5 whitespace-nowrap text-xs font-black text-slate-400 group-hover:text-slate-600">
-                        {new Date(p.paymentDate).toLocaleDateString()}
-                      </td>
-                      <td className="px-10 py-5 whitespace-nowrap text-sm font-black text-slate-950">
-                        {p.memberName}
-                      </td>
-                      <td className="px-10 py-5 whitespace-nowrap text-xs text-slate-400 italic group-hover:text-slate-600">
-                        {p.note}
-                      </td>
-                      <td className="px-10 py-5 whitespace-nowrap text-right">
-                        <div className="flex items-center justify-end space-x-1">
-                          <span className="text-xs font-black text-brand-700">₹</span>
-                          <span className="text-sm font-black text-slate-950">{p.amount.toLocaleString()}</span>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  {filteredTransactions.map(p => {
+                    const member = members.find(m => String(m.id) === String(p.memberId) || m._id === p.memberId);
+                    return (
+                      <tr key={p._id || p.id} className="hover:bg-slate-50 transition-colors group">
+                        <td className="px-10 py-5 whitespace-nowrap text-xs font-black text-slate-400 group-hover:text-slate-600">
+                          {new Date(p.paymentDate).toLocaleDateString()}
+                        </td>
+                        <td className="px-10 py-5 whitespace-nowrap text-sm font-black text-slate-950">
+                          {p.memberName}
+                        </td>
+                        <td className="px-10 py-5 whitespace-nowrap">
+                          {p.paymentMode && (
+                            <Tag variant={p.paymentMode === PaymentMode.UPI ? 'green' : 'orange'} className="uppercase !text-[10px] !py-1 !px-2">
+                              {p.paymentMode === PaymentMode.UPI ? 'UPI / CARD' : 'CASH'}
+                            </Tag>
+                          )}
+                        </td>
+                        <td className="px-10 py-5 whitespace-nowrap text-xs text-slate-400  group-hover:text-slate-600">
+                          {p.note.replace(/Renewal \((\d+) days\)/, (match, days) => {
+                            const d = parseInt(days);
+                            const displayDays = d <= 1 ? 1 : d + 1;
+                            if (displayDays % 30 === 0 || displayDays === 365 || displayDays === 1) {
+                              return `Renewal (${displayDays} days)`;
+                            }
+                            return match;
+                          })}
+                        </td>
+                        <td className="px-10 py-5 whitespace-nowrap text-right text-sm font-black text-slate-950">
+                          ₹{p.amount.toLocaleString()}
+                        </td>
+                        <td className="px-10 py-5 whitespace-nowrap text-right">
+                          <ActionIcon
+                            variant="pdf"
+                            onClick={() => {
+                              if (member) {
+                                const receiptMember = { ...member, paidAmount: p.amount };
+                                let desc: undefined | string = undefined;
+                                if (p.note.startsWith('Balance Cleared')) desc = 'Balance Cleared';
+                                else if (p.note === 'Initial Registration Payment') desc = 'Registration';
+
+                                generateInvoice(gym, receiptMember, p.createdAt, desc);
+                              }
+                            }}
+                            title="Download Invoice"
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
 
             {/* Mobile View */}
             <div className="sm:hidden divide-y divide-slate-50">
-              {filteredTransactions.map(p => (
-                <div key={p.id} className="p-6 flex justify-between items-center hover:bg-slate-50 transition-colors">
-                  <div className="space-y-1.5">
-                    <p className="text-sm font-black text-slate-950 tracking-tight">{p.memberName}</p>
-                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">{new Date(p.paymentDate).toLocaleDateString()} • {p.note}</p>
+              {filteredTransactions.map(p => {
+                const member = members.find(m => String(m.id) === String(p.memberId) || m._id === p.memberId);
+                return (
+                  <div key={p._id || p.id} className="p-6 flex justify-between items-center hover:bg-slate-50 transition-colors">
+                    <div className="space-y-1.5">
+                      <p className="text-sm font-black text-slate-950 tracking-tight">{p.memberName}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                          {new Date(p.paymentDate).toLocaleDateString()} • {p.note.replace(/Renewal \((\d+) days\)/, (match, days) => {
+                            const d = parseInt(days);
+                            const displayDays = d <= 1 ? 1 : d + 1;
+                            if (displayDays % 30 === 0 || displayDays === 365 || displayDays === 1) {
+                              return `Renewal (${displayDays} days)`;
+                            }
+                            return match;
+                          })}
+                        </p>
+                        {p.paymentMode && (
+                          <Tag variant={p.paymentMode === PaymentMode.UPI ? 'green' : 'orange'} className="uppercase !text-[9px] !py-0.5 !px-1.5 whitespace-nowrap">
+                            {p.paymentMode === PaymentMode.UPI ? 'UPI / CARD' : 'CASH'}
+                          </Tag>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <p className="text-sm font-black text-slate-950">₹{p.amount.toLocaleString()}</p>
+                      <ActionIcon
+                        variant="pdf"
+                        onClick={() => {
+                          if (member) {
+                            // Create a temporary member object with the specific payment amount for this receipt
+                            const receiptMember = { ...member, paidAmount: p.amount };
+                            let desc: undefined | string = undefined;
+                            if (p.note.startsWith('Balance Cleared')) desc = 'Balance Cleared';
+                            else if (p.note === 'Initial Registration Payment') desc = 'Registration';
+
+                            generateInvoice(gym, receiptMember, p.createdAt, desc);
+                          }
+                        }}
+                        title="Download Invoice"
+                      />
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-1">
-                    <span className="text-xs font-black text-brand-700">₹</span>
-                    <span className="text-sm font-black text-slate-950">{p.amount.toLocaleString()}</span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {filteredTransactions.length === 0 && (

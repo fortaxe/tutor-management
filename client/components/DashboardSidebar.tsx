@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { User, UserRole } from '../types';
 import DumbbellIcon from './icons/DumbbellIcon';
 import BorderButton from './BorderButton';
@@ -8,25 +9,27 @@ interface DashboardSidebarProps {
     user: User;
     isSidebarOpen: boolean;
     setIsSidebarOpen: (isOpen: boolean) => void;
-    activeView: string;
-    onViewChange?: (view: string) => void;
     onLogout: () => void;
     onChangePasswordRequest: () => void;
     isCollapsed?: boolean;
     gymName?: string;
+    gymLogo?: string;
 }
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
     user,
     isSidebarOpen,
     setIsSidebarOpen,
-    activeView,
-    onViewChange,
     onLogout,
     onChangePasswordRequest: _onChangePasswordRequest,
     isCollapsed,
     gymName,
+    gymLogo,
 }) => {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const activeView = location.pathname === '/' ? 'dashboard' : location.pathname.substring(1);
+
     const isOwner = user.role === UserRole.GYM_OWNER;
     const isTrainer = user.role === UserRole.TRAINER;
 
@@ -105,11 +108,12 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                             <button
                                 key={item.id}
                                 onClick={() => {
-                                    onViewChange?.(item.id);
+                                    const path = item.id === 'dashboard' ? '/' : `/${item.id}`;
+                                    navigate(path);
                                     setIsSidebarOpen(false);
                                 }}
                                 title={isCollapsed ? item.label : ''}
-                                className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-[5px] px-[10px]'} py-[12px] rounded-main transition-all font-medium primary-description text-white font-grotesk font-bold uppercase ${activeView === item.id
+                                className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-[5px] px-[15px]'} py-[12px] rounded-main transition-all font-medium primary-description text-white font-grotesk font-bold uppercase ${activeView === item.id
                                     ? 'bg-[#242424]  '
                                     : 'bg-[#101010] border border-[#242424]'
                                     }`}
@@ -124,12 +128,12 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                 <div className="mt-auto flex flex-col gap-[6px]">
                     <div className={`p-[10px] rounded-main bg-[#F8FAFC] flex gap-[8px] items-center ${isCollapsed ? 'justify-center' : ''}`}>
                         <div>
-                            <img src="/profile.png" alt="" className="w-[46px] h-[46px] rounded-main border-main" />
+                            <img src={gymLogo || "/profile.png"} alt="" className="w-[46px] h-[46px] rounded-main border-main object-cover" />
                         </div>
 
                         {!isCollapsed && (
                             <div>
-                                <p className="tertiary-description text-[#0F172A] font-medium">
+                                <p className="tertiary-description text-black font-medium">
                                     {user.role === UserRole.SUPER_ADMIN ? 'Super Admin' : user.role === UserRole.GYM_OWNER ? 'Gym Owner' : (user.name || 'Staff')}
                                 </p>
                                 <p className="text-[12px]  leading-[18px] text-[#9CA3AF]" >{user.phone}</p>
@@ -137,7 +141,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                         )}
 
                     </div>
-                    {(user.role === UserRole.GYM_OWNER || user.role === UserRole.SUPER_ADMIN) && (
+                    {(user.role === UserRole.SUPER_ADMIN) && (
                         <button
                             onClick={_onChangePasswordRequest}
                             className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-[5px] px-[10px]'} py-[12px] rounded-main transition-all font-medium primary-description text-white bg-[#101010] border border-[#242424] hover:bg-[#242424]`}
@@ -149,6 +153,22 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                             {!isCollapsed && <span>Change Password</span>}
                         </button>
                     )}
+
+                    {isOwner && (
+                        <BorderButton variant="green" onClick={() => {
+                            navigate('/profile');
+                            setIsSidebarOpen(false);
+                        }} className="uppercase">
+                            {isCollapsed ? "P" : "Owner's Profile"}
+                        </BorderButton>
+                    )}
+
+                    {/* Help - Owner & Staff */}
+                    {/* Help - Owner & Staff */}
+                    <BorderButton variant="blue" onClick={() => window.location.href = "tel:+919676675576"} className="uppercase">
+                        {isCollapsed ? "?" : "Help"}
+                    </BorderButton>
+
                     <BorderButton variant="red" onClick={onLogout}>
                         {isCollapsed ? (
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">

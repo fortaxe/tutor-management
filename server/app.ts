@@ -80,9 +80,14 @@ app.post('/api/gyms', async (req, res) => {
   }
 });
 
-app.patch('/api/gyms/:id', async (req, res) => {
+app.patch('/api/gyms/:id', upload.single('logo'), async (req, res) => {
   try {
     const { password, ...gymData } = req.body;
+
+    if (req.file) {
+      gymData.logo = await uploadToR2(req.file);
+    }
+
     await connectDB();
     const gym = await Gym.findOneAndUpdate({ id: req.params.id }, gymData, { new: true });
 

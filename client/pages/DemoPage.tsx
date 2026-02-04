@@ -107,12 +107,12 @@ const DemoPage: React.FC = () => {
             <div className="relative w-full lg:w-1/2 h-full flex flex-col justify-center items-center p-4 lg:p-[25px] bg-[#F8FAFC]">
                 {/* Top Right Contact */}
                 <div className="absolute top-4 lg:top-[25px] right-4 lg:right-[25px]">
-                    <a href="tel:+919676675576" className="text-[#0F172A] primary-description underline decoration-[1px] font-semibold">Contact us</a>
+                    <a href="tel:+919676675576" className="text-black primary-description underline decoration-[1px] font-semibold">Contact us</a>
                 </div>
 
                 <div className="w-full max-w-[420px] bg-white p-[30px] rounded-[30px] shadow-[0px_8px_40px_rgba(0,0,0,0.06)]">
                     <div className="">
-                        {/* <h1 className="text-[32px] font-bold text-[#0F172A] mb-[20px] uppercase font-grotesk">Take Control of Your Gym</h1> */}
+                        {/* <h1 className="text-[32px] font-bold text-black mb-[20px] uppercase font-grotesk">Take Control of Your Gym</h1> */}
 
                     </div>
 

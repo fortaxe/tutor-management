@@ -3,6 +3,7 @@ import { Member } from '../types';
 import Input from './Input';
 import Button from './Button';
 import SummaryCard from './SummaryCard';
+import MemberAvatar from './MemberAvatar';
 
 interface CollectBalanceFormProps {
     member: Member;
@@ -16,6 +17,17 @@ const CollectBalanceForm: React.FC<CollectBalanceFormProps> = ({ member, onSubmi
     const currentPaid = member.paidAmount + enteringAmount;
     const currentDue = Math.max(0, member.feesAmount - currentPaid);
 
+    // Add Member Info Display
+    const renderMemberInfo = () => (
+        <div className="flex items-center gap-3 p-2 bg-slate-50 rounded-main border border-slate-100 mb-5">
+            <MemberAvatar member={member} />
+            <div>
+                <h3 className="font-bold font-grotesk text-slate-900 leading-tight">{member.name}</h3>
+                <p className="text-sm font-semibold text-slate-500 font-geist">{member.phone}</p>
+            </div>
+        </div>
+    );
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const numAmount = Number(amount);
@@ -27,6 +39,7 @@ const CollectBalanceForm: React.FC<CollectBalanceFormProps> = ({ member, onSubmi
     return (
         <form onSubmit={handleSubmit} className="h-full flex flex-col">
             <div className="flex-1 overflow-y-auto no-scrollbar space-y-5">
+                {renderMemberInfo()}
 
                 <SummaryCard
                     variant="slate"

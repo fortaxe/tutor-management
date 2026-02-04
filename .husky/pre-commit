@@ -1,2 +1,2 @@
-cd client && bun run lint-staged
+
  

@@ -10,7 +10,7 @@ import { Lead } from './models/Lead';
 import { loginSchema, gymSchemaValidation, memberSchemaValidation, leadSchemaValidation } from './validators/schemas';
 import { UserRole, SubscriptionStatus, PaymentStatus, GymStatus } from './types';
 import multer from 'multer';
-import { uploadToR2 } from './utils/storage';
+import { uploadToR2, uploadBufferToR2 } from './utils/storage';
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -343,5 +343,35 @@ app.delete('/api/leads/:id', async (req, res) => {
   }
 });
 
+
+// Daily Backup Cron
+app.get('/api/cron/backup', async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  try {
+    await connectDB();
+    const data = {
+      timestamp: new Date().toISOString(),
+      users: await User.find({}),
+      gyms: await Gym.find({}),
+      members: await Member.find({}),
+      payments: await MemberPaymentRecord.find({}),
+      leads: await Lead.find({}),
+    };
+
+    const buffer = Buffer.from(JSON.stringify(data, null, 2));
+    const fileName = `backups/backup-${new Date().toISOString().split('T')[0]}.json`;
+
+    await uploadBufferToR2(buffer, fileName, 'application/json');
+
+    res.json({ success: true, fileName });
+  } catch (error: any) {
+    console.error('Backup failed:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 export default app;

@@ -35,3 +35,24 @@ export const uploadToR2 = async (file: Express.Multer.File, folder: string = 'me
 
     return `${process.env.R2_PUBLIC_BASE_URL}/${fileName}`;
 };
+
+export const uploadBufferToR2 = async (buffer: Buffer, fileName: string, contentType: string): Promise<string> => {
+    console.log(`Uploading to R2: ${fileName}, Size: ${buffer.length} bytes, Mime: ${contentType}`);
+
+    const command = new PutObjectCommand({
+        Bucket: process.env.R2_BUCKET,
+        Key: fileName,
+        Body: buffer,
+        ContentType: contentType,
+    });
+
+    try {
+        await r2.send(command);
+        console.log('R2 Upload completed successfully');
+    } catch (err) {
+        console.error('R2 Upload failed:', err);
+        throw err;
+    }
+
+    return `${process.env.R2_PUBLIC_BASE_URL}/${fileName}`;
+};

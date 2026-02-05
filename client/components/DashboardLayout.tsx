@@ -1,21 +1,18 @@
 import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { User, UserRole } from '../types';
-import Modal from './Modal';
 import DashboardSidebar from './DashboardSidebar';
 import BorderButton from './BorderButton';
-import Input from './Input';
 import Button from './Button';
 import { useDispatch } from 'react-redux';
 import { openAddMemberModal } from '../store/uiSlice';
-import { MemberType } from '../types';
 import MenuIcon from './icons/MenuIcon';
 
 interface DashboardLayoutProps {
   user: User;
   onLogout: () => void;
   pageTitle: string;
-  onChangePasswordRequest?: (password: string) => void;
+  onOpenChangePass: () => void;
   children: React.ReactNode;
   gymName?: string;
   gymLogo?: string;
@@ -25,42 +22,17 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   user,
   onLogout,
   pageTitle,
-  onChangePasswordRequest,
+  onOpenChangePass,
   children,
   gymName,
   gymLogo
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isChangePassOpen, setChangePassOpen] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [passError, setPassError] = useState('');
   const [isCollapsed, setIsCollapsed] = useState(false);
   const dispatch = useDispatch();
 
   const location = useLocation();
-  const navigate = useNavigate();
   const activeView = location.pathname === '/' ? 'dashboard' : location.pathname.substring(1);
-
-  const handlePassSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newPassword !== confirmPassword) {
-      setPassError('Passwords do not match');
-      return;
-    }
-    setPassError('');
-    onChangePasswordRequest?.(newPassword);
-    setChangePassOpen(false);
-    setNewPassword('');
-    setConfirmPassword('');
-  };
-
-  const closePassModal = () => {
-    setChangePassOpen(false);
-    setNewPassword('');
-    setConfirmPassword('');
-    setPassError('');
-  };
 
   return (
     <div className="h-screen bg-slate-50 flex flex-col lg:flex-row overflow-hidden bg-[#F4F7FB]">
@@ -69,7 +41,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
         onLogout={onLogout}
-        onChangePasswordRequest={() => setChangePassOpen(true)}
+        onChangePasswordRequest={onOpenChangePass}
         isCollapsed={isCollapsed}
         gymName={gymName}
         gymLogo={gymLogo}
@@ -88,7 +60,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             <div>
               <img src={gymLogo || "/profile.png"} alt="" className="size-[36px] rounded-main border-main object-cover" />
             </div>
-
             <span className="text-[16px] leading-[22px] text-white font-semibold">{pageTitle}</span>
           </div>
 
@@ -96,7 +67,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             className='text-white md:text-black cursor-pointer'
             onClick={() => setIsSidebarOpen(true)}
           />
-
         </div>
 
         <header className="hidden lg:flex justify-between items-start sticky top-0 z-10 ">
@@ -118,9 +88,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             </div>
           </div>
 
-
-
-
           <div className="hidden sm:block pb-[10px] ">
             {(user.role === UserRole.GYM_OWNER || user.role === UserRole.TRAINER) ? (
               activeView === 'dashboard' ? (
@@ -136,15 +103,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                     <Button
                       variant="secondary"
                       className='border border-[#22C55E] text-[#22C55E]'
-                      onClick={() => setChangePassOpen(true)}
+                      onClick={onOpenChangePass}
                     >
                       Change Password
-                    </Button>
-                    <Button
-                      variant="primary"
-                      onClick={() => navigate('/profile')}
-                    >
-                      BILLING DETAILS
                     </Button>
                   </div>
                 )
@@ -167,42 +128,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             {children}
           </div>
         </main>
-      </div >
-
-      <Modal isOpen={isChangePassOpen} onClose={closePassModal} title="Security Settings">
-        <form onSubmit={handlePassSubmit} className="space-y-[15px]">
-          <Input
-            label="New Password"
-            type="password"
-            value={newPassword}
-            onChange={(e) => {
-              setNewPassword(e.target.value);
-              if (passError) setPassError('');
-            }}
-            required
-            minLength={6}
-            placeholder="Min 6 characters"
-          />
-          <Input
-            label="Confirm Password"
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => {
-              setConfirmPassword(e.target.value);
-              if (passError) setPassError('');
-            }}
-            required
-            minLength={6}
-            placeholder="Re-enter password"
-            error={passError}
-          />
-          <div className="flex gap-4 pt-4">
-            <button type="button" onClick={closePassModal} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-colors">Cancel</button>
-            <button type="submit" className="flex-1 py-4 bg-charcoal text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-charcoal/20 active:scale-95 transition-all">Update Password</button>
-          </div>
-        </form>
-      </Modal>
-    </div >
+      </div>
+    </div>
   );
 };
 

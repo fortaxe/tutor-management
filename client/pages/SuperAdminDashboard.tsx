@@ -25,7 +25,7 @@ interface SuperAdminDashboardProps {
   onDeleteGym: (gymId: number) => void;
   onAddGym: (gymData: Omit<Gym, 'id' | 'paymentHistory'>, password?: string) => void;
   onUpdateGym: (gym: Gym, password?: string) => void;
-  onChangePassword?: (password: string) => void;
+  onOpenChangePass: () => void;
 }
 
 const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
@@ -37,7 +37,7 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
   onDeleteGym,
   onAddGym,
   onUpdateGym,
-  onChangePassword
+  onOpenChangePass
 }) => {
   const [modalType, setModalType] = useState<'add' | 'edit' | 'payment' | 'history' | 'delete' | null>(null);
   const [selectedGym, setSelectedGym] = useState<Gym | null>(null);
@@ -166,7 +166,7 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({
       user={user}
       onLogout={onLogout}
       pageTitle={activeView === 'leads' ? 'Lead Management' : 'SaaS Admin'}
-      onChangePasswordRequest={onChangePassword}
+      onOpenChangePass={onOpenChangePass}
     >
       {activeView === 'leads' ? (
         <LeadsManager />

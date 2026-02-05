@@ -14,9 +14,12 @@ import { useMyGym } from './hooks/useMyGym';
 import DemoPage from './pages/DemoPage';
 import OwnerProfile from './pages/OwnerProfile';
 import { generateInvoice } from './lib/invoiceGenerator';
+import ChangePasswordDrawer from './components/ChangePasswordDrawer';
+
 
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
+import { SubmitArrowIcon } from './components/icons/FormIcons';
 
 const STORAGE_KEY = 'gym_mgmt_session';
 const SESSION_EXPIRY_DAYS = 30;
@@ -27,6 +30,9 @@ const MainApp: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+
+  // Security Modal State
+  const [isChangePassOpen, setChangePassOpen] = useState(false);
 
   // Initial View State - syncing with URL if possible or default
   // const [activeView, setActiveView] = useState<string>('dashboard'); -> Removed
@@ -394,8 +400,16 @@ const MainApp: React.FC = () => {
           onDeleteGym={(id) => deleteGymMutation.mutate(id)}
           onAddGym={(gym, password) => addGymMutation.mutate({ gym, password })}
           onUpdateGym={(gym, password) => updateGymMutation.mutate({ gym, password })}
-          onChangePassword={(password) => changePasswordMutation.mutate(password)}
+          onOpenChangePass={() => setChangePassOpen(true)}
         />
+
+        <ChangePasswordDrawer
+          isOpen={isChangePassOpen}
+          onClose={() => setChangePassOpen(false)}
+          onUpdate={(pwd) => changePasswordMutation.mutate(pwd)}
+          isLoading={changePasswordMutation.isPending}
+        />
+
         {toast && (
           <Toast
             message={toast.message}
@@ -414,7 +428,7 @@ const MainApp: React.FC = () => {
       user={currentUser}
       onLogout={handleLogout}
       pageTitle={currentGym?.name || 'Overview'}
-      onChangePasswordRequest={(pwd) => changePasswordMutation.mutate(pwd)}
+      onOpenChangePass={() => setChangePassOpen(true)}
       gymName={currentGym?.name}
       gymLogo={currentGym?.logo}
     >
@@ -461,7 +475,7 @@ const MainApp: React.FC = () => {
                 <OwnerProfile
                   gym={currentGym}
                   user={currentUser}
-                  onChangePasswordRequest={() => { }} // Placeholder, will rely on Layout modal
+                  onChangePasswordRequest={() => setChangePassOpen(true)}
                   onUpdateGym={(gymData) => updateGymMutation.mutate({ gym: { id: currentGym.id, ...gymData } })}
                   isLoading={updateGymMutation.isPending}
                 />
@@ -522,6 +536,13 @@ const MainApp: React.FC = () => {
           onClose={() => setToast(null)}
         />
       )}
+
+      <ChangePasswordDrawer
+        isOpen={isChangePassOpen}
+        onClose={() => setChangePassOpen(false)}
+        onUpdate={(pwd) => changePasswordMutation.mutate(pwd)}
+        isLoading={changePasswordMutation.isPending}
+      />
     </DashboardLayout>
   );
 };

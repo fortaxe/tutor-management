@@ -42,7 +42,7 @@ interface OwnerProfileProps {
     isLoading?: boolean;
 }
 
-const OwnerProfile: React.FC<OwnerProfileProps> = ({ gym, user, onUpdateGym, isLoading }) => {
+const OwnerProfile: React.FC<OwnerProfileProps> = ({ gym, user, onUpdateGym, onChangePasswordRequest, isLoading }) => {
     const [logoName, setLogoName] = useState('UPLOAD');
     const [gymDetails, setGymDetails] = useState({
         gstNumber: gym.gstNumber || '',
@@ -75,6 +75,18 @@ const OwnerProfile: React.FC<OwnerProfileProps> = ({ gym, user, onUpdateGym, isL
 
     return (
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700 px-4 md:px-0">
+            {/* Mobile Header Action */}
+            <div className="md:hidden flex justify-between items-center">
+
+                <Button
+                    variant="secondary"
+                    className='border border-[#22C55E] text-[#22C55E] h-[36px] py-0 px-4 text-[12px] font-bold'
+                    onClick={() => onChangePasswordRequest?.()}
+                >
+                    Change Password
+                </Button>
+            </div>
+
             {/* Info Cards Row */}
             <div className="flex md:grid  md:grid-cols-3 gap-[10px] md:gap-[15px] overflow-x-auto no-scrollbar">
                 {/* Owner Info Card */}

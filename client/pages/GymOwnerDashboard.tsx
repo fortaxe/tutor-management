@@ -22,7 +22,8 @@ import Drawer from '../components/Drawer';
 
 import CollectBalanceForm from '../components/CollectBalanceForm';
 import RenewPlanForm from '../components/RenewPlanForm';
-import { generateInvoice } from '@/lib/invoiceGenerator';
+import SortIcon from '@/components/icons/SortIcon';
+import CustomDropdown from '../components/CustomDropdown';
 
 interface GymOwnerDashboardProps {
   user: User;
@@ -37,6 +38,12 @@ interface GymOwnerDashboardProps {
 
 type Tab = 'members' | 'expiry' | 'expired' | 'dues' | 'passes';
 
+const sortOptions = [
+  { value: 'planStart-desc', label: 'Latest' },
+  { value: 'name-asc', label: 'Name ↑' },
+  { value: 'name-desc', label: 'Name ↓' }
+];
+
 const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, members, onAddMember, onUpdateMember, onRenewMember, onDeleteMember }) => {
   const [activeTab, setActiveTab] = useState<Tab>('members');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -48,7 +55,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [initialType, setInitialType] = useState<MemberType>(MemberType.SUBSCRIPTION);
 
-  const sortConfig = { key: 'planStart', direction: 'desc' as 'asc' | 'desc' };
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'planStart', direction: 'desc' });
 
   const expiryFilter = 5;
   const [searchQuery, setSearchQuery] = useState('');
@@ -249,7 +256,22 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
       );
     }
 
-    return baseList;
+    // Apply sorting
+    return [...baseList].sort((a, b) => {
+      const { key, direction } = sortConfig;
+      let valA: any = (a as any)[key];
+      let valB: any = (b as any)[key];
+
+      // Special handling for dates if needed, but planStart is string, name is string
+      if (key === 'planStart') {
+        valA = new Date(valA).getTime();
+        valB = new Date(valB).getTime();
+      }
+
+      if (valA < valB) return direction === 'asc' ? -1 : 1;
+      if (valA > valB) return direction === 'asc' ? 1 : -1;
+      return 0;
+    });
   })();
 
 
@@ -441,6 +463,16 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
             onChange={(e) => setSearchQuery(e.target.value)}
           />
 
+          <CustomDropdown
+            options={sortOptions}
+            value={`${sortConfig.key}-${sortConfig.direction}`}
+            onChange={(val) => {
+              const [key, direction] = val.split('-');
+              setSortConfig({ key, direction: direction as 'asc' | 'desc' });
+            }}
+            icon={<SortIcon className='size-5' />}
+          />
+
 
           {!isTrainer && (
             <button onClick={handleExportExcel} className="size-[42px] md:size-[46px] flex items-center justify-center rounded-main border border-slate-200 hover:bg-slate-50 transition-colors">
@@ -471,28 +503,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
 
 
               <div className="flex flex-row gap-[5px] xl:items-center">
-                {/* <div className="relative w-full sm:w-auto">
-                <SortIcon active direction={sortConfig.direction} className="absolute left-[15px] top-1/2 -translate-y-1/2 size-4 pointer-events-none z-10" />
-                <select
-                  value={`${sortConfig.key}-${sortConfig.direction}`}
-                  onChange={(e) => {
-                    const [key, direction] = e.target.value.split('-');
-                    setSortConfig({ key, direction: direction as 'asc' | 'desc' });
-                  }}
-                  className="h-[46px] w-full sm:w-[220px] pl-[40px] pr-8 rounded-main border border-slate-200 bg-white outline-none appearance-none font-bold uppercase text-[12px] cursor-pointer hover:bg-slate-50 transition-colors"
-                >
-                  <option value="name-asc">Name A to Z</option>
-                  <option value="name-desc">Name Z to A</option>
-                  <option value="endDate-asc">Expiry: Earliest First</option>
-                  <option value="endDate-desc">Expiry: Latest First</option>
-                  <option value="remainingDays-asc">Days Left: Least First</option>
-                  <option value="remainingDays-desc">Days Left: Most First</option>
-                  <option value="planStart-desc">Newest First (Default)</option>
-                </select>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <ChevronDownSmallIcon className="size-4" stroke="#64748b" />
-                </div>
-              </div> */}
+
 
 
                 <div className="relative hidden md:block w-full sm:w-auto">
@@ -505,6 +516,16 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
+
+                <CustomDropdown
+                  options={sortOptions}
+                  value={`${sortConfig.key}-${sortConfig.direction}`}
+                  onChange={(val) => {
+                    const [key, direction] = val.split('-');
+                    setSortConfig({ key, direction: direction as 'asc' | 'desc' });
+                  }}
+                  icon={<SortIcon className='size-5' />}
+                />
 
                 {!isTrainer && (
                   <button onClick={handleExportExcel} className="size-[42px] md:size-[46px] flex items-center justify-center rounded-main border border-slate-200 hover:bg-slate-50 transition-colors">
@@ -558,7 +579,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
           }
         </div >
 
-      </div>
+      </div >
       <Drawer isOpen={isEditModalOpen || isAddMemberModalOpen} onClose={handleCloseModal} title={editingMember ? 'Edit Member' : 'Add New Member'} >
         <MemberForm member={editingMember} initialType={initialType} onSubmit={handleFormSubmit} onCancel={handleCloseModal} />
       </Drawer>

@@ -62,7 +62,10 @@ export const generateInvoice = async (gym: Gym, member: Member, customDate?: str
         doc.setFont('helvetica', 'bold');
     }
 
-    const receiptNo = Math.floor(10000 + Math.random() * 90000).toString();
+    const prefix = (gym.name || 'GS').substring(0, 2).toUpperCase();
+    const month = moment(customDate || member.createdAt).format('MM');
+    const randomDigits = Math.floor(100 + Math.random() * 900).toString();
+    const receiptNo = `${prefix}${month}${randomDigits}`;
     const dateOfIssue = moment(customDate || member.createdAt).format('MMM DD, YYYY');
 
     // Column 1: Labels (Left Aligned below 'RECEIPT')

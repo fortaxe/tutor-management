@@ -247,10 +247,23 @@ const MainApp: React.FC = () => {
       const res = await client.patch(`/members/${member._id}`, formData);
       return res.data;
     },
-    onSuccess: () => {
+    onSuccess: (updatedMember, variables, context) => {
       queryClient.invalidateQueries({ queryKey: ['members'] });
       queryClient.invalidateQueries({ queryKey: ['payments'] });
       showToast('Member updated successfully', 'success');
+
+      // Check if this update was a payment (paidAmount increased)
+      // variables contains the data sent to mutationFn
+      if (currentGym && updatedMember && variables.paidAmount !== undefined) {
+        // If it comes from CollectBalanceForm, the variables will have the new total paid amount.
+        // We can compare it with the member's previous paid amount if we had it.
+        // Actually, the simplest check: if variables.paidAmount > 0 and it's different from what we might have had.
+        // For now, let's assume if paidAmount is in variables and > 0, we might want a receipt.
+        // Better: check if it's a balance collection specifically by seeing if paymentMode is present.
+        if (variables.paymentMode) {
+          generateInvoice(currentGym, updatedMember, new Date().toISOString(), updatedMember.feesAmount === updatedMember.paidAmount ? 'Balance Cleared' : 'Partial Payment');
+        }
+      }
     },
     onError: (error: any) => {
       const msg = error.response?.data?.error || error.message;

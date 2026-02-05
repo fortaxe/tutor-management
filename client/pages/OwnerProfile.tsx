@@ -13,7 +13,7 @@ const ProfileCard: React.FC<{
     subtitle?: string;
     fields: { label: string; value: string; valueColor?: string }[];
 }> = ({ icon, title, subtitle, fields }) => (
-    <div className="bg-white rounded-[10px] p-[15px] border border-main relative h-full w-full min-w-[200px] shrink-0 md:min-w-0">
+    <div className="bg-white rounded-[10px] p-[15px] border border-main relative h-full w-[280px] md:w-full shrink-0 md:min-w-0">
         <div className="absolute top-[15px] right-[15px] size-[43px] rounded-full border-main rounded-main flex items-center justify-center">
             {icon}
         </div>
@@ -74,7 +74,7 @@ const OwnerProfile: React.FC<OwnerProfileProps> = ({ gym, user, onUpdateGym, isL
     };
 
     return (
-        <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700 px-4 md:px-0">
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700 px-4 md:px-0">
             {/* Info Cards Row */}
             <div className="flex md:grid  md:grid-cols-3 gap-[10px] md:gap-[15px] overflow-x-auto no-scrollbar">
                 {/* Owner Info Card */}
@@ -108,10 +108,10 @@ const OwnerProfile: React.FC<OwnerProfileProps> = ({ gym, user, onUpdateGym, isL
                 <h3 className="dashboard-16-grotesk text-black mb-[15px]">GYM DETAILS</h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-[10px] mb-5">
-                    {/* Logo Upload Placeholder */}
+                    {/* Logo Section */}
                     <div className="flex flex-col gap-3">
                         {logoPreview && (
-                            <div className="w-24 h-24 rounded-main overflow-hidden border border-[#E2E8F0] shadow-sm">
+                            <div className="w-24 h-24 rounded-main overflow-hidden border border-[#E2E8F0] shadow-sm shrink-0">
                                 <img src={logoPreview} alt="Gym Logo" className="w-full h-full object-cover" />
                             </div>
                         )}
@@ -127,22 +127,26 @@ const OwnerProfile: React.FC<OwnerProfileProps> = ({ gym, user, onUpdateGym, isL
                         />
                     </div>
 
-                    {/* GST */}
-                    <Input
-                        label="GST (OPTIONAL)"
-                        placeholder="GST Number"
-                        value={gymDetails.gstNumber}
-                        maxLength={15}
-                        onChange={(e) => handleInputChange('gstNumber', e.target.value)}
-                    />
+                    {/* GST - Pushed to bottom to align with UploadInput */}
+                    <div className="flex flex-col justify-end">
+                        <Input
+                            label="GST (OPTIONAL)"
+                            placeholder="GST Number"
+                            value={gymDetails.gstNumber}
+                            maxLength={15}
+                            onChange={(e) => handleInputChange('gstNumber', e.target.value)}
+                        />
+                    </div>
 
-                    {/* Instagram */}
-                    <Input
-                        label="INSTAGRAM ID"
-                        placeholder="Gym Instagram ID"
-                        value={gymDetails.instagramId}
-                        onChange={(e) => handleInputChange('instagramId', e.target.value)}
-                    />
+                    {/* Instagram - Pushed to bottom to align with UploadInput */}
+                    <div className="flex flex-col justify-end">
+                        <Input
+                            label="INSTAGRAM ID"
+                            placeholder="Gym Instagram ID"
+                            value={gymDetails.instagramId}
+                            onChange={(e) => handleInputChange('instagramId', e.target.value)}
+                        />
+                    </div>
                 </div>
 
                 <h3 className="dashboard-16-grotesk text-black mb-[15px]">ADDRESS DETAILS</h3>

@@ -22,7 +22,7 @@ const MobileMemberCard: React.FC<MobileMemberCardProps> = ({ member, onRenew, on
 
     // Status Badge Logic
     let statusVariant: 'green' | 'red' | 'orange' = 'green';
-    let statusText = `${remainingDays}D LEFT`;
+    let statusText = `${remainingDays}${remainingDays === 1 ? ' DAY' : 'D'} LEFT`;
     if (isExpired) {
         statusVariant = 'red';
         statusText = 'EXPIRED';

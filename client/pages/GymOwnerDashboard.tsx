@@ -57,10 +57,10 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
   const isTrainer = user.role === UserRole.TRAINER;
 
   const stats = useMemo(() => {
-    const expiredMembers = members.filter(m => getPlanDates(m).remainingDays < 0).length;
+    const expiredMembers = members.filter(m => getPlanDates(m).remainingDays <= 0).length;
     const expiringSoon = members.filter(m => {
       const { remainingDays } = getPlanDates(m);
-      return remainingDays >= 0 && remainingDays <= expiryFilter;
+      return remainingDays > 0 && remainingDays <= expiryFilter;
     }).length;
     const duesPendingMembers = members.filter(m => (m.feesAmount - m.paidAmount) > 0 && getPlanDates(m).remainingDays >= 0);
     const duesPending = duesPendingMembers.length;
@@ -136,7 +136,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
       className: "w-1 py-5 pr-[50px] whitespace-nowrap text-sm",
       render: (member) => {
         const { remainingDays } = getPlanDates(member);
-        const isExpired = remainingDays < 0;
+        const isExpired = remainingDays <= 0;
         if (isExpired) return <Tag variant="red">EXPIRED</Tag>;
         return (
           <span className={`dashboard-primary-desc-geist ${remainingDays <= 10 ? 'red-color' : remainingDays <= 20 ? 'orange-text-color' : 'green-text-color'}`}>
@@ -153,22 +153,23 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
       render: (member) => {
         const balance = member.feesAmount - member.paidAmount;
         const { remainingDays } = getPlanDates(member);
-        const isExpired = remainingDays < 0;
+        const isExpired = remainingDays <= 0;
 
         return (
           <div className="flex items-center gap-[5px]">
-            {isExpired && <Tag variant="red">EXPIRED</Tag>}
-            {(member.feesStatus !== PaymentStatus.PAID || !isExpired) && (
-              (member.feesStatus === PaymentStatus.PAID || balance <= 0) ? (
-                <Tag variant="green">SETTLED</Tag>
-              ) : (
-                <div className="flex gap-2">
+            {isExpired ? (
+              <Tag variant="red">EXPIRED</Tag>
+            ) : (
+              <>
+                {(member.feesStatus === PaymentStatus.PAID || balance <= 0) ? (
+                  <Tag variant="green">SETTLED</Tag>
+                ) : (
                   <Tag variant="orange">DUE : ₹{balance}</Tag>
-                </div>
-              )
-            )}
-            {member.memberType === MemberType.DAY_PASS && (
-              <Tag variant="violet">DAY PASS</Tag>
+                )}
+                {member.memberType === MemberType.DAY_PASS && (
+                  <Tag variant="violet">DAY PASS</Tag>
+                )}
+              </>
             )}
           </div>
         )
@@ -217,7 +218,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
         baseList = members
           .filter(m => {
             const { remainingDays } = getPlanDates(m);
-            return remainingDays >= 0 && remainingDays <= expiryFilter;
+            return remainingDays > 0 && remainingDays <= expiryFilter;
           })
           .sort((a, b) => getPlanDates(a).remainingDays - getPlanDates(b).remainingDays);
         break;

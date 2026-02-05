@@ -13,7 +13,7 @@ interface StaffManagementProps {
   staff: User[];
   onAddTrainer: (trainerData: Omit<User, 'id' | 'role'>) => void;
   onUpdateTrainer: (trainer: User) => void;
-  onDeleteUser: (userId: number) => void;
+  onDeleteUser: (userId: string) => void;
 }
 
 const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrainer, onUpdateTrainer, onDeleteUser }) => {
@@ -72,8 +72,8 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
   };
 
   const confirmDeletion = () => {
-    if (editingStaff) {
-      onDeleteUser(editingStaff.id);
+    if (editingStaff && editingStaff._id) {
+      onDeleteUser(editingStaff._id);
       handleCloseModals();
     }
   };
@@ -95,7 +95,7 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {staff.map(member => (
-          <div key={member.id} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 group hover:shadow-xl hover:shadow-brand/5 transition-all">
+          <div key={member._id || member.id} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 group hover:shadow-xl hover:shadow-brand/5 transition-all">
             <div className="flex justify-between items-start mb-4">
               <div className="h-12 w-12 rounded-2xl bg-slate-50 flex items-center justify-center text-xl shadow-inner group-hover:bg-brand/10 transition-colors">
                 {member.role === UserRole.GYM_OWNER ? '👑' : '🛡️'}

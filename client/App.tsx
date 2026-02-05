@@ -98,6 +98,31 @@ const MainApp: React.FC = () => {
 
   const { data: myGym, isLoading: gymLoading } = useMyGym(currentUser);
 
+  // Validate User Session Periodically
+  useQuery({
+    queryKey: ['validateUser', currentUser?._id],
+    queryFn: async () => {
+      if (!currentUser?._id) return null;
+      try {
+        await client.get(`/users/${currentUser._id}`);
+        return true;
+      } catch (error: any) {
+        if (error.response?.status === 404) {
+          handleLogout();
+          // Optional: You might want to show a toast, but handleLogout clears state so toast might disappear 
+          // or React might unmount everything. But since toast state is local to MainApp, and MainApp re-renders 
+          // with currentUser=null which shows Login page, the toast might be lost.
+          // However, the priority is to logout.
+          return false;
+        }
+        return true;
+      }
+    },
+    enabled: !!currentUser?._id,
+    refetchInterval: 5000, // Check every 5 seconds
+    retry: false
+  });
+
   // --- Mutations ---
   const loginMutation = useMutation({
     mutationFn: async (creds: any) => {

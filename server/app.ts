@@ -35,6 +35,17 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+app.get('/api/users/:id', async (req, res) => {
+  try {
+    await connectDB();
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json(user);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Gyms (Super Admin)
 app.get('/api/gyms', async (req, res) => {
   try {

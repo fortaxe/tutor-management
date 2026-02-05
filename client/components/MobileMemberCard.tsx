@@ -26,8 +26,12 @@ const MobileMemberCard: React.FC<MobileMemberCardProps> = ({ member, onRenew, on
     if (isExpired) {
         statusVariant = 'red';
         statusText = 'EXPIRED';
-    } else if (remainingDays <= 5) {
+    } else if (remainingDays <= 10) {
+        statusVariant = 'red';
+    } else if (remainingDays <= 20) {
         statusVariant = 'orange';
+    } else {
+        statusVariant = 'green';
     }
 
     return (

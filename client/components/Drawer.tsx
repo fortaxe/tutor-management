@@ -11,6 +11,14 @@ interface DrawerProps {
 }
 
 const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, title, children, width = 'max-w-[459px]' }) => {
+    const [isMobile, setIsMobile] = React.useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = 'hidden';
@@ -19,6 +27,8 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, title, children, width
         }
         return () => { document.body.style.overflow = 'unset'; };
     }, [isOpen]);
+
+    const xPos = isMobile ? '-100%' : '100%';
 
     return (
         <AnimatePresence>
@@ -35,11 +45,11 @@ const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, title, children, width
 
                     {/* Drawer Panel */}
                     <motion.div
-                        initial={{ x: '100%' }}
+                        initial={{ x: xPos }}
                         animate={{ x: 0 }}
-                        exit={{ x: '100%' }}
+                        exit={{ x: xPos }}
                         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                        className={`fixed inset-y-0 right-0 z-[101] w-full ${width} bg-white shadow-2xl flex flex-col h-full p-[30px]`}
+                        className={`fixed inset-y-0 ${isMobile ? 'left-0' : 'right-0'} z-[101] w-full ${width} bg-white shadow-2xl flex flex-col h-full p-[30px]`}
                     >
                         {/* Header */}
                         <div className="flex items-center justify-between bg-white">

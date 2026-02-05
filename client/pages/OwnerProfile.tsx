@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import moment from 'moment';
-import { INDIAN_STATES } from '../data';
 import { Gym, User } from '../types';
 import Input from '../components/Input';
 import UploadInput from '../components/UploadInput';
@@ -43,9 +42,8 @@ interface OwnerProfileProps {
     isLoading?: boolean;
 }
 
-const OwnerProfile: React.FC<OwnerProfileProps> = ({ gym, user, onUpdateGym, onChangePasswordRequest, isLoading }) => {
+const OwnerProfile: React.FC<OwnerProfileProps> = ({ gym, user, onUpdateGym, isLoading }) => {
     const [logoName, setLogoName] = useState('UPLOAD');
-    const [showStateDropdown, setShowStateDropdown] = useState(false);
     const [gymDetails, setGymDetails] = useState({
         gstNumber: gym.gstNumber || '',
         instagramId: gym.instagramId || '',
@@ -59,14 +57,12 @@ const OwnerProfile: React.FC<OwnerProfileProps> = ({ gym, user, onUpdateGym, onC
     const [logoPreview, setLogoPreview] = useState<string | null>(gym.logo || null);
 
     useEffect(() => {
-        if (gymDetails.logo) {
-            const objectUrl = URL.createObjectURL(gymDetails.logo);
-            setLogoPreview(objectUrl);
-            return () => URL.revokeObjectURL(objectUrl);
-        } else {
-            setLogoPreview(gym.logo || null);
-        }
-    }, [gymDetails.logo, gym.logo]);
+        return () => {
+            if (logoPreview && logoPreview.startsWith('blob:')) {
+                URL.revokeObjectURL(logoPreview);
+            }
+        };
+    }, [logoPreview]);
 
     const handleInputChange = (field: string, value: string) => {
         setGymDetails(prev => ({ ...prev, [field]: value }));
@@ -120,11 +116,13 @@ const OwnerProfile: React.FC<OwnerProfileProps> = ({ gym, user, onUpdateGym, onC
                             </div>
                         )}
                         <UploadInput
-                            label="LOGO"
+                            label="LOGO (RECOMMENDED 500x500)"
                             placeholder={logoName.length > 20 ? logoName.substring(0, 20) + '...' : logoName}
                             onFileSelect={(file) => {
                                 setLogoName(file.name);
                                 setGymDetails(prev => ({ ...prev, logo: file }));
+                                const objectUrl = URL.createObjectURL(file);
+                                setLogoPreview(objectUrl);
                             }}
                         />
                     </div>

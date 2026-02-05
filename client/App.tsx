@@ -119,7 +119,7 @@ const MainApp: React.FC = () => {
       }
     },
     enabled: !!currentUser?._id,
-    refetchInterval: 5000, // Check every 5 seconds
+    refetchInterval: 30000, // Check every 30 seconds
     retry: false
   });
 

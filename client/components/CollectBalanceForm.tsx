@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
-import { Member } from '../types';
+import { Member, PaymentMode } from '../types';
 import Input from './Input';
 import Button from './Button';
+import BorderButton from './BorderButton';
 import SummaryCard from './SummaryCard';
 import MemberAvatar from './MemberAvatar';
 
 interface CollectBalanceFormProps {
     member: Member;
-    onSubmit: (amount: number) => void;
+    onSubmit: (amount: number, paymentMode: PaymentMode) => void;
     onCancel: () => void;
 }
 
 const CollectBalanceForm: React.FC<CollectBalanceFormProps> = ({ member, onSubmit, onCancel }) => {
     const [amount, setAmount] = useState('');
+    const [paymentMode, setPaymentMode] = useState<PaymentMode>(PaymentMode.CASH);
     const enteringAmount = Number(amount) || 0;
     const currentPaid = member.paidAmount + enteringAmount;
     const currentDue = Math.max(0, member.feesAmount - currentPaid);
@@ -32,7 +34,7 @@ const CollectBalanceForm: React.FC<CollectBalanceFormProps> = ({ member, onSubmi
         e.preventDefault();
         const numAmount = Number(amount);
         if (numAmount > 0) {
-            onSubmit(numAmount);
+            onSubmit(numAmount, paymentMode);
         }
     };
 
@@ -64,6 +66,30 @@ const CollectBalanceForm: React.FC<CollectBalanceFormProps> = ({ member, onSubmi
                     autoFocus
                     startContent={<span className="text-slate-400 font-bold">₹</span>}
                 />
+
+                <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                    <label className="block text-xs font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">
+                        Payment Method
+                    </label>
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                        <BorderButton
+                            type="button"
+                            variant="outline"
+                            className={`h-[46px] ${paymentMode === PaymentMode.CASH ? 'bg-white border-[#22C55E] text-[#22C55E]' : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#9CA3AF]'}`}
+                            onClick={() => setPaymentMode(PaymentMode.CASH)}
+                        >
+                            Cash
+                        </BorderButton>
+                        <BorderButton
+                            type="button"
+                            variant="outline"
+                            className={`h-[46px] ${paymentMode === PaymentMode.UPI ? 'bg-white border-[#22C55E] text-[#22C55E]' : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#9CA3AF]'}`}
+                            onClick={() => setPaymentMode(PaymentMode.UPI)}
+                        >
+                            UPI / CARD
+                        </BorderButton>
+                    </div>
+                </div>
             </div>
 
             <div className="flex gap-2 pt-5 mt-auto">

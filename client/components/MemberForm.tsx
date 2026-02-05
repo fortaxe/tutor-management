@@ -245,7 +245,8 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
               <div className="flex w-full gap-2 pb-[10px]">
                 <BorderButton variant="green" className="flex-1 bg-white border-[#22C55E] text-[#22C55E]" onClick={() => fileInputRef.current?.click()}>
                   <GalleryIcon className="w-4 h-4 mr-[5px]" />
-                  UPLOAD
+                  <span className="hidden md:inline">UPLOAD</span>
+                  <span className="md:hidden">GALLERY</span>
                 </BorderButton>
                 <BorderButton variant="green" className="flex-1 bg-white border-[#22C55E] text-[#22C55E]" onClick={() => setShowCamera(true)}>
                   <CameraIcon className="w-4 h-4 mr-[5px]" />
@@ -395,11 +396,12 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
                   <div className="flex w-full gap-2 pb-[30px] ">
                     <BorderButton variant="green" className="flex-1 bg-white border-[#22C55E] text-[#22C55E]" onClick={() => fileInputRef.current?.click()}>
                       <GalleryIcon className="w-4 h-4 mr-[5px]" />
-                      Gallery
+                      <span className="hidden md:inline">UPLOAD</span>
+                      <span className="md:hidden">GALLERY</span>
                     </BorderButton>
                     <BorderButton variant="green" className="flex-1 bg-white border-[#22C55E] text-[#22C55E]" onClick={() => setShowCamera(true)}>
                       <CameraIcon className="w-4 h-4 mr-[5px]" />
-                      Camera
+                      CAMERA
                     </BorderButton>
                     <input type="file" ref={fileInputRef} onChange={handleFileSelect} accept="image/*" className="hidden" />
                   </div>

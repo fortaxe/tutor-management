@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useMembershipDuration } from '../hooks/useMembershipDuration';
-import { Member, MemberType, PaymentStatus } from '../types';
+import { Member, MemberType, PaymentStatus, PaymentMode } from '../types';
 import Input from './Input';
 import Button from './Button';
+import BorderButton from './BorderButton';
 import Select from './Select';
 
 import DateInput from './DateInput';
@@ -19,6 +20,7 @@ interface RenewPlanFormProps {
         paidAmount: number;
         feesStatus: PaymentStatus;
         memberType: MemberType;
+        paymentMode: PaymentMode;
     }) => void;
     onCancel: () => void;
 }
@@ -58,6 +60,7 @@ const RenewPlanForm: React.FC<RenewPlanFormProps> = ({ member, onSubmit, onCance
         duration: member.memberType === MemberType.DAY_PASS ? 0 : 29,
         fee: '',
         paid: '',
+        paymentMode: PaymentMode.CASH,
     });
 
     const {
@@ -95,7 +98,8 @@ const RenewPlanForm: React.FC<RenewPlanFormProps> = ({ member, onSubmit, onCance
             feesAmount,
             paidAmount,
             feesStatus,
-            memberType: formData.type
+            memberType: formData.type,
+            paymentMode: formData.paymentMode
         });
     };
 
@@ -214,6 +218,30 @@ const RenewPlanForm: React.FC<RenewPlanFormProps> = ({ member, onSubmit, onCance
                         required
                         startContent={<span className="secondary-color font-bold">₹</span>}
                     />
+
+                    <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                        <label className="block text-xs font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">
+                            Payment Method
+                        </label>
+                        <div className="grid grid-cols-2 gap-2 mt-2">
+                            <BorderButton
+                                type="button"
+                                variant="outline"
+                                className={`h-[46px] ${formData.paymentMode === PaymentMode.CASH ? 'bg-white border-[#22C55E] text-[#22C55E]' : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#9CA3AF]'}`}
+                                onClick={() => setFormData(p => ({ ...p, paymentMode: PaymentMode.CASH }))}
+                            >
+                                Cash
+                            </BorderButton>
+                            <BorderButton
+                                type="button"
+                                variant="outline"
+                                className={`h-[46px] ${formData.paymentMode === PaymentMode.UPI ? 'bg-white border-[#22C55E] text-[#22C55E]' : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#9CA3AF]'}`}
+                                onClick={() => setFormData(p => ({ ...p, paymentMode: PaymentMode.UPI }))}
+                            >
+                                UPI / CARD
+                            </BorderButton>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -226,7 +254,7 @@ const RenewPlanForm: React.FC<RenewPlanFormProps> = ({ member, onSubmit, onCance
                     <SubmitArrowIcon className="ml-[5px]" stroke="white" />
                 </Button>
             </div>
-        </form>
+        </form >
     );
 };
 

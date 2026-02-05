@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store/store';
 import { closeAddMemberModal, openAddMemberModal } from '../store/uiSlice';
-import { User, Gym, Member, PaymentStatus, UserRole, MemberType } from '../types';
+import { User, Gym, Member, PaymentStatus, UserRole, MemberType, PaymentMode } from '../types';
 import Modal from '../components/Modal';
 import MemberForm from '../components/MemberForm';
 import UserGroupIcon from '../components/icons/UserGroupIcon';
@@ -31,7 +31,7 @@ interface GymOwnerDashboardProps {
   onLogout: () => void;
   onAddMember: (member: Omit<Member, 'id' | '_id'>) => void;
   onUpdateMember: (member: Member) => void;
-  onRenewMember: (memberId: string | number, renewalData: { planStart: string; planDurationDays: number; feesAmount: number; paidAmount: number; feesStatus: PaymentStatus; memberType: MemberType }) => void;
+  onRenewMember: (memberId: string | number, renewalData: { planStart: string; planDurationDays: number; feesAmount: number; paidAmount: number; feesStatus: PaymentStatus; memberType: MemberType; paymentMode: PaymentMode }) => void;
   onDeleteMember: (memberId: string | number) => void;
 }
 
@@ -297,7 +297,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
     handleCloseModal();
   };
 
-  const handleCollectSubmit = (amount: number) => {
+  const handleCollectSubmit = (amount: number, paymentMode: PaymentMode) => {
     if (!editingMember) return;
 
     const maxAllowed = editingMember.feesAmount - editingMember.paidAmount;
@@ -313,7 +313,8 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
     onUpdateMember({
       ...editingMember,
       paidAmount: newTotalPaid,
-      feesStatus: newStatus
+      feesStatus: newStatus,
+      paymentMode
     });
 
     handleCloseModal();
@@ -326,6 +327,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
     paidAmount: number;
     feesStatus: PaymentStatus;
     memberType: MemberType;
+    paymentMode: PaymentMode;
   }) => {
     if (!editingMember) return;
     onRenewMember(editingMember._id || editingMember.id!, renewalData);

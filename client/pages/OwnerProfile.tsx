@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import moment from 'moment';
 import { INDIAN_STATES } from '../data';
 import { Gym, User } from '../types';
@@ -56,6 +56,18 @@ const OwnerProfile: React.FC<OwnerProfileProps> = ({ gym, user, onUpdateGym, onC
         logo: null as File | null,
     });
 
+    const [logoPreview, setLogoPreview] = useState<string | null>(gym.logo || null);
+
+    useEffect(() => {
+        if (gymDetails.logo) {
+            const objectUrl = URL.createObjectURL(gymDetails.logo);
+            setLogoPreview(objectUrl);
+            return () => URL.revokeObjectURL(objectUrl);
+        } else {
+            setLogoPreview(gym.logo || null);
+        }
+    }, [gymDetails.logo, gym.logo]);
+
     const handleInputChange = (field: string, value: string) => {
         setGymDetails(prev => ({ ...prev, [field]: value }));
     };
@@ -101,14 +113,21 @@ const OwnerProfile: React.FC<OwnerProfileProps> = ({ gym, user, onUpdateGym, onC
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-[10px] mb-5">
                     {/* Logo Upload Placeholder */}
-                    <UploadInput
-                        label="LOGO"
-                        placeholder={logoName.length > 20 ? logoName.substring(0, 20) + '...' : logoName}
-                        onFileSelect={(file) => {
-                            setLogoName(file.name);
-                            setGymDetails(prev => ({ ...prev, logo: file }));
-                        }}
-                    />
+                    <div className="flex flex-col gap-3">
+                        {logoPreview && (
+                            <div className="w-24 h-24 rounded-main overflow-hidden border border-[#E2E8F0] shadow-sm">
+                                <img src={logoPreview} alt="Gym Logo" className="w-full h-full object-cover" />
+                            </div>
+                        )}
+                        <UploadInput
+                            label="LOGO"
+                            placeholder={logoName.length > 20 ? logoName.substring(0, 20) + '...' : logoName}
+                            onFileSelect={(file) => {
+                                setLogoName(file.name);
+                                setGymDetails(prev => ({ ...prev, logo: file }));
+                            }}
+                        />
+                    </div>
 
                     {/* GST */}
                     <Input

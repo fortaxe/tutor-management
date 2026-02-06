@@ -39,7 +39,7 @@ interface GymOwnerDashboardProps {
 type Tab = 'members' | 'expiry' | 'expired' | 'dues' | 'passes';
 
 const sortOptions = [
-  { value: 'planStart-desc', label: 'Latest' },
+  { value: 'createdAt-desc', label: 'Latest' },
   { value: 'name-asc', label: 'Name ↑' },
   { value: 'name-desc', label: 'Name ↓' }
 ];
@@ -55,7 +55,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [initialType, setInitialType] = useState<MemberType>(MemberType.SUBSCRIPTION);
 
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'planStart', direction: 'desc' });
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'createdAt', direction: 'desc' });
 
   const expiryFilter = 5;
   const [searchQuery, setSearchQuery] = useState('');
@@ -262,8 +262,8 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
       let valA: any = (a as any)[key];
       let valB: any = (b as any)[key];
 
-      // Special handling for dates if needed, but planStart is string, name is string
-      if (key === 'planStart') {
+      // Special handling for dates
+      if (key === 'planStart' || key === 'createdAt') {
         valA = new Date(valA).getTime();
         valB = new Date(valB).getTime();
       }

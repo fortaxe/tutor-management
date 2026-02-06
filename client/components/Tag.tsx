@@ -42,7 +42,7 @@ const Tag: React.FC<TagProps> = ({ variant, isActive = false, onClick, children,
     return (
         <div
             onClick={onClick}
-            className={`px-[10px] py-[5px] rounded-main text-[12px] leading-[20px] font-bold font-grotesk inline-flex justify-center uppercase items-center gap-[3.5px] border ${computedStyles} ${onClick ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''} ${className}`}
+            className={`px-[10px] py-[5px] rounded-main text-[10px] md:text-[12px] leading-[18px] md:leading-[20px] font-bold font-grotesk inline-flex justify-center uppercase items-center gap-[3.5px] border ${computedStyles} ${onClick ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''} ${className}`}
         >
             {children}
         </div>

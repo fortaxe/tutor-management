@@ -1,5 +1,6 @@
 import React from 'react';
 import Tag from './Tag';
+import { cn } from '../lib/utils';
 
 interface StatsCardProps {
     label: string;
@@ -8,9 +9,10 @@ interface StatsCardProps {
     onClick?: () => void;
     isActive?: boolean;
     children?: React.ReactNode;
+    className?: string;
 }
 
-const StatsCard: React.FC<StatsCardProps> = ({ label, value, variant, onClick, isActive = false, children }) => {
+const StatsCard: React.FC<StatsCardProps> = ({ label, value, variant, onClick, isActive = false, children, className }) => {
     const variantStyles = {
         green: {
             value: 'green-text-color',
@@ -38,10 +40,10 @@ const StatsCard: React.FC<StatsCardProps> = ({ label, value, variant, onClick, i
 
 
     return (
-        <div className="bg-white p-[15px] md:p-5 flex-shrink-0 snap-center rounded-main border-main flex items-center w-[160px] md:w-full">
+        <div className={cn("bg-white p-[15px] md:p-5 flex-shrink-0 snap-center rounded-main border-main flex items-center w-[160px] md:w-full", className)}>
             <div className="w-full">
-                <p className="secondary-description font-bold font-grotesk uppercase pb-[10px] md:pb-3">{label}</p>
-                <p className={`${styles.value} text-[32px] font-medium leading-[32px] mb-5 font-bold font-grotesk `}>{value}</p>
+                <p className="secondary-description font-bold font-grotesk uppercase pb-[10px] md:pb-3 whitespace-nowrap">{label}</p>
+                <p className={`${styles.value} text-[32px] font-medium leading-[32px]  font-bold font-grotesk `}>{value}</p>
 
                 {children && (
                     <Tag

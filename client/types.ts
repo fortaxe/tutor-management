@@ -103,7 +103,7 @@ export interface MemberPayment {
   amount: number;
   paymentDate: string;
   note: string;
-  paymentMode?: string;
+  paymentMode?: PaymentMode;
   createdAt?: string;
 }
 

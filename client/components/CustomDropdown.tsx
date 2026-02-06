@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+import { cn } from '../lib/utils';
 
 interface DropdownOption {
     value: string;
@@ -31,16 +32,20 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({ options, value, onChang
     }, []);
 
     return (
-        <div className={`relative ${className}`} ref={containerRef}>
-            {/* Trigger Button */}
+        <div className="relative" ref={containerRef}>
             <div
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-[5px] border-main rounded-main h-[42px] md:h-[46px] px-[11px] md:px-5 bg-white cursor-pointer select-none"
+                className={cn(
+                    "flex items-center gap-[5px] border-main rounded-main h-[42px] md:h-[46px] px-[11px] md:px-5 bg-white cursor-pointer select-none",
+                    className
+                )}
             >
                 {icon}
-                <span className="hidden md:block font-bold text-[16px] leading-[22px] font-grotesk uppercase secondary-color">
-                    {selectedOption.label}
-                </span>
+                {value && (
+                    <span className="hidden md:block font-bold text-[16px] leading-[22px] font-grotesk uppercase secondary-color">
+                        {selectedOption.label}
+                    </span>
+                )}
             </div>
 
             {/* Menu */}

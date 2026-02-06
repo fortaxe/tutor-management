@@ -80,55 +80,55 @@ export const generateInvoice = async (gym: Gym, member: Member, customDate?: str
     doc.text(dateOfIssue, valuesX, infoStartY + 4.5);
 
     // --- Logo Section (Top Right) ---
-    // --- Logo Section (Top Right) ---
+    let logoAdded = false;
     if (gym.logo) {
         try {
-            console.log('Adding logo:', gym.logo);
-            // Fetch the image to get a blob, then create a data URL
-            // This avoids some CORS issues if the server allows the fetch
-            const response = await fetch(gym.logo, { mode: 'cors' });
+            const response = await fetch(gym.logo, { mode: 'cors', cache: 'no-store' });
+            if (!response.ok) throw new Error('Logo fetch failed');
             const blob = await response.blob();
 
-            // Convert blob to base64
             const reader = new FileReader();
             reader.readAsDataURL(blob);
             await new Promise((resolve) => {
                 reader.onloadend = () => {
-                    try {
-                        const base64data = reader.result as string;
+                    const base64data = reader.result as string;
+                    const img = new Image();
+                    img.onload = () => {
+                        const aspectRatio = img.width / img.height;
+                        const logoHeight = 15;
+                        const logoWidth = logoHeight * aspectRatio;
+                        // Detect format from base64 prefix
+                        let format = 'PNG';
+                        if (base64data.startsWith('data:image/jpeg') || base64data.startsWith('data:image/jpg')) format = 'JPEG';
+                        else if (base64data.startsWith('data:image/webp')) format = 'WEBP';
 
-                        // Load image to get original dimensions
-                        const img = new Image();
-                        img.onload = () => {
-                            const aspectRatio = img.width / img.height;
-                            const logoHeight = 15; // Reduced height as requested
-                            const logoWidth = logoHeight * aspectRatio; // Auto width based on aspect ratio
-
-                            // Align top with RECEIPT text (RECEIPT baseline is 15, font is 24pt ~ 8.5mm ascender)
-                            // To match top alignment, image y should be around 15 - 8 = 7
-                            doc.addImage(base64data, 'PNG', endX - logoWidth, 7, logoWidth, logoHeight, undefined, 'FAST');
-                            resolve(null);
-                        };
-                        img.src = base64data;
-                    } catch (err) {
-                        console.error("Error adding base64 image", err);
+                        doc.addImage(base64data, format, endX - logoWidth, 7, logoWidth, logoHeight, undefined, 'FAST');
+                        logoAdded = true;
                         resolve(null);
-                    }
+                    };
+                    img.onerror = () => {
+                        console.error('Image tag failed to load logo');
+                        resolve(null);
+                    };
+                    img.src = base64data;
+                };
+                reader.onerror = () => {
+                    console.error('FileReader failed');
+                    resolve(null);
                 }
             });
-
         } catch (e) {
-            console.warn('Failed to add logo to PDF', e);
+            console.warn('Failed to add logo to PDF:', e);
         }
-    } else {
-        // Fallback: Show Gym Name if logo is missing
+    }
+
+    if (!logoAdded) {
+        // Fallback: Show Gym Name if logo is missing or failed to load
         doc.setFontSize(14);
         if (fontsLoaded.spaceGroteskBold) doc.setFont('Space Grotesk', 'bold');
         else doc.setFont('helvetica', 'bold');
         doc.setTextColor(0, 0, 0);
 
-        // Align top-right (roughly matching logo position y=7 to y=15 range)
-        // Baseline for 14px text to match top alignment ~13-14
         const textY = 14;
         doc.text(gym.name.toUpperCase(), endX, textY, { align: 'right' });
     }
@@ -237,12 +237,18 @@ export const generateInvoice = async (gym: Gym, member: Member, customDate?: str
     const startDatev = moment(member.planStart).format('MMM DD, YYYY');
     const endDatev = moment(member.planStart).add(member.planDurationDays, 'days').format('MMM DD, YYYY');
 
-    let planType = 'Membership';
-    if (member.planDurationDays <= 1) planType = 'Day Pass';
-    else if (member.planDurationDays <= 31) planType = 'Monthly';
-    else if (member.planDurationDays <= 95) planType = 'Quarterly';
-    else if (member.planDurationDays <= 185) planType = 'Half Yearly';
-    else planType = 'Yearly';
+    let durationText = '';
+    const totalDays = member.planDurationDays + 1;
+    if (totalDays <= 1) {
+        durationText = 'Day Pass';
+    } else {
+        const months = Math.round(totalDays / 30);
+        if (months <= 1) {
+            durationText = '1 Month';
+        } else {
+            durationText = `${months} Months`;
+        }
+    }
 
     // --- 4. Line Items Box ---
     const itemBoxY = section3Y + 5;
@@ -274,7 +280,7 @@ export const generateInvoice = async (gym: Gym, member: Member, customDate?: str
     else doc.setFont('helvetica', 'bold');
 
     doc.text('DESCRIPTION', c1X, hY);
-    doc.text('PLAN TYPE', c2X, hY);
+    doc.text('DURATION', c2X, hY);
     doc.text('START DATE', c3X, hY);
     doc.text('END DATE', c4X, hY);
     doc.text('AMOUNT', c5X, hY, { align: 'right' });
@@ -284,9 +290,18 @@ export const generateInvoice = async (gym: Gym, member: Member, customDate?: str
     if (fontsLoaded.geistSemiBold) doc.setFont('Geist', 'semibold');
     else doc.setFont('helvetica', 'bold');
 
-    const description = customDescription || (customDate ? 'Plan Renewal' : 'Registration');
+    // Normalize descriptions to consistent spelling and casing
+    let description = customDescription || (customDate ? 'Plan renewal' : 'Registration');
+    const descLower = description.toLowerCase();
+    if (descLower.includes('initial') || descLower.includes('registration')) {
+        description = 'Registration';
+    } else if (descLower.includes('renewal')) {
+        description = 'Plan renewal';
+    } else if (descLower.includes('balance') || descLower.includes('cleared')) {
+        description = 'Balance Cleared';
+    }
     doc.text(description, c1X, vY);
-    doc.text(planType, c2X, vY);
+    doc.text(durationText, c2X, vY);
     doc.text(startDatev, c3X, vY);
     doc.text(endDatev, c4X, vY);
     doc.text(`₹${member.feesAmount}`, c5X, vY, { align: 'right' });
@@ -398,8 +413,31 @@ export const generateInvoice = async (gym: Gym, member: Member, customDate?: str
 
     // --- 7. Footer ---
     const pageHeight = doc.internal.pageSize.height;
-    doc.setDrawColor(...borderColor);
-    doc.line(startX, pageHeight - 15, endX, pageHeight - 15);
+
+    doc.setFontSize(10);
+    if (fontsLoaded.spaceGroteskBold) doc.setFont('Space Grotesk', 'bold');
+    else doc.setFont('helvetica', 'bold');
+
+    const pBy = "POWERED BY ";
+    const gymTxt = "GYM ";
+    const stackTxt = "STACK";
+    const totalFooterWidth = doc.getTextWidth(pBy + gymTxt + stackTxt);
+    let currentFX = (pageWidth - totalFooterWidth) / 2;
+    const footerY = pageHeight - 10;
+
+    // "POWERED BY " - #9CA3AF
+    doc.setTextColor(156, 163, 175);
+    doc.text(pBy, currentFX, footerY);
+    currentFX += doc.getTextWidth(pBy);
+
+    // "GYM " - Black
+    doc.setTextColor(0, 0, 0);
+    doc.text(gymTxt, currentFX, footerY);
+    currentFX += doc.getTextWidth(gymTxt);
+
+    // "STACK" - #22C55E
+    doc.setTextColor(34, 197, 94);
+    doc.text(stackTxt, currentFX, footerY);
 
     doc.save(`${member.name.replace(/\s+/g, '_')}_Receipt.pdf`);
 };

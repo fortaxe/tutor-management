@@ -194,8 +194,8 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
 
         const handleWhatsApp = () => {
           const text = isExpired
-            ? `Hello ${member.name}, your gym membership has expired on ${endDate.toLocaleDateString()}. Please renew to continue your workout.`
-            : `Hello ${member.name}, your gym membership is ending in ${remainingDays} days. Please renew to continue your workout.`;
+            ? `Hi ${member.name},\n\nYour ${gym.name} membership expired on ${endDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }).replace(',', '')}.\n\nRenew today to resume your training.\n\nThank you`
+            : `Hi ${member.name},\n\nYour ${gym.name} membership expires in ${remainingDays} ${remainingDays === 1 ? 'day' : 'days'}.\n\nRenew now to continue your fitness journey.\n\nThank you`;
           window.open(`https://wa.me/91${member.phone}?text=${encodeURIComponent(text)}`, '_blank');
         };
 
@@ -371,18 +371,22 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
     }
 
     const headers = ['Name', 'Phone', 'Email', 'Plan Start', 'Duration (Days)', 'Fee Amount', 'Paid Amount', 'Status', 'Member Type', 'Payment Mode'];
-    const rows = filteredMembers.map(m => [
-      `"${m.name}"`,
-      `"${m.phone}"`,
-      `"${m.email || ''}"`,
-      `"${m.planStart}"`,
-      m.planDurationDays,
-      m.feesAmount,
-      m.paidAmount,
-      `"${m.feesStatus}"`,
-      `"${m.memberType}"`,
-      `"${m.paymentMode || ''}"`
-    ]);
+    const rows = filteredMembers.map(m => {
+      const date = new Date(m.planStart);
+      const formattedDate = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+      return [
+        `"${m.name}"`,
+        `"${m.phone}"`,
+        `"${m.email || ''}"`,
+        `"${formattedDate}"`,
+        m.planDurationDays,
+        m.feesAmount,
+        m.paidAmount,
+        `"${m.feesStatus}"`,
+        `"${m.memberType}"`,
+        `"${m.paymentMode || ''}"`
+      ];
+    });
 
     const csvContent = [
       headers.join(','),
@@ -415,8 +419,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
             value={stats.activeMembers}
             variant="green"
           >
-            <TrendUpIcon className='size-[13px]' />
-            {stats.thisMonthMembers} This Month
+
           </StatsCard>
 
           <StatsCard
@@ -426,7 +429,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
             isActive={activeTab === 'expired'}
             onClick={() => setActiveTab('expired')}
           >
-            View List
+
           </StatsCard>
 
           {!isTrainer && (
@@ -437,7 +440,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
               isActive={activeTab === 'dues'}
               onClick={() => setActiveTab('dues')}
             >
-              View List
+
             </StatsCard>
           )}
         </div>
@@ -559,8 +562,8 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
                   const { endDate, remainingDays } = getPlanDates(m);
                   const isExpired = remainingDays < 0;
                   const text = isExpired
-                    ? `Hello ${m.name}, your gym membership has expired on ${endDate.toLocaleDateString()}. Please renew to continue your workout.`
-                    : `Hello ${m.name}, your gym membership is ending in ${remainingDays} days. Please renew to continue your workout.`;
+                    ? `Hi ${m.name},\n\nYour ${gym.name} membership expired on ${endDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }).replace(',', '')}.\n\nRenew today to resume your training.\n\nThank you`
+                    : `Hi ${m.name},\n\nYour ${gym.name} membership expires in ${remainingDays} ${remainingDays === 1 ? 'day' : 'days'}.\n\nRenew now to continue your fitness journey.\n\nThank you`;
                   window.open(`https://wa.me/91${m.phone}?text=${encodeURIComponent(text)}`, '_blank');
                 }}
               />

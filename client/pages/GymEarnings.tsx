@@ -1,10 +1,19 @@
 
-import React, { useMemo, useState } from 'react';
-import { Gym, MemberPayment, Member, PaymentMode } from '../types';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
+import { Gym, MemberPayment, Member, PaymentMode, UserRole } from '../types';
 import SearchIcon from '../components/icons/SearchIcon';
 import Tag from '../components/Tag';
 import ActionIcon from '../components/ActionIcon';
 import { generateInvoice } from '@/lib/invoiceGenerator';
+import StatsCard from '../components/StatsCard';
+import { Table, Column } from '../components/Table';
+import CustomDropdown from '../components/CustomDropdown';
+import SortIcon from '../components/icons/SortIcon';
+import * as XLSX from 'xlsx';
+import TabSelector from '../components/TabSelector';
+import Button from '../components/Button';
+import { cn } from '@/lib/utils';
+import Input from '../components/Input';
 
 interface GymEarningsProps {
   gym: Gym;
@@ -12,15 +21,37 @@ interface GymEarningsProps {
   payments: MemberPayment[];
 }
 
+type TimeFilter = 'today' | 'yesterday' | '7days' | '30days' | 'all';
+
+const paymentOptions = [
+  { value: PaymentMode.UPI, label: 'UPI / CARD' },
+  { value: PaymentMode.CASH, label: 'CASH' }
+];
+
+const timeFilterOptions = [
+  { label: 'Today', value: 'today' },
+  { label: 'Yesterday', value: 'yesterday' },
+  { label: 'Last 7 Days', value: '7days' },
+  { label: 'Last 30 Days', value: '30days' },
+];
+
 const GymEarnings: React.FC<GymEarningsProps> = ({ gym, members, payments }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>('today');
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+  const [paymentFilter, setPaymentFilter] = useState('');
+  const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
+  const [showDuesOnly, setShowDuesOnly] = useState(false);
 
   const today = new Date();
-  const currentMonth = today.getMonth();
-  const currentYear = today.getFullYear();
+  today.setHours(0, 0, 0, 0);
 
   const stats = useMemo(() => {
     const totalEarnings = payments.reduce((acc, p) => acc + p.amount, 0);
+
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+
     const thisMonthEarnings = payments
       .filter(p => {
         const d = new Date(p.paymentDate);
@@ -28,237 +59,490 @@ const GymEarnings: React.FC<GymEarningsProps> = ({ gym, members, payments }) => 
       })
       .reduce((acc, p) => acc + p.amount, 0);
 
-    // Sum of all pending balances
-    const pendingDues = members
-      .reduce((acc, m) => acc + (m.feesAmount - m.paidAmount), 0);
+    const pendingAmount = members.reduce((acc, m) => acc + (Math.max(0, m.feesAmount - m.paidAmount)), 0);
+    const pendingCount = members.filter(m => m.feesAmount > m.paidAmount).length;
 
-    return { totalEarnings, thisMonthEarnings, pendingDues };
-  }, [payments, members, currentMonth, currentYear]);
+    return {
+      totalEarnings: `₹${totalEarnings.toLocaleString()}`,
+      thisMonthEarnings: `₹${thisMonthEarnings.toLocaleString()}`,
+      pendingAmount: `₹${pendingAmount.toLocaleString()}`,
+      pendingCount
+    };
+  }, [payments, members, today]);
 
-  const monthlyHistory = useMemo(() => {
+  const monthlyBreakdown = useMemo(() => {
     const groups: Record<string, number> = {};
     payments.forEach(p => {
       const d = new Date(p.paymentDate);
-      const key = d.toLocaleString('default', { month: 'long', year: 'numeric' });
+      const key = d.toLocaleString('default', { month: 'short', year: 'numeric' }).toUpperCase();
       groups[key] = (groups[key] || 0) + p.amount;
     });
-    return Object.entries(groups).sort((a, b) => {
-      const dateA = new Date(a[0]);
-      const dateB = new Date(b[0]);
-      return dateB.getTime() - dateA.getTime();
-    });
+
+    return Object.entries(groups)
+      .sort((a, b) => {
+        const dateA = new Date(a[0]);
+        const dateB = new Date(b[0]);
+        return dateB.getTime() - dateA.getTime();
+      });
   }, [payments]);
 
-  const filteredTransactions = useMemo(() => {
-    const q = searchQuery.toLowerCase();
-    return payments
-      .filter(p =>
-        p.memberName.toLowerCase().includes(q) ||
-        p.note.toLowerCase().includes(q)
+  const filteredPayments = useMemo(() => {
+    let result = [...payments];
+
+    // Search filter
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(p => {
+        const member = members.find(m => String(m.id) === String(p.memberId) || m._id === p.memberId);
+        const phone = member?.phone?.toLowerCase() || '';
+        return (
+          p.memberName.toLowerCase().includes(q) ||
+          p.note.toLowerCase().includes(q) ||
+          phone.includes(q)
+        );
+      });
+    }
+
+    // Selected Month filter
+    if (selectedMonth) {
+      result = result.filter(p => {
+        const d = new Date(p.paymentDate);
+        const key = d.toLocaleString('default', { month: 'short', year: 'numeric' }).toUpperCase();
+        return key === selectedMonth;
+      });
+    }
+
+    // Time Filter
+    if (timeFilter !== 'all') {
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+
+      result = result.filter(p => {
+        const pDate = new Date(p.paymentDate);
+        pDate.setHours(0, 0, 0, 0);
+
+        if (timeFilter === 'today') return pDate.getTime() === now.getTime();
+        if (timeFilter === 'yesterday') {
+          const yesterday = new Date(now);
+          yesterday.setDate(now.getDate() - 1);
+          return pDate.getTime() === yesterday.getTime();
+        }
+        if (timeFilter === '7days') {
+          const limitDate = new Date(now);
+          limitDate.setDate(now.getDate() - 6);
+          return pDate.getTime() >= limitDate.getTime();
+        }
+        if (timeFilter === '30days') {
+          const limitDate = new Date(now);
+          limitDate.setDate(now.getDate() - 29);
+          return pDate.getTime() >= limitDate.getTime();
+        }
+        return true;
+      });
+    }
+
+    // Payment Filter
+    if (paymentFilter) {
+      result = result.filter(p => p.paymentMode === (paymentFilter as PaymentMode));
+    }
+
+    // Dues Filter - show only latest payment from members with pending balance
+    if (showDuesOnly) {
+      const membersWithDues = members.filter(m => (m.feesAmount - m.paidAmount) > 0);
+      const memberIdsWithDues = membersWithDues.map(m => String(m.id || m._id));
+
+      // Get latest payment for each member with dues
+      const latestPaymentPerMember: Record<string, typeof result[0]> = {};
+      result.forEach(p => {
+        const memberId = String(p.memberId);
+        if (memberIdsWithDues.includes(memberId)) {
+          if (!latestPaymentPerMember[memberId] ||
+            new Date(p.paymentDate) > new Date(latestPaymentPerMember[memberId].paymentDate)) {
+            latestPaymentPerMember[memberId] = p;
+          }
+        }
+      });
+      result = Object.values(latestPaymentPerMember);
+    }
+
+    // Sorting
+    result.sort((a, b) => {
+      if (sortConfig.key === 'date') {
+        const dA = new Date(a.paymentDate).getTime();
+        const dB = new Date(b.paymentDate).getTime();
+        return sortConfig.direction === 'desc' ? dB - dA : dA - dB;
+      }
+      if (sortConfig.key === 'amount') {
+        const vA = a.amount;
+        const vB = b.amount;
+        return sortConfig.direction === 'desc' ? vB - vA : vA - vB;
+      }
+      if (sortConfig.key === 'name') {
+        const nA = a.memberName.toLowerCase();
+        const nB = b.memberName.toLowerCase();
+        if (nA < nB) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (nA > nB) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      }
+      return 0;
+    });
+
+    return result;
+  }, [payments, searchQuery, timeFilter, selectedMonth, sortConfig, paymentFilter, showDuesOnly, members]);
+
+  const handleExportExcel = () => {
+    const exportData = filteredPayments.map(p => {
+      const member = members.find(m => String(m.id) === String(p.memberId) || m._id === p.memberId);
+      const date = new Date(p.paymentDate);
+      const formattedDate = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+      return {
+        'Settled Date': formattedDate,
+        'Member': p.memberName,
+        'Phone': member?.phone || 'N/A',
+        'Reference': p.note,
+        'Payment Mode': p.paymentMode || 'N/A',
+        'Amount': p.amount
+      };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Earnings");
+    XLSX.writeFile(wb, `Gym_Earnings_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  const columns: Column<MemberPayment>[] = [
+    {
+      header: (
+        <div className="flex items-center gap-[1px]">
+          SETTLED DATE
+        </div>
+      ),
+      key: "paymentDate",
+      headerClassName: "table-th pl-5 pr-[50px]",
+      className: "w-1 py-5 pl-5 pr-[50px] whitespace-nowrap",
+      render: (item) => (
+        <span className="text-black text-[14px] leading-[20px] font-semibold">
+          {new Date(item.paymentDate).toLocaleDateString('en-US', {
+            month: 'short',
+            day: '2-digit',
+            year: 'numeric'
+          })}
+        </span>
       )
-      .sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
-  }, [payments, searchQuery]);
+    },
+    {
+      header: (
+        <div className="flex items-center gap-[1px]">
+          MEMBER
+        </div>
+      ),
+      key: "memberName",
+      headerClassName: "table-th pr-[50px]",
+      className: "w-1 py-5 pr-[50px] whitespace-nowrap",
+      render: (item) => <span className="text-black text-[14px] leading-[20px] font-semibold">{item.memberName}</span>
+    },
+    {
+      header: (
+        <div className="flex items-center gap-[1px]">
+          PHONE
+        </div>
+      ),
+      key: "memberId",
+      headerClassName: "table-th pr-[50px]",
+      className: "w-1 py-5 pr-[50px] whitespace-nowrap ",
+      render: (item) => {
+        const member = members.find(m => String(m.id) === String(item.memberId) || m._id === item.memberId);
+        return <span className="text-black text-[14px] leading-[20px] font-semibold">{member?.phone || 'N/A'}</span>;
+      }
+    },
+    {
+      header: (
+        <div className="flex items-center gap-[1px]">
+          REFERENCE
+        </div>
+      ),
+      key: "note",
+      headerClassName: "table-th text-left w-full",
+      className: "py-5 whitespace-nowrap text-sm w-full",
+      render: (item) => (
+        <span className="text-black text-[14px] leading-[20px] font-semibold">
+          {item.note}
+        </span>
+      )
+    },
+    {
+      header: (
+        <div className="flex items-center gap-[1px]">
+          PAYMENT METHOD
+        </div>
+      ),
+      key: "paymentMode",
+      headerClassName: "table-th pr-[50px]",
+      className: "w-1 py-5 pr-[50px] whitespace-nowrap",
+      render: (item) => (
+        <Tag variant={item.paymentMode === PaymentMode.UPI ? 'green' : 'orange'} className="uppercase">
+          {item.paymentMode === PaymentMode.UPI ? 'UPI / CARD' : 'CASH'}
+        </Tag>
+      )
+    },
+    {
+      header: (
+        <div className="flex items-center gap-[1px]">
+          AMOUNT
+        </div>
+      ),
+      key: "amount",
+      headerClassName: "table-th pr-[50px]",
+      className: "w-1 py-5 pr-[50px] whitespace-nowrap",
+      render: (item) => <span className="text-black text-[14px] leading-[20px] font-semibold">₹{Number(item.amount).toLocaleString()}</span>
+    },
+    {
+      header: "ACTION",
+      key: "_id",
+      headerClassName: "table-th text-right px-5",
+      className: "px-5 py-5 whitespace-nowrap text-right text-sm font-medium",
+      render: (item) => (
+        <div className="flex gap-2 justify-end">
+          <ActionIcon
+            variant="pdf"
+            onClick={() => {
+              const member = members.find(m => String(m.id) === String(item.memberId) || m._id === item.memberId);
+              if (member) {
+                generateInvoice(gym, { ...member, paidAmount: item.amount }, item.createdAt, item.note);
+              }
+            }}
+          />
+        </div>
+      )
+    }
+  ];
+
+
+  const currentMonthKey = useMemo(() =>
+    new Date().toLocaleString('default', { month: 'short', year: 'numeric' }).toUpperCase(),
+    []);
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 px-4 md:px-0">
-      {/* Revenue High-Level Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-        <div className="bg-charcoal p-8 rounded-[2rem] shadow-2xl shadow-charcoal/20 flex flex-col justify-between relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-brand/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-brand/20 transition-all"></div>
-          <p className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Total Realized</p>
-          <div>
-            <span className="text-brand text-2xl font-black mr-1">₹</span>
-            <span className="text-4xl font-black text-white tracking-tight">{stats.totalEarnings.toLocaleString()}</span>
-          </div>
-        </div>
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-4 md:space-y-0 px-4 md:px-5 lg:px-0 no-scrollbar">
+      {/* Stats Overview */}
+      <div className="flex overflow-x-auto md:pb-4 gap-2 md:gap-4 snap-x snap-mandatory no-scrollbar sm:grid sm:pb-0 sm:gap-[15px] sm:grid-cols-3">
+        <StatsCard
+          label="TOTAL EARNINGS"
+          value={stats.totalEarnings}
+          variant="green"
+          isActive={selectedMonth === null && timeFilter === 'all'}
+          onClick={() => { setSelectedMonth(null); setTimeFilter('all'); }}
+          className="min-w-[200px]"
+        >
 
-        <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col justify-between relative group hover:shadow-xl hover:shadow-brand/5 transition-all">
-          <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Collected This Month</p>
-          <div>
-            <span className="text-brand text-2xl font-black mr-1">₹</span>
-            <span className="text-4xl font-black text-slate-950 tracking-tight">{stats.thisMonthEarnings.toLocaleString()}</span>
-          </div>
-        </div>
+        </StatsCard>
+        <StatsCard
+          label="COLLECTED THIS MONTH"
+          value={stats.thisMonthEarnings}
+          variant="green"
+          isActive={selectedMonth === currentMonthKey}
+          className="min-w-[200px]"
+          onClick={() => {
+            setSelectedMonth(selectedMonth === currentMonthKey ? null : currentMonthKey);
+            setTimeFilter('all');
+          }}
+        >
 
-        <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col justify-between relative group hover:shadow-xl hover:shadow-orange/5 transition-all">
-          <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Awaiting Balance</p>
-          <div>
-            <span className="text-orange-500 text-2xl font-black mr-1">₹</span>
-            <span className="text-4xl font-black text-slate-950 tracking-tight">{stats.pendingDues.toLocaleString()}</span>
-          </div>
-        </div>
+        </StatsCard>
+        <StatsCard
+          label="PENDING AMOUNT"
+          value={stats.pendingAmount}
+          variant="orange"
+          isActive={showDuesOnly}
+          className="min-w-[200px]"
+          onClick={() => {
+            setShowDuesOnly(!showDuesOnly);
+            if (!showDuesOnly) {
+              setTimeFilter('all');
+              setSelectedMonth(null);
+            }
+          }}
+        >
+
+        </StatsCard>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        {/* Monthly Breakdown List */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="px-2">
-            <h3 className="text-sm font-black text-slate-950 uppercase tracking-[0.2em]">Monthly Performance</h3>
-          </div>
-          <div className="bg-white rounded-[2rem] shadow-sm border border-slate-200/60 overflow-hidden">
-            <div className="divide-y divide-slate-50">
-              {monthlyHistory.map(([month, amount]) => (
-                <div key={month} className="px-8 py-5 flex justify-between items-center hover:bg-slate-50 transition-colors">
-                  <span className="text-sm font-bold text-slate-700">{month}</span>
-                  <div className="flex items-center space-x-1.5">
-                    <span className="text-xs font-black text-brand-700">₹</span>
-                    <span className="text-sm font-black text-slate-950">{amount.toLocaleString()}</span>
-                  </div>
-                </div>
-              ))}
-              {monthlyHistory.length === 0 && (
-                <div className="p-16 text-center">
-                  <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <span className="text-slate-300">📊</span>
-                  </div>
-                  <p className="text-slate-400 text-xs font-black uppercase tracking-widest">No data available</p>
-                </div>
+      <div className="">
+        {/* Monthly Performance Scroll */}
+        <div className="flex gap-[5px] overflow-x-auto no-scrollbar mb-4 md:mb-5">
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setSelectedMonth(null);
+              setTimeFilter('all');
+            }}
+            className={cn(
+              "flex-shrink-0 h-[30px] md:h-[46px] border-main secondary-color whitespace-nowrap font-black hover:bg-white text-[12px] md:text-[16px] leading-[18px] md:leading-[22px] ",
+              (selectedMonth === null && timeFilter === 'all') ? "bg-white" : "bg-transparent"
+            )}
+          >
+            ALL
+          </Button>
+          {monthlyBreakdown.map(([month, amount]) => (
+            <Button
+              key={month}
+              variant="secondary"
+              onClick={() => {
+                const nextMonth = selectedMonth === month ? null : month;
+                setSelectedMonth(nextMonth);
+                setTimeFilter('all');
+              }}
+              className={cn(
+                "flex-shrink-0 h-[30px] md:h-[46px] border-main secondary-color whitespace-nowrap font-black hover:bg-white text-[12px] md:text-[16px] leading-[18px] md:leading-[22px]",
+                selectedMonth === month ? "bg-white" : "bg-transparent"
               )}
-            </div>
-          </div>
+            >
+              {month} - ₹{amount.toLocaleString()}
+            </Button>
+          ))}
         </div>
 
-        {/* Transaction Ledger */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 px-2">
-            <h3 className="text-sm font-black text-slate-950 uppercase tracking-[0.2em]">Recent Inflow</h3>
-            <div className="relative w-full sm:w-72">
-              <SearchIcon className="absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Filter by member..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-11 pr-5 py-3 bg-white border border-slate-200 rounded-2xl text-xs font-semibold focus:ring-4 focus:ring-brand/5 focus:border-brand outline-none shadow-sm transition-all"
+        <div className="md:bg-white bg-transparent md:border md:border-[#E2E8F0] md:rounded-[10px]">
+          <div className="space-y-4 md:space-y-5">
+            {/* Filters Toolbar */}
+            <div className="flex flex-col xl:flex-row justify-between xl:items-end md:space-y-4 xl:space-y-0 border-b border-[#E2E8F0] p-[15px] hidden md:flex md:p-5">
+              <TabSelector
+                options={timeFilterOptions}
+                value={timeFilter}
+                onChange={(val) => {
+                  setTimeFilter(val as TimeFilter);
+                  setSelectedMonth(null);
+                }}
+                className="hidden md:flex"
+              />
+
+              <div className="flex flex-row gap-[5px] items-center">
+                <div className="relative hidden md:block w-full sm:w-auto">
+                  <img src="/icons/search.svg" alt="" className="absolute left-[15px] top-1/2 -translate-y-1/2 size-5 z-10" />
+                  <Input
+                    type="text"
+                    placeholder="SEARCH..."
+                    className="block w-full sm:w-[191px] pl-[45px] pr-4 h-[46px] font-bold uppercase bg-white"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+
+                {/* <CustomDropdown
+                  options={paymentOptions}
+                  value={paymentFilter}
+                  onChange={setPaymentFilter}
+                  icon={<SortIcon className='size-5' />}
+                  className='md:px-[13px]'
+                /> */}
+
+                <button onClick={handleExportExcel} className="size-[46px] flex items-center justify-center rounded-main border border-slate-200 hover:bg-slate-50 transition-colors bg-white">
+                  <img src="/icons/excel.svg" alt="" className='size-[20px]' />
+                </button>
+              </div>
+            </div>
+
+            {/* Mobile Only Toolbar */}
+            <div className="flex gap-[5px] md:hidden w-full ">
+              <div className="relative flex-1">
+                <img src="/icons/search.svg" alt="" className="absolute left-[15px] size-5 top-1/2 -translate-y-1/2 z-10" />
+                <Input
+                  type="text"
+                  placeholder="SEARCH..."
+                  className="block w-full h-[42px] pl-[45px] font-bold uppercase bg-white"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              {/* <CustomDropdown
+                options={paymentOptions}
+                value={paymentFilter}
+                onChange={setPaymentFilter}
+                icon={<SortIcon className='size-5' />}
+                className="h-[42px]"
+              /> */}
+              <button onClick={handleExportExcel} className="size-[42px] flex items-center justify-center rounded-main border border-slate-200 bg-white">
+                <img src="/icons/excel.svg" alt="" className='size-4' />
+              </button>
+            </div>
+
+            {/* Mobile Tab Scroller */}
+            <TabSelector
+              options={timeFilterOptions}
+              value={timeFilter}
+              onChange={(val) => {
+                setTimeFilter(val as TimeFilter);
+                setSelectedMonth(null);
+              }}
+              className="md:hidden overflow-x-auto no-scrollbar "
+              itemClassName="min-w-fit px-4 border"
+            />
+
+            {/* Desktop Table container */}
+            <div className="hidden md:block">
+              <Table
+                data={filteredPayments}
+                columns={columns}
+                keyExtractor={(p) => p._id || String(p.id)}
               />
             </div>
-          </div>
 
-          <div className="bg-white rounded-[2rem] shadow-sm border border-slate-200/60 overflow-hidden">
-            {/* Desktop Table */}
-            <div className="hidden sm:block overflow-x-auto">
-              <table className="min-w-full divide-y divide-slate-100">
-                <thead className="bg-slate-50/50">
-                  <tr>
-                    <th className="px-10 py-5 text-left text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Settled Date</th>
-                    <th className="px-10 py-5 text-left text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Member</th>
-                    <th className="px-10 py-5 text-left text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Mode</th>
-                    <th className="px-10 py-5 text-left text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Reference</th>
-                    <th className="px-10 py-5 text-right text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Amount</th>
-                    <th className="px-10 py-5 text-right text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 bg-white">
-                  {filteredTransactions.map(p => {
-                    const member = members.find(m => String(m.id) === String(p.memberId) || m._id === p.memberId);
-                    return (
-                      <tr key={p._id || p.id} className="hover:bg-slate-50 transition-colors group">
-                        <td className="px-10 py-5 whitespace-nowrap text-xs font-black text-slate-400 group-hover:text-slate-600">
-                          {new Date(p.paymentDate).toLocaleDateString()}
-                        </td>
-                        <td className="px-10 py-5 whitespace-nowrap text-sm font-black text-slate-950">
-                          {p.memberName}
-                        </td>
-                        <td className="px-10 py-5 whitespace-nowrap">
-                          {p.paymentMode && (
-                            <Tag variant={p.paymentMode === PaymentMode.UPI ? 'green' : 'orange'} className="uppercase !text-[10px] !py-1 !px-2">
-                              {p.paymentMode === PaymentMode.UPI ? 'UPI / CARD' : 'CASH'}
-                            </Tag>
-                          )}
-                        </td>
-                        <td className="px-10 py-5 whitespace-nowrap text-xs text-slate-400  group-hover:text-slate-600">
-                          {p.note.replace(/Renewal \((\d+) days\)/, (match, days) => {
-                            const d = parseInt(days);
-                            const displayDays = d <= 1 ? 1 : d + 1;
-                            if (displayDays % 30 === 0 || displayDays === 365 || displayDays === 1) {
-                              return `Renewal (${displayDays} days)`;
-                            }
-                            return match;
-                          })}
-                        </td>
-                        <td className="px-10 py-5 whitespace-nowrap text-right text-sm font-black text-slate-950">
-                          ₹{p.amount.toLocaleString()}
-                        </td>
-                        <td className="px-10 py-5 whitespace-nowrap text-right">
+            {/* Mobile Card List */}
+            <div className="md:hidden space-y-[5px] pb-[10px]">
+              {filteredPayments.map(p => {
+                const member = members.find(m => String(m.id) === String(p.memberId) || m._id === p.memberId);
+                return (
+                  <div key={p._id || p.id} className="bg-white px-[10px] py-[15px] rounded-main border-main">
+                    <div className="flex-1">
+                      <div className='flex justify-between pb-[10px] items-center'>
+                        <div className='flex gap-[5px] items-center'>
+                          <div className='flex flex-col'>
+                            <p className="text-[12px] leading-[18px] font-semibold">{p.memberName}</p>
+
+                          </div>
+                          <Tag variant={p.paymentMode === PaymentMode.UPI ? 'green' : 'orange'}>
+                            {p.paymentMode === PaymentMode.UPI ? 'UPI / CARD' : 'CASH'}
+                          </Tag>
+                        </div>
+                        <div>
+                          <p className="text-[12px] leading-[18px] font-semibold">
+                            ₹{p.amount.toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className='flex justify-between items-center'>
+                        <div>
+                          <div className='flex gap-[5px]'>
+                            <p className="text-[#94A3B8] text-[12px] leading-[18px] font-semibold">
+                              {new Date(p.paymentDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}
+                            </p>
+                            <p className="text-[12px] leading-[18px] font-semibold">{p.note}</p>
+                          </div>
+                          <p className="text-[12px] leading-[18px] font-semibold font-medium">{member?.phone}</p>
+                        </div>
+                        <div>
                           <ActionIcon
                             variant="pdf"
                             onClick={() => {
                               if (member) {
-                                const receiptMember = { ...member, paidAmount: p.amount };
-                                let desc: undefined | string = undefined;
-                                if (p.note.startsWith('Balance Cleared')) desc = 'Balance Cleared';
-                                else if (p.note === 'Initial Registration Payment') desc = 'Registration';
-
-                                generateInvoice(gym, receiptMember, p.createdAt, desc);
+                                generateInvoice(gym, { ...member, paidAmount: p.amount }, p.createdAt, p.note);
                               }
                             }}
-                            title="Download Invoice"
                           />
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile View */}
-            <div className="sm:hidden divide-y divide-slate-50">
-              {filteredTransactions.map(p => {
-                const member = members.find(m => String(m.id) === String(p.memberId) || m._id === p.memberId);
-                return (
-                  <div key={p._id || p.id} className="p-6 flex justify-between items-center hover:bg-slate-50 transition-colors">
-                    <div className="space-y-1.5">
-                      <p className="text-sm font-black text-slate-950 tracking-tight">{p.memberName}</p>
-                      <div className="flex items-center gap-2">
-                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
-                          {new Date(p.paymentDate).toLocaleDateString()} • {p.note.replace(/Renewal \((\d+) days\)/, (match, days) => {
-                            const d = parseInt(days);
-                            const displayDays = d <= 1 ? 1 : d + 1;
-                            if (displayDays % 30 === 0 || displayDays === 365 || displayDays === 1) {
-                              return `Renewal (${displayDays} days)`;
-                            }
-                            return match;
-                          })}
-                        </p>
-                        {p.paymentMode && (
-                          <Tag variant={p.paymentMode === PaymentMode.UPI ? 'green' : 'orange'} className="uppercase !text-[9px] !py-0.5 !px-1.5 whitespace-nowrap">
-                            {p.paymentMode === PaymentMode.UPI ? 'UPI / CARD' : 'CASH'}
-                          </Tag>
-                        )}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <p className="text-sm font-black text-slate-950">₹{p.amount.toLocaleString()}</p>
-                      <ActionIcon
-                        variant="pdf"
-                        onClick={() => {
-                          if (member) {
-                            // Create a temporary member object with the specific payment amount for this receipt
-                            const receiptMember = { ...member, paidAmount: p.amount };
-                            let desc: undefined | string = undefined;
-                            if (p.note.startsWith('Balance Cleared')) desc = 'Balance Cleared';
-                            else if (p.note === 'Initial Registration Payment') desc = 'Registration';
-
-                            generateInvoice(gym, receiptMember, p.createdAt, desc);
-                          }
-                        }}
-                        title="Download Invoice"
-                      />
                     </div>
                   </div>
                 );
               })}
-            </div>
-
-            {filteredTransactions.length === 0 && (
-              <div className="p-32 text-center">
-                <div className="w-16 h-16 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                  <SearchIcon className="w-6 h-6 text-slate-200" />
+              {filteredPayments.length === 0 && (
+                <div className="py-20 text-center">
+                  <p className="text-[#94A3B8] font-grotesk uppercase font-bold">No Records Found</p>
                 </div>
-                <p className="text-slate-400 font-black uppercase text-[10px] tracking-widest">No matching records found</p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>

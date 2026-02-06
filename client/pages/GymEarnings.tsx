@@ -378,8 +378,8 @@ const GymEarnings: React.FC<GymEarningsProps> = ({ gym, members, payments }) => 
               setTimeFilter('all');
             }}
             className={cn(
-              "flex-shrink-0 h-[30px] md:h-[46px] border-main secondary-color whitespace-nowrap font-black hover:bg-white text-[12px] md:text-[16px] leading-[18px] md:leading-[22px] ",
-              (selectedMonth === null && timeFilter === 'all') ? "bg-white" : "bg-transparent"
+              "flex-shrink-0 h-[30px] md:h-[46px] border-main text-[#9CA3AF]  whitespace-nowrap font-black hover:bg-white text-[12px] md:text-[16px] leading-[18px] md:leading-[22px] ",
+              (selectedMonth === null && timeFilter === 'all') ? "bg-white text-black" : "bg-transparent"
             )}
           >
             ALL
@@ -394,8 +394,8 @@ const GymEarnings: React.FC<GymEarningsProps> = ({ gym, members, payments }) => 
                 setTimeFilter('all');
               }}
               className={cn(
-                "flex-shrink-0 h-[30px] md:h-[46px] border-main secondary-color whitespace-nowrap font-black hover:bg-white text-[12px] md:text-[16px] leading-[18px] md:leading-[22px]",
-                selectedMonth === month ? "bg-white" : "bg-transparent"
+                "flex-shrink-0 h-[30px] md:h-[46px] border-main whitespace-nowrap font-black hover:bg-white text-[12px] md:text-[16px] text-[#9CA3AF] leading-[18px] md:leading-[22px]",
+                selectedMonth === month ? "bg-white text-black" : "bg-transparent"
               )}
             >
               {month} - ₹{amount.toLocaleString()}

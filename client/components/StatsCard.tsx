@@ -40,7 +40,15 @@ const StatsCard: React.FC<StatsCardProps> = ({ label, value, variant, onClick, i
 
 
     return (
-        <div className={cn("bg-white p-[15px] md:p-5 flex-shrink-0 snap-center rounded-main border-main flex items-center w-[160px] md:w-full", className)}>
+        <div
+            className={cn(
+                "bg-white p-[15px] md:p-5 flex-shrink-0 snap-center rounded-main border border-[#E2E8F0] flex items-center w-[160px] md:w-full transition-all",
+                onClick && "cursor-pointer",
+                isActive && `${variant === 'green' ? 'border-[#22C55E]' : variant === 'red' ? 'border-[#EF4444]' : variant === 'orange' ? 'border-[#F59E0B]' : 'border-[#0E7490]'}`,
+                className
+            )}
+            onClick={onClick}
+        >
             <div className="w-full">
                 <p className="secondary-description font-bold font-grotesk uppercase pb-[10px] md:pb-3 whitespace-nowrap">{label}</p>
                 <p className={`${styles.value} text-[32px] font-medium leading-[32px]  font-bold font-grotesk `}>{value}</p>
@@ -49,7 +57,6 @@ const StatsCard: React.FC<StatsCardProps> = ({ label, value, variant, onClick, i
                     <Tag
                         variant={variant}
                         isActive={isActive}
-                        onClick={onClick}
                     >
                         {children}
                     </Tag>

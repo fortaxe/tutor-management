@@ -1,14 +1,11 @@
 
-import React, { useMemo, useState, useRef, useEffect } from 'react';
-import { Gym, MemberPayment, Member, PaymentMode, UserRole } from '../types';
-import SearchIcon from '../components/icons/SearchIcon';
+import React, { useMemo, useState } from 'react';
+import { Gym, MemberPayment, Member, PaymentMode } from '../types';
 import Tag from '../components/Tag';
 import ActionIcon from '../components/ActionIcon';
 import { generateInvoice } from '@/lib/invoiceGenerator';
 import StatsCard from '../components/StatsCard';
 import { Table, Column } from '../components/Table';
-import CustomDropdown from '../components/CustomDropdown';
-import SortIcon from '../components/icons/SortIcon';
 import * as XLSX from 'xlsx';
 import TabSelector from '../components/TabSelector';
 import Button from '../components/Button';
@@ -23,10 +20,10 @@ interface GymEarningsProps {
 
 type TimeFilter = 'today' | 'yesterday' | '7days' | '30days' | 'all';
 
-const paymentOptions = [
-  { value: PaymentMode.UPI, label: 'UPI / CARD' },
-  { value: PaymentMode.CASH, label: 'CASH' }
-];
+// const paymentOptions = [
+//   { value: PaymentMode.UPI, label: 'UPI / CARD' },
+//   { value: PaymentMode.CASH, label: 'CASH' }
+// ];
 
 const timeFilterOptions = [
   { label: 'Today', value: 'today' },
@@ -331,41 +328,20 @@ const GymEarnings: React.FC<GymEarningsProps> = ({ gym, members, payments }) => 
           label="TOTAL EARNINGS"
           value={stats.totalEarnings}
           variant="green"
-          isActive={selectedMonth === null && timeFilter === 'all'}
-          onClick={() => { setSelectedMonth(null); setTimeFilter('all'); }}
           className="min-w-[200px]"
-        >
-
-        </StatsCard>
+        />
         <StatsCard
           label="COLLECTED THIS MONTH"
           value={stats.thisMonthEarnings}
           variant="green"
-          isActive={selectedMonth === currentMonthKey}
           className="min-w-[200px]"
-          onClick={() => {
-            setSelectedMonth(selectedMonth === currentMonthKey ? null : currentMonthKey);
-            setTimeFilter('all');
-          }}
-        >
-
-        </StatsCard>
+        />
         <StatsCard
           label="PENDING AMOUNT"
           value={stats.pendingAmount}
           variant="orange"
-          isActive={showDuesOnly}
           className="min-w-[200px]"
-          onClick={() => {
-            setShowDuesOnly(!showDuesOnly);
-            if (!showDuesOnly) {
-              setTimeFilter('all');
-              setSelectedMonth(null);
-            }
-          }}
-        >
-
-        </StatsCard>
+        />
       </div>
 
       <div className="">

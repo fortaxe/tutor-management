@@ -8,19 +8,19 @@ interface PaymentFormProps {
 }
 
 const PaymentForm: React.FC<PaymentFormProps> = ({ onSubmit, onCancel }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState(() => ({
     amount: 300,
     startDate: new Date().toISOString().split('T')[0],
     endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     paymentDate: new Date().toISOString().split('T')[0],
     note: 'Subscription Renewal',
-  });
+  }));
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ 
-      ...prev, 
-      [name]: name === 'amount' ? Number(value) : value 
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === 'amount' ? Number(value) : value
     }));
   };
 
@@ -34,24 +34,24 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onSubmit, onCancel }) => {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700">Amount (INR)</label>
-          <input 
-            type="number" 
-            name="amount" 
-            value={formData.amount} 
-            onChange={handleChange} 
-            required 
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" 
+          <input
+            type="number"
+            name="amount"
+            value={formData.amount}
+            onChange={handleChange}
+            required
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
           />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">Payment Received Date</label>
-          <input 
-            type="date" 
-            name="paymentDate" 
-            value={formData.paymentDate} 
-            onChange={handleChange} 
-            required 
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" 
+          <input
+            type="date"
+            name="paymentDate"
+            value={formData.paymentDate}
+            onChange={handleChange}
+            required
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
           />
         </div>
       </div>
@@ -59,37 +59,37 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onSubmit, onCancel }) => {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700">Period Start</label>
-          <input 
-            type="date" 
-            name="startDate" 
-            value={formData.startDate} 
-            onChange={handleChange} 
-            required 
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" 
+          <input
+            type="date"
+            name="startDate"
+            value={formData.startDate}
+            onChange={handleChange}
+            required
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
           />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">Period End (Expiry)</label>
-          <input 
-            type="date" 
-            name="endDate" 
-            value={formData.endDate} 
-            onChange={handleChange} 
-            required 
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" 
+          <input
+            type="date"
+            name="endDate"
+            value={formData.endDate}
+            onChange={handleChange}
+            required
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
           />
         </div>
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700">Note</label>
-        <textarea 
-          name="note" 
-          value={formData.note} 
-          onChange={handleChange} 
+        <textarea
+          name="note"
+          value={formData.note}
+          onChange={handleChange}
           rows={2}
           placeholder="e.g. Upgraded to Yearly Plan"
-          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" 
+          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
         />
       </div>
 

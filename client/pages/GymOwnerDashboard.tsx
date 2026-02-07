@@ -13,7 +13,6 @@ import Tag from '../components/Tag';
 import Input from '../components/Input';
 import StatsCard from '../components/StatsCard';
 import ActionIcon from '../components/ActionIcon';
-import TrendUpIcon from '../components/icons/TrendUpIcon';
 import MobileMemberCard from '../components/MobileMemberCard';
 import MemberAvatar from '@/components/MemberAvatar';
 import { getPlanDates } from '@/lib/utils';
@@ -418,19 +417,17 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
             label="Active Now"
             value={stats.activeMembers}
             variant="green"
-          >
-
-          </StatsCard>
+            isActive={activeTab === 'members'}
+            onClick={() => setActiveTab('members')}
+          />
 
           <StatsCard
-            label="Expired List"
-            value={stats.expiredMembers}
+            label="Expiring Soon"
+            value={stats.expiringSoon}
             variant="red"
-            isActive={activeTab === 'expired'}
-            onClick={() => setActiveTab('expired')}
-          >
-
-          </StatsCard>
+            isActive={activeTab === 'expiry'}
+            onClick={() => setActiveTab('expiry')}
+          />
 
           {!isTrainer && (
             <StatsCard
@@ -439,9 +436,7 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
               variant="orange"
               isActive={activeTab === 'dues'}
               onClick={() => setActiveTab('dues')}
-            >
-
-            </StatsCard>
+            />
           )}
         </div>
 

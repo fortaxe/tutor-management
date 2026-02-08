@@ -214,7 +214,7 @@ const GymEarnings: React.FC<GymEarningsProps> = ({ gym, members, payments }) => 
     try {
       if (navigator.share) {
         // Generate PDF Blob
-        const blob = await generateInvoice(gym, { ...member, paidAmount: payment.amount }, payment.createdAt, payment.note, true);
+        const blob = await generateInvoice(gym, member, payment.createdAt, payment.note, true, payment.amount);
         if (blob instanceof Blob) {
           const file = new File([blob], `${member.name.replace(/\s+/g, '_')}_Receipt.pdf`, { type: 'application/pdf' });
           await navigator.share({
@@ -333,7 +333,7 @@ const GymEarnings: React.FC<GymEarningsProps> = ({ gym, members, payments }) => 
             onClick={() => {
               const member = members.find(m => String(m.id) === String(item.memberId) || m._id === item.memberId);
               if (member) {
-                generateInvoice(gym, { ...member, paidAmount: item.amount }, item.createdAt, item.note);
+                generateInvoice(gym, member, item.createdAt, item.note, false, item.amount);
               }
             }}
           />
@@ -539,7 +539,7 @@ const GymEarnings: React.FC<GymEarningsProps> = ({ gym, members, payments }) => 
                             variant="pdf"
                             onClick={() => {
                               if (member) {
-                                generateInvoice(gym, { ...member, paidAmount: p.amount }, p.createdAt, p.note);
+                                generateInvoice(gym, member, p.createdAt, p.note, false, p.amount);
                               }
                             }}
                           />

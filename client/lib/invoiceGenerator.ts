@@ -3,7 +3,7 @@ import autoTable from 'jspdf-autotable';
 import moment from 'moment';
 import { Gym, Member } from '../types';
 
-export const generateInvoice = async (gym: Gym, member: Member, customDate?: string, customDescription?: string) => {
+export const generateInvoice = async (gym: Gym, member: Member, customDate?: string, customDescription?: string, returnBlob: boolean = false, amount?: number) => {
     const doc = new jsPDF();
 
     // Helper to load font
@@ -41,6 +41,8 @@ export const generateInvoice = async (gym: Gym, member: Member, customDate?: str
     const contentWidth = pageWidth - (margin * 2);
     const startX = margin;
     const endX = margin + contentWidth;
+
+    const displayAmount = amount !== undefined ? amount : member.paidAmount;
 
     // --- 1. Header (RECEIPT) ---
     doc.setFontSize(24);
@@ -229,7 +231,7 @@ export const generateInvoice = async (gym: Gym, member: Member, customDate?: str
 
     // Using Rupee Symbol directly. Note: Requires font support in PDF generation.
     // If Space Grotesk TTF has the char, it will render.
-    const payText = `₹${member.paidAmount.toFixed(2)} PAID ON ${moment(customDate || member.createdAt).format('MMM DD, YYYY')}`.toUpperCase();
+    const payText = `₹${displayAmount.toFixed(2)} PAID ON ${moment(customDate || member.createdAt).format('MMM DD, YYYY')}`.toUpperCase();
     doc.text(payText, startX, section3Y);
 
 
@@ -327,7 +329,7 @@ export const generateInvoice = async (gym: Gym, member: Member, customDate?: str
     doc.setTextColor(156, 163, 175);
     doc.text('Amount Paid', labelX, totalRowY);
     doc.setTextColor(0, 0, 0);
-    doc.text(`₹${member.paidAmount.toFixed(2)}`, endX, totalRowY, { align: 'right' });
+    doc.text(`₹${displayAmount.toFixed(2)}`, endX, totalRowY, { align: 'right' });
 
     // Amount Due row (Conditional)
     const due = member.feesAmount - member.paidAmount;
@@ -407,7 +409,7 @@ export const generateInvoice = async (gym: Gym, member: Member, customDate?: str
 
     doc.text(member.paymentMode || 'Cash', col1X, valueCenteredY);
     doc.text(moment(customDate || member.createdAt).format('MMM DD, YYYY'), col2X, valueCenteredY);
-    doc.text(`₹${member.paidAmount}`, col3X, valueCenteredY);
+    doc.text(`₹${displayAmount}`, col3X, valueCenteredY);
     doc.text(receiptNo, col4X, valueCenteredY);
 
 
@@ -439,5 +441,8 @@ export const generateInvoice = async (gym: Gym, member: Member, customDate?: str
     doc.setTextColor(34, 197, 94);
     doc.text(stackTxt, currentFX, footerY);
 
+    if (returnBlob) {
+        return doc.output('blob');
+    }
     doc.save(`${member.name.replace(/\s+/g, '_')}_Receipt.pdf`);
 };

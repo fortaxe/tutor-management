@@ -224,9 +224,7 @@ const MainApp: React.FC = () => {
     },
     onSuccess: (newMember) => {
       showToast('Member added successfully', 'success');
-      if (currentGym && newMember && newMember.paidAmount > 0) {
-        generateInvoice(currentGym, newMember);
-      }
+      // Logic for invoice moved to Dashboard UI manual trigger
     },
     onError: (error: any, newMember, context) => {
       if (context?.previousMembers) {
@@ -261,14 +259,7 @@ const MainApp: React.FC = () => {
       // Check if this update was a payment (paidAmount increased)
       // variables contains the data sent to mutationFn
       if (currentGym && updatedMember && variables.paidAmount !== undefined) {
-        // If it comes from CollectBalanceForm, the variables will have the new total paid amount.
-        // We can compare it with the member's previous paid amount if we had it.
-        // Actually, the simplest check: if variables.paidAmount > 0 and it's different from what we might have had.
-        // For now, let's assume if paidAmount is in variables and > 0, we might want a receipt.
-        // Better: check if it's a balance collection specifically by seeing if paymentMode is present.
-        if (variables.paymentMode) {
-          generateInvoice(currentGym, updatedMember, new Date().toISOString(), updatedMember.feesAmount === updatedMember.paidAmount ? 'Balance Cleared' : 'Partial Payment');
-        }
+        // Logic for invoice generation moved to Dashboard UI manual trigger
       }
     },
     onError: (error: any) => {
@@ -290,15 +281,6 @@ const MainApp: React.FC = () => {
     onSuccess: (updatedMember) => {
       queryClient.invalidateQueries({ queryKey: ['members'] });
       queryClient.invalidateQueries({ queryKey: ['payments'] });
-      if (currentGym && updatedMember && updatedMember.paidAmount > 0) {
-        // Technically renewal might only set paid amount for that transaction, 
-        // but updatedMember returns the whole member object where paidAmount accumulates.
-        // Ideally we check the transaction amount, but for now checking if they paid *anything* is safe enough 
-        // or we can rely on the user to manual download if it was 0.
-        // However, specifically for renewal, we might want to pass the specific renewal amount if we had it.
-        // For simplicity: if total paid > 0 (which it must be if they just paid), generate.
-        generateInvoice(currentGym, updatedMember, new Date().toISOString(), 'Plan Renewal');
-      }
     }
   });
 
@@ -439,9 +421,9 @@ const MainApp: React.FC = () => {
             gym={currentGym || { name: 'Loading...' } as Gym}
             members={members}
             onLogout={handleLogout}
-            onAddMember={(m) => addMemberMutation.mutate(m)}
-            onUpdateMember={(m) => updateMemberMutation.mutate(m)}
-            onRenewMember={(id, renewalData) => renewMemberMutation.mutate({ memberId: id, renewalData })}
+            onAddMember={(m) => addMemberMutation.mutateAsync(m)}
+            onUpdateMember={(m) => updateMemberMutation.mutateAsync(m)}
+            onRenewMember={(id, renewalData) => renewMemberMutation.mutateAsync({ memberId: id, renewalData })}
             onDeleteMember={(id) => deleteMemberMutation.mutate(id)}
           />
         } />

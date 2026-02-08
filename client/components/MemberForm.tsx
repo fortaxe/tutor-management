@@ -24,6 +24,7 @@ interface MemberFormProps {
   initialType?: MemberType;
   onSubmit: (memberData: Omit<Member, 'id' | '_id'> | Member) => void;
   onCancel: () => void;
+  isLoading?: boolean;
 }
 
 const formatDate = (dateStr: string | Date) => {
@@ -38,7 +39,7 @@ const formatDate = (dateStr: string | Date) => {
   return [year, month, day].join('-');
 };
 
-const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberType.SUBSCRIPTION, onSubmit, onCancel: _onCancel }) => {
+const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberType.SUBSCRIPTION, onSubmit, onCancel: _onCancel, isLoading = false }) => {
   const [showCamera, setShowCamera] = useState(false);
   const [step, setStep] = useState(1);
   const [activeType, setActiveType] = useState<MemberType>(member?.memberType || initialType);
@@ -556,7 +557,7 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
       <div className="pt-5 mt-auto">
         {member ? (
           /* EDIT Member Footer */
-          <Button key="submit-btn" type="submit" className="flex-1 w-full">
+          <Button key="submit-btn" type="submit" className="flex-1 w-full" isLoading={isLoading}>
             Update Member
             <SubmitArrowIcon className="ml-[5px]" stroke="white" />
           </Button>
@@ -570,6 +571,7 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
                 onClick={_onCancel}
                 variant="secondary"
                 className="flex-1 max-w-[120px]"
+                disabled={isLoading}
               >
                 Cancel
               </Button>
@@ -585,11 +587,12 @@ const MemberForm: React.FC<MemberFormProps> = ({ member, initialType = MemberTyp
                 onClick={() => setStep(1)}
                 variant="secondary"
                 className="flex-1 max-w-[120px] gap-[5px]"
+                disabled={isLoading}
               >
                 <ArrowLeftIcon className="size-4" />
                 <span>Back</span>
               </Button>
-              <Button key="submit-btn" type="submit" className="flex-1">
+              <Button key="submit-btn" type="submit" className="flex-1" isLoading={isLoading}>
                 Register Member
                 <SubmitArrowIcon className="ml-[5px]" stroke="white" />
               </Button>

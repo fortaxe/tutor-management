@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store/store';
@@ -23,15 +22,16 @@ import CollectBalanceForm from '../components/CollectBalanceForm';
 import RenewPlanForm from '../components/RenewPlanForm';
 import SortIcon from '@/components/icons/SortIcon';
 import CustomDropdown from '../components/CustomDropdown';
+import { generateInvoice } from '../lib/invoiceGenerator';
 
 interface GymOwnerDashboardProps {
   user: User;
   gym: Gym;
   members: Member[];
   onLogout: () => void;
-  onAddMember: (member: Omit<Member, 'id' | '_id'>) => void;
-  onUpdateMember: (member: Member) => void;
-  onRenewMember: (memberId: string | number, renewalData: { planStart: string; planDurationDays: number; feesAmount: number; paidAmount: number; feesStatus: PaymentStatus; memberType: MemberType; paymentMode: PaymentMode }) => void;
+  onAddMember: (member: Omit<Member, 'id' | '_id'>) => Promise<any>;
+  onUpdateMember: (member: Member) => Promise<any>;
+  onRenewMember: (memberId: string | number, renewalData: { planStart: string; planDurationDays: number; feesAmount: number; paidAmount: number; feesStatus: PaymentStatus; memberType: MemberType; paymentMode: PaymentMode }) => Promise<any>;
   onDeleteMember: (memberId: string | number) => void;
 }
 
@@ -55,6 +55,16 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
   const [initialType, setInitialType] = useState<MemberType>(MemberType.SUBSCRIPTION);
 
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'createdAt', direction: 'desc' });
+
+  // Success State
+  const [successData, setSuccessData] = useState<{
+    type: 'ADD' | 'RENEW' | 'COLLECT';
+    member: Member;
+    title: string;
+    description?: string;
+    amount?: number;
+  } | null>(null);
+
 
   const expiryFilter = 5;
   const [searchQuery, setSearchQuery] = useState('');
@@ -282,16 +292,19 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
     setEditingMember(member);
     setInitialType(type);
     setIsEditModalOpen(true);
+    setSuccessData(null);
   };
 
   const handleOpenCollectModal = (member: Member) => {
     setEditingMember(member);
     setIsCollectModalOpen(true);
+    setSuccessData(null);
   };
 
   const handleOpenRenewModal = (member: Member) => {
     setEditingMember(member);
     setIsRenewModalOpen(true);
+    setSuccessData(null);
   };
 
 
@@ -301,6 +314,9 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
     setIsDeleteModalOpen(true);
   };
 
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleCloseModal = () => {
     setEditingMember(null);
     setIsEditModalOpen(false);
@@ -308,18 +324,41 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
     setIsCollectModalOpen(false);
     setIsRenewModalOpen(false);
     setIsDeleteModalOpen(false);
+    setSuccessData(null);
+    setIsSubmitting(false); // Ensure loading state is reset
   };
 
-  const handleFormSubmit = (memberData: Omit<Member, 'id' | '_id'> | Member) => {
-    if ('id' in memberData || '_id' in memberData) {
-      onUpdateMember(memberData as Member);
-    } else {
-      onAddMember({ ...memberData, gymId: gym.id });
+  const handleFormSubmit = async (memberData: Omit<Member, 'id' | '_id'> | Member) => {
+    setIsSubmitting(true);
+    try {
+      if ('id' in memberData || '_id' in memberData) {
+        const updated = await onUpdateMember(memberData as Member);
+        // Only show success for add? The prompt mentions "add member renewal and the balance clean"
+        // Update might be simple edit.
+        // Assuming "Add Member" means creating new.
+        handleCloseModal();
+      } else {
+        const newMember = await onAddMember({ ...memberData, gymId: gym.id });
+        if (newMember) {
+          setSuccessData({
+            type: 'ADD',
+            member: newMember,
+            title: 'Member Added Successfully',
+            description: 'Registration'
+          });
+        } else {
+          handleCloseModal();
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      // Keep modal open on error?
+    } finally {
+      setIsSubmitting(false);
     }
-    handleCloseModal();
   };
 
-  const handleCollectSubmit = (amount: number, paymentMode: PaymentMode) => {
+  const handleCollectSubmit = async (amount: number, paymentMode: PaymentMode) => {
     if (!editingMember) return;
 
     const maxAllowed = editingMember.feesAmount - editingMember.paidAmount;
@@ -332,17 +371,31 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
     const newTotalPaid = editingMember.paidAmount + amount;
     const newStatus = newTotalPaid >= editingMember.feesAmount ? PaymentStatus.PAID : PaymentStatus.PARTIAL;
 
-    onUpdateMember({
-      ...editingMember,
-      paidAmount: newTotalPaid,
-      feesStatus: newStatus,
-      paymentMode
-    });
+    setIsSubmitting(true);
+    try {
+      const updated = await onUpdateMember({
+        ...editingMember,
+        paidAmount: newTotalPaid,
+        feesStatus: newStatus,
+        paymentMode
+      });
 
-    handleCloseModal();
+      const description = updated?.feesAmount === updated?.paidAmount ? 'Balance Cleared' : 'Partial Payment';
+      setSuccessData({
+        type: 'COLLECT',
+        member: updated || { ...editingMember, paidAmount: newTotalPaid, feesStatus: newStatus },
+        title: 'Payment Collected Successfully',
+        description,
+        amount: amount
+      });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const onRenewMemberSubmit = (renewalData: {
+  const onRenewMemberSubmit = async (renewalData: {
     planStart: string;
     planDurationDays: number;
     feesAmount: number;
@@ -352,9 +405,22 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
     paymentMode: PaymentMode;
   }) => {
     if (!editingMember) return;
-    onRenewMember(editingMember._id || editingMember.id!, renewalData);
-    handleCloseModal();
+    setIsSubmitting(true);
+    try {
+      const updated = await onRenewMember(editingMember._id || editingMember.id!, renewalData);
+      setSuccessData({
+        type: 'RENEW',
+        member: updated || editingMember, // Fallback if API doesn't return member
+        title: 'Membership Renewed Successfully',
+        description: 'Plan Renewal'
+      });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
 
   const confirmDeletion = () => {
     if (editingMember) {
@@ -407,6 +473,59 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
     flex-1 text-center px-[15px] py-[5px] uppercase  dashboard-primary-desc font-black transition-all duration-300 w-fit  
     ${activeTab === tabName ? 'bg-black text-white  z-10' : 'secondary-color border-main'}
   `;
+
+  // Success View Component
+  const SuccessView = () => {
+    if (!successData) return null;
+    const { member, title, description, amount } = successData;
+
+    // Only show share/download if paidAmount > 0 (or if amount is passed and > 0)
+    const displayAmount = amount !== undefined ? amount : member.paidAmount;
+    const showInvoiceOptions = displayAmount > 0;
+
+    const handleShare = async () => {
+      try {
+        const dateStr = new Date().toISOString();
+        if (navigator.share) {
+          const blob = await generateInvoice(gym, member, dateStr, description, true, displayAmount);
+          if (blob instanceof Blob) {
+            const file = new File([blob], `${member.name.replace(/\s+/g, '_')}_Receipt.pdf`, { type: 'application/pdf' });
+            await navigator.share({
+              files: [file],
+              title: 'Payment Receipt',
+              text: `Here is your payment receipt.`
+            });
+            return;
+          }
+        }
+      } catch (e) {
+        console.error("Share failed", e);
+      }
+    };
+
+    return (
+      <div className="flex flex-col items-center justify-center p-6 h-full text-center">
+        <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-6">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 6L9 17L4 12" stroke="#22C55E" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+        <h2 className="text-2xl font-black text-slate-900 mb-2">{title}</h2>
+        <p className="text-slate-500 mb-8">{showInvoiceOptions ? 'Transaction recorded successfully.' : 'Action completed successfully.'}</p>
+
+        {showInvoiceOptions && (
+          <div className="flex flex-col gap-3 w-full max-w-sm mb-8">
+            <Button onClick={handleShare} className="w-full bg-[#128C7E] hover:bg-[#075E54] justify-center">
+              Share Receipt on WhatsApp
+            </Button>
+            <Button onClick={() => generateInvoice(gym, member, new Date().toISOString(), description, false, displayAmount)} variant="secondary" className="w-full justify-center">
+              Download Invoice
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <>
@@ -578,26 +697,36 @@ const GymOwnerDashboard: React.FC<GymOwnerDashboardProps> = ({ user, gym, member
         </div >
 
       </div >
-      <Drawer isOpen={isEditModalOpen || isAddMemberModalOpen} onClose={handleCloseModal} title={editingMember ? 'Edit Member' : 'Add New Member'} >
-        <MemberForm member={editingMember} initialType={initialType} onSubmit={handleFormSubmit} onCancel={handleCloseModal} />
-      </Drawer>
-
-      <Drawer isOpen={isCollectModalOpen} onClose={handleCloseModal} title="Collect Pending Balance">
-        {editingMember && (
-          <CollectBalanceForm
+      <Drawer isOpen={isEditModalOpen || isAddMemberModalOpen} onClose={handleCloseModal} title={successData ? successData.title : (editingMember ? 'Edit Member' : 'Add New Member')} >
+        {successData ? <SuccessView /> : (
+          <MemberForm
             member={editingMember}
-            onSubmit={handleCollectSubmit}
+            initialType={initialType}
+            onSubmit={handleFormSubmit}
             onCancel={handleCloseModal}
+            isLoading={isSubmitting}
           />
         )}
       </Drawer>
 
-      <Drawer isOpen={isRenewModalOpen} onClose={handleCloseModal} title="RENEW / NEW PLAN">
-        {editingMember && (
+      <Drawer isOpen={isCollectModalOpen} onClose={handleCloseModal} title={successData ? successData.title : "Collect Pending Balance"}>
+        {successData ? <SuccessView /> : editingMember && (
+          <CollectBalanceForm
+            member={editingMember}
+            onSubmit={handleCollectSubmit}
+            onCancel={handleCloseModal}
+            isLoading={isSubmitting}
+          />
+        )}
+      </Drawer>
+
+      <Drawer isOpen={isRenewModalOpen} onClose={handleCloseModal} title={successData ? successData.title : "RENEW / NEW PLAN"}>
+        {successData ? <SuccessView /> : editingMember && (
           <RenewPlanForm
             member={editingMember}
             onSubmit={onRenewMemberSubmit}
             onCancel={handleCloseModal}
+            isLoading={isSubmitting}
           />
         )}
       </Drawer>

@@ -10,9 +10,10 @@ interface CollectBalanceFormProps {
     member: Member;
     onSubmit: (amount: number, paymentMode: PaymentMode) => void;
     onCancel: () => void;
+    isLoading?: boolean;
 }
 
-const CollectBalanceForm: React.FC<CollectBalanceFormProps> = ({ member, onSubmit, onCancel }) => {
+const CollectBalanceForm: React.FC<CollectBalanceFormProps> = ({ member, onSubmit, onCancel, isLoading = false }) => {
     const [amount, setAmount] = useState('');
     const [paymentMode, setPaymentMode] = useState<PaymentMode>(PaymentMode.CASH);
     const enteringAmount = Number(amount) || 0;
@@ -93,10 +94,10 @@ const CollectBalanceForm: React.FC<CollectBalanceFormProps> = ({ member, onSubmi
             </div>
 
             <div className="flex gap-2 pt-5 mt-auto">
-                <Button type="button" onClick={onCancel} variant="secondary" className="flex-1 max-w-[120px]">
+                <Button type="button" onClick={onCancel} variant="secondary" className="flex-1 max-w-[120px]" disabled={isLoading}>
                     Cancel
                 </Button>
-                <Button type="submit" className="flex-1 ">
+                <Button type="submit" className="flex-1 " isLoading={isLoading}>
                     Collect Payment
                 </Button>
             </div>

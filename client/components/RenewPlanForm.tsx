@@ -23,9 +23,10 @@ interface RenewPlanFormProps {
         paymentMode: PaymentMode;
     }) => void;
     onCancel: () => void;
+    isLoading?: boolean;
 }
 
-const RenewPlanForm: React.FC<RenewPlanFormProps> = ({ member, onSubmit, onCancel }) => {
+const RenewPlanForm: React.FC<RenewPlanFormProps> = ({ member, onSubmit, onCancel, isLoading = false }) => {
     const formatDate = (date: Date) => {
         const d = new Date(date);
         let month = '' + (d.getMonth() + 1);
@@ -246,10 +247,10 @@ const RenewPlanForm: React.FC<RenewPlanFormProps> = ({ member, onSubmit, onCance
             </div>
 
             <div className="flex gap-2 pt-5 mt-auto">
-                <Button type="button" onClick={onCancel} variant="secondary" className="flex-1 max-w-[120px]">
+                <Button type="button" onClick={onCancel} variant="secondary" className="flex-1 max-w-[120px]" disabled={isLoading}>
                     Cancel
                 </Button>
-                <Button type="submit" className="flex-1">
+                <Button type="submit" className="flex-1" isLoading={isLoading}>
                     Confirm Plan
                     <SubmitArrowIcon className="ml-[5px]" stroke="white" />
                 </Button>

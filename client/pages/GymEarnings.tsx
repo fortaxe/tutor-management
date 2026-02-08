@@ -207,7 +207,29 @@ const GymEarnings: React.FC<GymEarningsProps> = ({ gym, members, payments }) => 
     XLSX.utils.book_append_sheet(wb, ws, "Earnings");
     XLSX.writeFile(wb, `Gym_Earnings_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
+  const handleShareReceipt = async (payment: MemberPayment) => {
+    const member = members.find(m => String(m.id) === String(payment.memberId) || m._id === payment.memberId);
+    if (!member || !member.phone) return;
 
+    try {
+      if (navigator.share) {
+        // Generate PDF Blob
+        const blob = await generateInvoice(gym, { ...member, paidAmount: payment.amount }, payment.createdAt, payment.note, true);
+        if (blob instanceof Blob) {
+          const file = new File([blob], `${member.name.replace(/\s+/g, '_')}_Receipt.pdf`, { type: 'application/pdf' });
+          await navigator.share({
+            files: [file],
+            title: 'Payment Receipt',
+            text: `Here is your payment receipt.`
+          });
+          return;
+        }
+      }
+
+    } catch (error) {
+      console.error('Error sharing receipt:', error);
+    }
+  };
   const columns: Column<MemberPayment>[] = [
     {
       header: (
@@ -264,7 +286,7 @@ const GymEarnings: React.FC<GymEarningsProps> = ({ gym, members, payments }) => 
       className: "py-5 whitespace-nowrap text-sm w-full",
       render: (item) => (
         <span className="text-black text-[14px] leading-[20px] font-semibold">
-          {item.note}
+          {item.note.replace(/Renewal\s*\(\d+\s*days?\)/i, 'Renewal')}
         </span>
       )
     },
@@ -301,6 +323,11 @@ const GymEarnings: React.FC<GymEarningsProps> = ({ gym, members, payments }) => 
       className: "px-5 py-5 whitespace-nowrap text-right text-sm font-medium",
       render: (item) => (
         <div className="flex gap-2 justify-end">
+          <ActionIcon
+            variant="share"
+            onClick={() => handleShareReceipt(item)}
+            title="Share Receipt"
+          />
           <ActionIcon
             variant="pdf"
             onClick={() => {
@@ -494,11 +521,20 @@ const GymEarnings: React.FC<GymEarningsProps> = ({ gym, members, payments }) => 
                             <p className="text-[#94A3B8] text-[12px] leading-[18px] font-semibold">
                               {new Date(p.paymentDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}
                             </p>
-                            <p className="text-[12px] leading-[18px] font-semibold">{p.note}</p>
+                            <p className="text-[12px] leading-[18px] font-semibold">
+                              {member?.phone}
+                            </p>
                           </div>
-                          <p className="text-[12px] leading-[18px] font-semibold font-medium">{member?.phone}</p>
+                          <p className="text-[12px] leading-[18px] font-semibold font-medium">
+                            {p.note.replace(/Renewal\s*\(\d+\s*days?\)/i, 'Renewal')}
+                          </p>
                         </div>
-                        <div>
+                        <div className="flex gap-[5px]">
+                          <ActionIcon
+                            variant="share"
+                            onClick={() => handleShareReceipt(p)}
+                            title="Share Receipt"
+                          />
                           <ActionIcon
                             variant="pdf"
                             onClick={() => {

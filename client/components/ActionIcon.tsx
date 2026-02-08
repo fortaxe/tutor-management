@@ -8,13 +8,15 @@ import WhatsAppIcon from './icons/WhatsAppIcon';
 
 import PdfIcon from './icons/PdfIcon';
 
-export type ActionVariant = 'reload' | 'edit' | 'card' | 'delete' | 'whatsup' | 'pdf';
+import ShareIcon from './icons/ShareIcon';
+
+export type ActionVariant = 'reload' | 'edit' | 'card' | 'delete' | 'whatsup' | 'pdf' | 'share';
 
 interface ActionIconProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     variant: ActionVariant;
 }
 
-const variants = {
+const variants: Record<ActionVariant, { icon: React.FC<any>; className: string }> = {
     reload: {
         icon: ReloadIcon,
         className: "bg-[#EFF6FF] border-[#A7C8FB] text-[#2563EB] hover:bg-[#2563EB] hover:text-white hover:border-transparent"
@@ -38,6 +40,10 @@ const variants = {
     pdf: {
         icon: PdfIcon,
         className: "bg-[#F1F5F9] border-[#CBD5E1] text-[#64748B] hover:bg-[#64748B] hover:text-white hover:border-transparent"
+    },
+    share: {
+        icon: ShareIcon,
+        className: "bg-[#F8FAFC] border-[#CBD5E1] text-[#475569] hover:bg-[#475569] hover:text-white hover:border-transparent"
     }
 };
 

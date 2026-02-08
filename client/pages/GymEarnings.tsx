@@ -264,7 +264,7 @@ const GymEarnings: React.FC<GymEarningsProps> = ({ gym, members, payments }) => 
       className: "py-5 whitespace-nowrap text-sm w-full",
       render: (item) => (
         <span className="text-black text-[14px] leading-[20px] font-semibold">
-          {item.note}
+          {item.note.replace(/Renewal\s*\(\d+\s*days?\)/i, 'Renewal')}
         </span>
       )
     },

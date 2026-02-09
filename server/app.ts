@@ -91,7 +91,7 @@ app.post('/api/tutors', async (req, res) => {
   }
 });
 
-app.patch('/api/tutors/:id', upload.single('logo'), async (req, res) => {
+app.patch('/api/tutors/:id', upload.single('logo') as any, async (req, res) => {
   try {
     const { password, ...tutorData } = req.body;
 
@@ -155,7 +155,7 @@ app.get('/api/students/:id', async (req, res) => {
   }
 });
 
-app.post('/api/students', upload.single('photo'), async (req, res) => {
+app.post('/api/students', upload.single('photo') as any, async (req, res) => {
   try {
     const studentData = { ...req.body };
     if (req.file) {
@@ -184,7 +184,7 @@ app.post('/api/students', upload.single('photo'), async (req, res) => {
   }
 });
 
-app.patch('/api/students/:id', upload.single('photo'), async (req, res) => {
+app.patch('/api/students/:id', upload.single('photo') as any, async (req, res) => {
   try {
     const studentData = { ...req.body };
     if (req.file) {
@@ -341,6 +341,7 @@ app.delete('/api/leads/:id', async (req, res) => {
   }
 });
 
+/*
 // Daily Backup Cron
 app.get('/api/cron/backup', async (req, res) => {
   const authHeader = req.headers.authorization;
@@ -370,5 +371,6 @@ app.get('/api/cron/backup', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+*/
 
 export default app;

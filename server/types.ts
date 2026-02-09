@@ -1,8 +1,8 @@
 
 export enum UserRole {
   SUPER_ADMIN = 'SUPER_ADMIN',
-  GYM_OWNER = 'GYM_OWNER',
-  TRAINER = 'TRAINER',
+  TUTOR = 'TUTOR',
+  ASSISTANT = 'ASSISTANT',
 }
 
 export interface User {
@@ -11,10 +11,10 @@ export interface User {
   name?: string;
   password?: string;
   role: UserRole;
-  gymId?: number;
+  tutorId?: number;
 }
 
-export enum GymStatus {
+export enum TutorStatus {
   ACTIVE = 'Active',
   INACTIVE = 'Inactive',
   SUSPENDED = 'Suspended',
@@ -35,14 +35,14 @@ export interface SubscriptionPayment {
   note: string;
 }
 
-export interface Gym {
+export interface Tutor {
   id: number;
-  name: string;
-  ownerName?: string;
+  name: string; // Tutor/Center Name
+  ownerName?: string; // Tutor Name
   ownerPhone: string;
   state?: string;
   pincode?: string;
-  status: GymStatus;
+  status: TutorStatus;
   subscriptionStatus: SubscriptionStatus;
   subscriptionStartDate: string;
   subscriptionEndDate: string;
@@ -56,9 +56,8 @@ export enum PaymentStatus {
   PARTIAL = 'Partial',
 }
 
-export enum MemberType {
+export enum StudentType {
   SUBSCRIPTION = 'Subscription',
-  DAY_PASS = 'Day Pass',
 }
 
 export enum PaymentMode {
@@ -66,27 +65,33 @@ export enum PaymentMode {
   UPI = 'UPI',
 }
 
-export interface Member {
+export interface Student {
   id: number;
-  gymId: number;
+  tutorId: number;
   name: string;
   email?: string;
-  phone: string;
+  studentPhone?: string; // Optional
+  parentName: string; // Mandatory
+  parentPhone: string; // Mandatory
   planStart: string;
-  planDurationDays: number;
-  feesAmount: number; // Total Plan Fee
-  paidAmount: number; // Total Collected Fee
+  planDurationMonths: number; // Changed from Days to Months
+  feesAmount: number;
+  paidAmount: number;
   feesStatus: PaymentStatus;
-  memberType: MemberType;
-  photo?: string; // Base64 encoded image
+  studentType: StudentType;
+  photo?: string;
   paymentMode?: PaymentMode;
+  dob?: string;
+  studentClass: string;
+  subjects: string;
+  board: string;
 }
 
-export interface MemberPayment {
+export interface StudentPayment {
   id: number;
-  memberId: number;
-  memberName: string;
-  gymId: number;
+  studentId: number;
+  studentName: string;
+  tutorId: number;
   amount: number;
   paymentDate: string;
   note: string;
@@ -96,8 +101,8 @@ export interface MemberPayment {
 export interface Lead {
   _id?: string;
   id?: string;
-  gymOwnerName: string;
-  gymName: string;
+  tutorOwnerName: string;
+  tutorName: string;
   phone: string;
   status: 'new' | 'contacted' | 'converted' | 'rejected';
   createdAt?: string;

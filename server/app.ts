@@ -3,12 +3,12 @@ import express from 'express';
 import cors from 'cors';
 import { connectDB } from './connectDB';
 import { User } from './models/User';
-import { Gym } from './models/Gym';
-import { Member } from './models/Member';
-import { MemberPaymentRecord } from './models/MemberPayment';
+import { Tutor } from './models/Tutor';
+import { Student } from './models/Student';
+import { StudentPaymentRecord } from './models/StudentPayment';
 import { Lead } from './models/Lead';
-import { loginSchema, gymSchemaValidation, memberSchemaValidation, leadSchemaValidation } from './validators/schemas';
-import { UserRole, SubscriptionStatus, PaymentStatus, GymStatus } from './types';
+import { loginSchema, tutorSchemaValidation, studentSchemaValidation, leadSchemaValidation } from './validators/schemas';
+import { UserRole, SubscriptionStatus, PaymentStatus, TutorStatus } from './types';
 import multer from 'multer';
 import { uploadToR2, uploadBufferToR2 } from './utils/storage';
 
@@ -19,7 +19,7 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
 app.get('/', (req, res) => {
-  res.send('Gym Stack API is running!');
+  res.send('Student Management API is running!');
 });
 
 // Auth
@@ -46,202 +46,200 @@ app.get('/api/users/:id', async (req, res) => {
   }
 });
 
-// Gyms (Super Admin)
-app.get('/api/gyms', async (req, res) => {
+// Tutors (Super Admin)
+app.get('/api/tutors', async (req, res) => {
   try {
     await connectDB();
-    const gyms = await Gym.find().sort({ createdAt: -1 });
-    res.json(gyms);
+    const tutors = await Tutor.find().sort({ createdAt: -1 });
+    res.json(tutors);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
-app.get('/api/gyms/:id', async (req, res) => {
+app.get('/api/tutors/:id', async (req, res) => {
   try {
     await connectDB();
-    const gym = await Gym.findOne({ id: req.params.id });
-    if (!gym) return res.status(404).json({ error: 'Gym not found' });
-    res.json(gym);
+    const tutor = await Tutor.findOne({ id: req.params.id });
+    if (!tutor) return res.status(404).json({ error: 'Tutor not found' });
+    res.json(tutor);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
-app.post('/api/gyms', async (req, res) => {
+app.post('/api/tutors', async (req, res) => {
   try {
-    const { password, ...gymData } = req.body;
-    const validatedGym = gymSchemaValidation.parse(gymData);
+    const { password, ...tutorData } = req.body;
+    const validatedTutor = tutorSchemaValidation.parse(tutorData);
     await connectDB();
 
     const id = Date.now();
-    const newGym = await Gym.create({ ...validatedGym, id, paymentHistory: [] });
+    const newTutor = await Tutor.create({ ...validatedTutor, id, paymentHistory: [] });
 
     await User.create({
-      phone: validatedGym.ownerPhone,
-      name: validatedGym.ownerName,
-      password: password || 'gym123',
-      role: UserRole.GYM_OWNER,
-      gymId: id
+      phone: validatedTutor.ownerPhone,
+      name: validatedTutor.ownerName,
+      password: password || 'tutor123',
+      role: UserRole.TUTOR,
+      tutorId: id
     });
 
-    res.status(201).json(newGym);
+    res.status(201).json(newTutor);
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }
 });
 
-app.patch('/api/gyms/:id', upload.single('logo'), async (req, res) => {
+app.patch('/api/tutors/:id', upload.single('logo'), async (req, res) => {
   try {
-    const { password, ...gymData } = req.body;
+    const { password, ...tutorData } = req.body;
 
     if (req.file) {
-      gymData.logo = await uploadToR2(req.file);
+      tutorData.logo = await uploadToR2(req.file);
     }
 
     await connectDB();
-    const gym = await Gym.findOneAndUpdate({ id: req.params.id }, gymData, { new: true });
+    const tutor = await Tutor.findOneAndUpdate({ id: req.params.id }, tutorData, { new: true });
 
-    if (password || gymData.ownerPhone || gymData.ownerName) {
+    if (password || tutorData.ownerPhone || tutorData.ownerName) {
       await User.findOneAndUpdate(
-        { gymId: req.params.id, role: UserRole.GYM_OWNER },
+        { tutorId: req.params.id, role: UserRole.TUTOR },
         {
           ...(password ? { password } : {}),
-          ...(gymData.ownerPhone ? { phone: gymData.ownerPhone } : {}),
-          ...(gymData.ownerName ? { name: gymData.ownerName } : {})
+          ...(tutorData.ownerPhone ? { phone: tutorData.ownerPhone } : {}),
+          ...(tutorData.ownerName ? { name: tutorData.ownerName } : {})
         }
       );
     }
-    res.json(gym);
+    res.json(tutor);
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }
 });
 
-app.delete('/api/gyms/:id', async (req, res) => {
+app.delete('/api/tutors/:id', async (req, res) => {
   try {
     await connectDB();
-    await Gym.deleteOne({ id: req.params.id });
-    await User.deleteMany({ gymId: req.params.id });
-    await Member.deleteMany({ gymId: req.params.id });
-    await MemberPaymentRecord.deleteMany({ gymId: req.params.id });
+    await Tutor.deleteOne({ id: req.params.id });
+    await User.deleteMany({ tutorId: req.params.id });
+    await Student.deleteMany({ tutorId: req.params.id });
+    await StudentPaymentRecord.deleteMany({ tutorId: req.params.id });
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Members
-app.get('/api/members', async (req, res) => {
+// Students
+app.get('/api/students', async (req, res) => {
   try {
-    const { gymId } = req.query;
+    const { tutorId } = req.query;
     await connectDB();
-    const filter = (gymId && gymId !== 'undefined') ? { gymId } : {};
-    const members = await Member.find(filter).sort({ createdAt: -1 });
-    res.json(members);
+    const filter = (tutorId && tutorId !== 'undefined') ? { tutorId } : {};
+    const students = await Student.find(filter).sort({ createdAt: -1 });
+    res.json(students);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
-app.get('/api/members/:id', async (req, res) => {
+app.get('/api/students/:id', async (req, res) => {
   try {
     await connectDB();
-    const member = await Member.findById(req.params.id);
-    if (!member) return res.status(404).json({ error: 'Member not found' });
-    res.json(member);
+    const student = await Student.findById(req.params.id);
+    if (!student) return res.status(404).json({ error: 'Student not found' });
+    res.json(student);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
-app.post('/api/members', upload.single('photo'), async (req, res) => {
+app.post('/api/students', upload.single('photo'), async (req, res) => {
   try {
-    const memberData = { ...req.body };
+    const studentData = { ...req.body };
     if (req.file) {
-      memberData.photo = await uploadToR2(req.file);
+      studentData.photo = await uploadToR2(req.file);
     }
 
-    // Manual coercion for numeric fields if they come as strings (from FormData)
-    // Note: Zod schema with z.coerce.number() handles this, but creating a clean object helps
-
-    const validatedMember = memberSchemaValidation.parse(memberData);
+    // Manual coercion (Zod handles it but safe to double check if needed, I'll rely on Zod)
+    const validatedStudent = studentSchemaValidation.parse(studentData);
     await connectDB();
-    const member = await Member.create({ ...validatedMember, gymId: req.body.gymId });
+    const student = await Student.create({ ...validatedStudent, tutorId: req.body.tutorId });
 
-    if (validatedMember.paidAmount > 0) {
-      await MemberPaymentRecord.create({
-        memberId: member._id,
-        memberName: member.name,
-        gymId: member.gymId,
-        amount: member.paidAmount,
+    if (validatedStudent.paidAmount > 0) {
+      await StudentPaymentRecord.create({
+        studentId: student._id,
+        studentName: student.name,
+        tutorId: student.tutorId,
+        amount: student.paidAmount,
         paymentDate: new Date().toISOString().split('T')[0],
         note: 'Initial Registration Payment',
-        paymentMode: validatedMember.paymentMode
+        paymentMode: validatedStudent.paymentMode
       });
     }
-    res.status(201).json(member);
+    res.status(201).json(student);
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }
 });
 
-app.patch('/api/members/:id', upload.single('photo'), async (req, res) => {
+app.patch('/api/students/:id', upload.single('photo'), async (req, res) => {
   try {
-    const memberData = { ...req.body };
+    const studentData = { ...req.body };
     if (req.file) {
-      memberData.photo = await uploadToR2(req.file);
+      studentData.photo = await uploadToR2(req.file);
     }
 
     await connectDB();
-    const oldMember = await Member.findById(req.params.id);
-    const updatedMember = await Member.findByIdAndUpdate(req.params.id, memberData, { new: true });
+    const oldStudent = await Student.findById(req.params.id);
+    const updatedStudent = await Student.findByIdAndUpdate(req.params.id, studentData, { new: true });
 
-    if (oldMember && memberData.paidAmount > oldMember.paidAmount) {
-      await MemberPaymentRecord.create({
-        memberId: updatedMember._id,
-        memberName: updatedMember.name,
-        gymId: updatedMember.gymId,
-        amount: memberData.paidAmount - oldMember.paidAmount,
+    if (oldStudent && studentData.paidAmount > oldStudent.paidAmount) {
+      await StudentPaymentRecord.create({
+        studentId: updatedStudent._id,
+        studentName: updatedStudent.name,
+        tutorId: updatedStudent.tutorId,
+        amount: studentData.paidAmount - oldStudent.paidAmount,
         paymentDate: new Date().toISOString().split('T')[0],
-        note: memberData.paidAmount >= updatedMember.feesAmount ? 'Balance Cleared' : 'Partial Payment',
-        paymentMode: memberData.paymentMode // Assuming paymentMode is passed in the update body
+        note: studentData.paidAmount >= updatedStudent.feesAmount ? 'Balance Cleared' : 'Partial Payment',
+        paymentMode: studentData.paymentMode
       });
     }
-    res.json(updatedMember);
+    res.json(updatedStudent);
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }
 });
 
-app.post('/api/members/:id/renew', async (req, res) => {
+app.post('/api/students/:id/renew', async (req, res) => {
   try {
     const { renewalData } = req.body;
     await connectDB();
-    const member = await Member.findByIdAndUpdate(req.params.id, renewalData, { new: true });
+    const student = await Student.findByIdAndUpdate(req.params.id, renewalData, { new: true });
 
     if (renewalData.paidAmount > 0) {
-      await MemberPaymentRecord.create({
-        memberId: member._id,
-        memberName: member.name,
-        gymId: member.gymId,
+      await StudentPaymentRecord.create({
+        studentId: student._id,
+        studentName: student.name,
+        tutorId: student.tutorId,
         amount: renewalData.paidAmount,
         paymentDate: new Date().toISOString().split('T')[0],
-        note: `Renewal (${renewalData.planDurationDays} days)`,
-        paymentMode: renewalData.paymentMode // Assuming paymentMode is in renewalData
+        note: `Renewal (${renewalData.planDurationMonths} months)`,
+        paymentMode: renewalData.paymentMode
       });
     }
-    res.json(member);
+    res.json(student);
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }
 });
 
-app.delete('/api/members/:id', async (req, res) => {
+app.delete('/api/students/:id', async (req, res) => {
   try {
     await connectDB();
-    await Member.findByIdAndDelete(req.params.id);
-    await MemberPaymentRecord.deleteMany({ memberId: req.params.id });
+    await Student.findByIdAndDelete(req.params.id);
+    await StudentPaymentRecord.deleteMany({ studentId: req.params.id });
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -251,9 +249,9 @@ app.delete('/api/members/:id', async (req, res) => {
 // Payments & Staff
 app.get('/api/payments', async (req, res) => {
   try {
-    const { gymId } = req.query;
+    const { tutorId } = req.query;
     await connectDB();
-    const payments = await MemberPaymentRecord.find({ gymId }).sort({ createdAt: -1 });
+    const payments = await StudentPaymentRecord.find({ tutorId }).sort({ createdAt: -1 });
     res.json(payments);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -262,9 +260,9 @@ app.get('/api/payments', async (req, res) => {
 
 app.get('/api/staff', async (req, res) => {
   try {
-    const { gymId } = req.query;
+    const { tutorId } = req.query;
     await connectDB();
-    const staff = await User.find({ gymId }).sort({ createdAt: -1 });
+    const staff = await User.find({ tutorId }).sort({ createdAt: -1 });
     res.json(staff);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -274,7 +272,7 @@ app.get('/api/staff', async (req, res) => {
 app.post('/api/staff', async (req, res) => {
   try {
     await connectDB();
-    const staff = await User.create({ ...req.body, role: UserRole.TRAINER });
+    const staff = await User.create({ ...req.body, role: UserRole.ASSISTANT });
     res.status(201).json(staff);
   } catch (error: any) {
     res.status(400).json({ error: error.message });
@@ -343,7 +341,6 @@ app.delete('/api/leads/:id', async (req, res) => {
   }
 });
 
-
 // Daily Backup Cron
 app.get('/api/cron/backup', async (req, res) => {
   const authHeader = req.headers.authorization;
@@ -356,9 +353,9 @@ app.get('/api/cron/backup', async (req, res) => {
     const data = {
       timestamp: new Date().toISOString(),
       users: await User.find({}),
-      gyms: await Gym.find({}),
-      members: await Member.find({}),
-      payments: await MemberPaymentRecord.find({}),
+      tutors: await Tutor.find({}),
+      students: await Student.find({}),
+      payments: await StudentPaymentRecord.find({}),
       leads: await Lead.find({}),
     };
 

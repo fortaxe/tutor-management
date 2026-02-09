@@ -2,7 +2,7 @@ import React from 'react';
 import { cn } from '../lib/utils';
 
 interface BorderButtonProps {
-    variant?: 'red' | 'green' | 'blue' | 'outline';
+    variant?: 'red' | 'green' | 'blue' | 'yellow' | 'outline';
     onClick?: () => void;
     children: React.ReactNode;
     className?: string;
@@ -20,6 +20,7 @@ const BorderButton: React.FC<BorderButtonProps> = ({
         red: 'bg-[#EF44441A] text-[#EF4444] border-[#EF444433]',
         green: 'bg-[#22C55E1A] text-[#22C55E] border-[#22C55E33]',
         blue: 'bg-[#2F70FF1A] text-[#2F70FF] border-[#2F70FF4D]',
+        yellow: 'bg-[#FACC151A] text-[#EAB308] border-[#FACC1533]',
         outline: 'bg-transparent border border-[#E2E8F0] text-[#9CA3AF]'
     };
 

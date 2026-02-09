@@ -1,32 +1,31 @@
 import { useState } from 'react';
 
 interface UseMembershipDurationReturn {
-    duration: number;
+    duration: number; // This will now represent months
     isCustom: boolean;
     customMonths: string;
     isCustomRenewal: boolean;
     handleDurationChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
     handleCustomMonthChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    setDuration: React.Dispatch<React.SetStateAction<number>>;
+    setDuration: (duration: number) => void;
     setCustomMonths: React.Dispatch<React.SetStateAction<string>>;
     setIsCustomRenewal: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const useMembershipDuration = (
-    initialDuration: number,
+    initialDuration: number, // Initial duration in months
     onDurationChange: (duration: number) => void
 ): UseMembershipDurationReturn => {
     const [isCustomRenewal, setIsCustomRenewal] = useState(() => {
-        // Check if initial duration is one of the standard ones
-        const STANDARD_DURATIONS = [29, 89, 179, 364];
-        return !STANDARD_DURATIONS.includes(initialDuration) && initialDuration !== 1; // 1 is Day Pass
+        // Standard durations in months: 1, 3, 6, 12
+        const STANDARD_DURATIONS = [1, 3, 6, 12];
+        return !STANDARD_DURATIONS.includes(initialDuration);
     });
 
     const [customMonths, setCustomMonths] = useState<string>(() => {
-        // If it's effectively a "standard-ish" custom duration (e.g. they previously chose custom 1 month)
-        // or if it's a weird number, try to reverse engineer months for display
-        if (![29, 89, 179, 364, 1].includes(initialDuration)) {
-            return Math.round((initialDuration + 1) / 30).toString();
+        const STANDARD_DURATIONS = [1, 3, 6, 12];
+        if (!STANDARD_DURATIONS.includes(initialDuration)) {
+            return initialDuration.toString();
         }
         return '';
     });
@@ -36,7 +35,7 @@ export const useMembershipDuration = (
         if (value === 'custom') {
             setIsCustomRenewal(true);
             setCustomMonths('');
-            onDurationChange(0);
+            onDurationChange(1); // Default to 1 month for custom
         } else {
             setIsCustomRenewal(false);
             setCustomMonths('');
@@ -48,12 +47,12 @@ export const useMembershipDuration = (
         const val = e.target.value;
         setCustomMonths(val);
         if (val === '') {
-            onDurationChange(0);
+            onDurationChange(1);
             return;
         }
         const months = parseInt(val);
-        if (!isNaN(months) && months > 0 && months <= 16) {
-            onDurationChange((months * 30) - 1);
+        if (!isNaN(months) && months > 0) {
+            onDurationChange(months);
         }
     };
 
@@ -61,10 +60,10 @@ export const useMembershipDuration = (
         duration: initialDuration,
         isCustom: isCustomRenewal,
         customMonths,
-        isCustomRenewal, // Alias for backward compatibility if needed or clearer naming
+        isCustomRenewal,
         handleDurationChange,
         handleCustomMonthChange,
-        setDuration: () => { }, // No-op for now unless we need two-way binding beyond the callback
+        setDuration: onDurationChange,
         setCustomMonths,
         setIsCustomRenewal
     };

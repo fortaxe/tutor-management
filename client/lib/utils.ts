@@ -1,13 +1,21 @@
-import { Member } from '../types';
+import { Student } from '../types';
 
-export const getPlanDates = (member: Member) => {
-    if (!member) return { startDate: new Date(), endDate: new Date(), remainingDays: 0 };
-    const startDate = new Date(member.planStart);
+export const getPlanDates = (student: Student) => {
+    if (!student) return { startDate: new Date(), endDate: new Date(), remainingDays: 0 };
+    const startDate = new Date(student.planStart);
     const endDate = new Date(startDate);
-    endDate.setDate(startDate.getDate() + Number(member.planDurationDays));
+
+    // Add 30 days per month for plan duration (inclusive of both start and end date)
+    endDate.setDate(startDate.getDate() + (Number(student.planDurationMonths) * 30) - 1);
+
+    // Calculate remaining days
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const remainingDays = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
+    today.setHours(0, 0, 0, 0); // Normalize today to midnight
+
+    // Calculate difference in milliseconds
+    const diffTime = endDate.getTime() - today.getTime();
+    const remainingDays = Math.ceil(diffTime / (1000 * 3600 * 24));
+
     return { startDate, endDate, remainingDays };
 };
 

@@ -1,34 +1,31 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { User, Gym, UserRole, GymStatus, Member, MemberPayment } from './types';
+import { User, Tutor, UserRole, TutorStatus, Student, StudentPayment } from './types';
 import Login from './pages/Login';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
-import GymOwnerDashboard from './pages/GymOwnerDashboard';
-import GymEarnings from './pages/GymEarnings';
+import TutorDashboard from './pages/TutorDashboard';
+import TutorEarnings from './pages/TutorEarnings';
 import StaffManagement from './pages/StaffManagement';
 import DashboardLayout from './components/DashboardLayout';
 import Toast from './components/Toast';
 import client from './lib/client';
 import { objectToFormData } from './lib/utils';
-import { useMyGym } from './hooks/useMyGym';
+import { useMyTutor } from './hooks/useMyTutor';
 import DemoPage from './pages/DemoPage';
 import OwnerProfile from './pages/OwnerProfile';
-import { generateInvoice } from './lib/invoiceGenerator';
 import ChangePasswordDrawer from './components/ChangePasswordDrawer';
 
 
-import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
-import { SubmitArrowIcon } from './components/icons/FormIcons';
 
-const STORAGE_KEY = 'gym_mgmt_session';
+const STORAGE_KEY = 'tutor_mgmt_session';
 const SESSION_EXPIRY_DAYS = 30;
 
 // Main App Component with all dashboard logic
 const MainApp: React.FC = () => {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
-  const location = useLocation();
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
   // Security Modal State
@@ -65,44 +62,44 @@ const MainApp: React.FC = () => {
   };
 
   // --- Queries ---
-  const { data: gyms = [], isLoading: gymsLoading } = useQuery({
-    queryKey: ['gyms'],
+  const { data: tutors = [], isLoading: tutorsLoading } = useQuery({
+    queryKey: ['tutors'],
     queryFn: async () => {
-      const res = await client.get('/gyms');
+      const res = await client.get('/tutors');
       return res.data;
     },
     enabled: currentUser?.role === UserRole.SUPER_ADMIN,
   });
 
-  const { data: members = [], isLoading: membersLoading } = useQuery<Member[]>({
-    queryKey: ['members', currentUser?.role === UserRole.SUPER_ADMIN ? 'all' : currentUser?.gymId],
+  const { data: students = [], isLoading: studentsLoading } = useQuery<Student[]>({
+    queryKey: ['students', currentUser?.role === UserRole.SUPER_ADMIN ? 'all' : currentUser?.tutorId],
     queryFn: async () => {
-      const params = currentUser?.role === UserRole.SUPER_ADMIN ? {} : { gymId: currentUser?.gymId };
-      const res = await client.get('/members', { params });
+      const params = currentUser?.role === UserRole.SUPER_ADMIN ? {} : { tutorId: currentUser?.tutorId };
+      const res = await client.get('/students', { params });
       return res.data;
     },
-    enabled: !!currentUser && (currentUser.role === UserRole.SUPER_ADMIN || !!currentUser.gymId),
+    enabled: !!currentUser && (currentUser.role === UserRole.SUPER_ADMIN || !!currentUser.tutorId),
   });
 
   const { data: staff = [], isLoading: staffLoading } = useQuery({
-    queryKey: ['staff', currentUser?.gymId],
+    queryKey: ['staff', currentUser?.tutorId],
     queryFn: async () => {
-      const res = await client.get(`/staff?gymId=${currentUser?.gymId}`);
+      const res = await client.get(`/staff?tutorId=${currentUser?.tutorId}`);
       return res.data;
     },
-    enabled: !!currentUser?.gymId,
+    enabled: !!currentUser?.tutorId,
   });
 
-  const { data: payments = [], isLoading: paymentsLoading } = useQuery<MemberPayment[]>({
-    queryKey: ['payments', currentUser?.gymId],
+  const { data: payments = [], isLoading: paymentsLoading } = useQuery<StudentPayment[]>({
+    queryKey: ['payments', currentUser?.tutorId],
     queryFn: async () => {
-      const res = await client.get(`/payments?gymId=${currentUser?.gymId}`);
+      const res = await client.get(`/payments?tutorId=${currentUser?.tutorId}`);
       return res.data;
     },
-    enabled: !!currentUser?.gymId,
+    enabled: !!currentUser?.tutorId,
   });
 
-  const { data: myGym, isLoading: gymLoading } = useMyGym(currentUser);
+  const { data: myTutor, isLoading: tutorLoading } = useMyTutor(currentUser);
 
   // Validate User Session Periodically
   useQuery({
@@ -147,159 +144,159 @@ const MainApp: React.FC = () => {
     }
   });
 
-  const addGymMutation = useMutation({
-    mutationFn: async ({ gym, password }: any) => {
-      const res = await client.post('/gyms', { ...gym, password });
+  const addTutorMutation = useMutation({
+    mutationFn: async ({ tutor, password }: any) => {
+      const res = await client.post('/tutors', { ...tutor, password });
       return res.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['gyms'] });
-      showToast('Gym added successfully', 'success');
+      queryClient.invalidateQueries({ queryKey: ['tutors'] });
+      showToast('Tutor added successfully', 'success');
     },
     onError: (error: any) => {
       const msg = error.response?.data?.error || error.message;
       if (msg.includes('duplicate key') || msg.includes('E11000')) {
-        showToast('Gym Owner Phone/ID already exists!', 'error');
+        showToast('Tutor Owner Phone/ID already exists!', 'error');
       } else {
-        showToast(`Failed to add gym: ${msg}`, 'error');
+        showToast(`Failed to add tutor: ${msg}`, 'error');
       }
     }
   });
 
-  const updateGymMutation = useMutation({
-    mutationFn: async ({ gym, password }: any) => {
-      const formData = objectToFormData({ ...gym, password });
-      const res = await client.patch(`/gyms/${gym.id}`, formData);
+  const updateTutorMutation = useMutation({
+    mutationFn: async ({ tutor, password }: any) => {
+      const formData = objectToFormData({ ...tutor, password });
+      const res = await client.patch(`/tutors/${tutor.id}`, formData);
       return res.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['gyms'] });
-      queryClient.invalidateQueries({ queryKey: ['myGym'] });
-      showToast('Gym updated successfully', 'success');
+      queryClient.invalidateQueries({ queryKey: ['tutors'] });
+      queryClient.invalidateQueries({ queryKey: ['myTutor'] });
+      showToast('Tutor updated successfully', 'success');
     },
     onError: (error: any) => {
       const msg = error.response?.data?.error || error.message;
-      showToast(`Failed to update gym: ${msg}`, 'error');
+      showToast(`Failed to update tutor: ${msg}`, 'error');
     }
   });
 
-  const toggleGymStatusMutation = useMutation({
-    mutationFn: async ({ gymId, status }: any) => {
-      const res = await client.patch(`/gyms/${gymId}`, { status });
+  const toggleTutorStatusMutation = useMutation({
+    mutationFn: async ({ tutorId, status }: any) => {
+      const res = await client.patch(`/tutors/${tutorId}`, { status });
       return res.data;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['gyms'] })
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tutors'] })
   });
 
-  const deleteGymMutation = useMutation({
-    mutationFn: async (gymId: number) => {
-      await client.delete(`/gyms/${gymId}`);
+  const deleteTutorMutation = useMutation({
+    mutationFn: async (tutorId: number) => {
+      await client.delete(`/tutors/${tutorId}`);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['gyms'] })
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tutors'] })
   });
 
 
-  const addMemberMutation = useMutation({
-    mutationFn: async (member: any) => {
-      const formData = objectToFormData({ ...member, gymId: currentUser?.gymId });
-      const res = await client.post('/members', formData);
+  const addStudentMutation = useMutation({
+    mutationFn: async (student: any) => {
+      // Ensure specific fields are correctly passed or defaulted
+      const studentData = {
+        ...student,
+        tutorId: currentUser?.tutorId,
+        planDurationMonths: Number(student.planDurationMonths || 0),
+        // Any other defaults needed?
+      }
+      const formData = objectToFormData(studentData);
+      const res = await client.post('/students', formData);
       return res.data;
     },
-    onMutate: async (newMember) => {
-      const queryKey = ['members', currentUser?.gymId];
+    onMutate: async (newStudent) => {
+      const queryKey = ['students', currentUser?.tutorId];
       await queryClient.cancelQueries({ queryKey });
-      const previousMembers = queryClient.getQueryData(queryKey);
+      const previousStudents = queryClient.getQueryData(queryKey);
       queryClient.setQueryData(queryKey, (old: any[]) => [
         {
-          ...newMember,
+          ...newStudent,
           id: Date.now(),
           _id: 'temp-' + Date.now(),
-          gymId: currentUser?.gymId,
-          feesAmount: Number(newMember.feesAmount),
-          paidAmount: Number(newMember.paidAmount)
+          tutorId: currentUser?.tutorId,
+          feesAmount: Number(newStudent.feesAmount),
+          paidAmount: Number(newStudent.paidAmount)
         },
         ...(old || [])
       ]);
-      return { previousMembers };
+      return { previousStudents };
     },
-    onSuccess: (newMember) => {
-      showToast('Member added successfully', 'success');
-      // Logic for invoice moved to Dashboard UI manual trigger
+    onSuccess: () => {
+      showToast('Student added successfully', 'success');
     },
-    onError: (error: any, newMember, context) => {
-      if (context?.previousMembers) {
-        queryClient.setQueryData(['members', currentUser?.gymId], context.previousMembers);
+    onError: (error: any, _newStudent, context) => {
+      if (context?.previousStudents) {
+        queryClient.setQueryData(['students', currentUser?.tutorId], context.previousStudents);
       }
       const msg = error.response?.data?.error || error.message;
       if (msg.includes('duplicate key') || msg.includes('E11000')) {
-        showToast('Member with this phone number already exists!', 'error');
+        showToast('Student with this phone number already exists!', 'error');
       } else {
-        showToast(`Failed to add member: ${msg}`, 'error');
+        showToast(`Failed to add student: ${msg}`, 'error');
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['members'] });
+      queryClient.invalidateQueries({ queryKey: ['students'] });
       queryClient.invalidateQueries({ queryKey: ['payments'] });
     }
   });
 
-  const updateMemberMutation = useMutation({
-    mutationFn: async (member: any) => {
-      const formData = objectToFormData(member);
+  const updateStudentMutation = useMutation({
+    mutationFn: async (student: any) => {
+      const formData = objectToFormData(student);
       // We use _id because sending FormData with patches sometimes can be tricky if id is in body, 
       // but here we use URL param which is fine.
-      const res = await client.patch(`/members/${member._id}`, formData);
+      const res = await client.patch(`/students/${student._id}`, formData);
       return res.data;
     },
-    onSuccess: (updatedMember, variables, context) => {
-      queryClient.invalidateQueries({ queryKey: ['members'] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['students'] });
       queryClient.invalidateQueries({ queryKey: ['payments'] });
-      showToast('Member updated successfully', 'success');
-
-      // Check if this update was a payment (paidAmount increased)
-      // variables contains the data sent to mutationFn
-      if (currentGym && updatedMember && variables.paidAmount !== undefined) {
-        // Logic for invoice generation moved to Dashboard UI manual trigger
-      }
+      showToast('Student updated successfully', 'success');
     },
     onError: (error: any) => {
       const msg = error.response?.data?.error || error.message;
       if (msg.includes('duplicate key') || msg.includes('E11000')) {
         showToast('Update failed: Phone number already in use!', 'error');
       } else {
-        showToast(`Failed to update member: ${msg}`, 'error');
+        showToast(`Failed to update student: ${msg}`, 'error');
       }
     }
   });
 
-  const renewMemberMutation = useMutation({
+  const renewStudentMutation = useMutation({
     // Using any for variable type to handle potential ID format mismatches between mock and server data
-    mutationFn: async ({ memberId, renewalData }: any) => {
-      const res = await client.post(`/members/${memberId}/renew`, { renewalData });
+    mutationFn: async ({ studentId, renewalData }: any) => {
+      const res = await client.post(`/students/${studentId}/renew`, { renewalData });
       return res.data;
     },
-    onSuccess: (updatedMember) => {
-      queryClient.invalidateQueries({ queryKey: ['members'] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['students'] });
       queryClient.invalidateQueries({ queryKey: ['payments'] });
     }
   });
 
-  const deleteMemberMutation = useMutation({
+  const deleteStudentMutation = useMutation({
     // Changed id type from string to any to prevent number vs string assignment errors
     mutationFn: async (id: any) => {
-      await client.delete(`/members/${id}`);
+      await client.delete(`/students/${id}`);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['members'] })
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['students'] })
   });
 
   const addStaffMutation = useMutation({
     mutationFn: async (trainerData: any) => {
-      const res = await client.post('/staff', { ...trainerData, gymId: currentUser?.gymId });
+      const res = await client.post('/staff', { ...trainerData, tutorId: currentUser?.tutorId });
       return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staff'] });
-      showToast('Trainer/Staff added successfully', 'success');
+      showToast('Assistant added successfully', 'success');
     },
     onError: (error: any) => {
       const msg = error.response?.data?.error || error.message;
@@ -340,9 +337,9 @@ const MainApp: React.FC = () => {
 
   const changePasswordMutation = useMutation({
     mutationFn: async (password: string) => {
-      if (currentUser?.role === UserRole.GYM_OWNER) {
-        await client.patch(`/gyms/${currentUser.gymId}`, { password });
-      } else if (currentUser?.role === UserRole.TRAINER || currentUser?.role === UserRole.SUPER_ADMIN) {
+      if (currentUser?.role === UserRole.TUTOR) {
+        await client.patch(`/tutors/${currentUser.tutorId}`, { password });
+      } else if (currentUser?.role === UserRole.ASSISTANT || currentUser?.role === UserRole.SUPER_ADMIN) {
         await client.patch(`/staff/${currentUser._id}`, { password });
       }
     },
@@ -367,21 +364,21 @@ const MainApp: React.FC = () => {
     );
   }
 
-  const isTrainer = currentUser.role === UserRole.TRAINER;
-  const currentGym = myGym || gyms.find(g => g.id === currentUser.gymId);
+  const isAssistant = currentUser.role === UserRole.ASSISTANT;
+  const currentTutor = myTutor || tutors.find(t => t.id === currentUser.tutorId);
 
   if (currentUser.role === UserRole.SUPER_ADMIN) {
     return (
       <>
         <SuperAdminDashboard
           user={currentUser}
-          gyms={gyms}
-          members={members}
+          tutors={tutors}
+          students={students}
           onLogout={handleLogout}
-          onToggleGymStatus={(id, status) => toggleGymStatusMutation.mutate({ gymId: id, status: status === GymStatus.ACTIVE ? GymStatus.SUSPENDED : GymStatus.ACTIVE })}
-          onDeleteGym={(id) => deleteGymMutation.mutate(id)}
-          onAddGym={(gym, password) => addGymMutation.mutate({ gym, password })}
-          onUpdateGym={(gym, password) => updateGymMutation.mutate({ gym, password })}
+          onToggleTutorStatus={(id, status) => toggleTutorStatusMutation.mutate({ tutorId: id, status: status === TutorStatus.ACTIVE ? TutorStatus.SUSPENDED : TutorStatus.ACTIVE })}
+          onDeleteTutor={(id) => deleteTutorMutation.mutate(id)}
+          onAddTutor={(tutor, password) => addTutorMutation.mutate({ tutor, password })}
+          onUpdateTutor={(tutor, password) => updateTutorMutation.mutate({ tutor, password })}
           onOpenChangePass={() => setChangePassOpen(true)}
         />
 
@@ -409,69 +406,69 @@ const MainApp: React.FC = () => {
     <DashboardLayout
       user={currentUser}
       onLogout={handleLogout}
-      pageTitle={currentGym?.name || 'Overview'}
+      pageTitle={currentTutor?.name || 'Overview'}
       onOpenChangePass={() => setChangePassOpen(true)}
-      gymName={currentGym?.name}
-      gymLogo={currentGym?.logo}
+      tutorName={currentTutor?.name}
+      tutorLogo={currentTutor?.logo}
     >
       <Routes>
         <Route path="/" element={
-          <GymOwnerDashboard
+          <TutorDashboard
             user={currentUser}
-            gym={currentGym || { name: 'Loading...' } as Gym}
-            members={members}
+            tutor={currentTutor || { name: 'Loading...' } as Tutor}
+            students={students}
             onLogout={handleLogout}
-            onAddMember={(m) => addMemberMutation.mutateAsync(m)}
-            onUpdateMember={(m) => updateMemberMutation.mutateAsync(m)}
-            onRenewMember={(id, renewalData) => renewMemberMutation.mutateAsync({ memberId: id, renewalData })}
-            onDeleteMember={(id) => deleteMemberMutation.mutate(id)}
+            onAddStudent={(s) => addStudentMutation.mutateAsync(s)}
+            onUpdateStudent={(s) => updateStudentMutation.mutateAsync(s)}
+            onRenewStudent={(id, renewalData) => renewStudentMutation.mutateAsync({ studentId: id, renewalData })}
+            onDeleteStudent={(id) => deleteStudentMutation.mutate(id)}
           />
         } />
 
         <Route path="/earnings" element={
-          !isTrainer ? (
-            <GymEarnings
-              gym={currentGym || {} as Gym}
-              members={members}
+          !isAssistant ? (
+            <TutorEarnings
+              tutor={currentTutor || {} as Tutor}
+              students={students}
               payments={payments}
             />
           ) : <Navigate to="/" replace />
         } />
 
         <Route path="/staff" element={
-          !isTrainer ? (
+          currentUser.role !== UserRole.ASSISTANT ? (
             <StaffManagement
-              gym={currentGym || {} as Gym}
+              tutor={currentTutor || {} as Tutor}
               staff={staff}
-              onAddTrainer={(t) => addStaffMutation.mutate(t)}
-              onUpdateTrainer={(t) => updateStaffMutation.mutate(t)}
+              onAddAssistant={(t: any) => addStaffMutation.mutate(t)}
+              onUpdateAssistant={(t: any) => updateStaffMutation.mutate(t)}
               onDeleteUser={(id) => deleteStaffMutation.mutate(id)}
             />
           ) : <Navigate to="/" replace />
         } />
 
         <Route path="/profile" element={
-          isTrainer ? <Navigate to="/" replace /> :
-            gymLoading ? <div className="flex justify-center items-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div></div> :
-              currentGym ? (
+          currentUser.role === UserRole.ASSISTANT ? <Navigate to="/" replace /> :
+            tutorLoading ? <div className="flex justify-center items-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div></div> :
+              currentTutor ? (
                 <OwnerProfile
-                  gym={currentGym}
-                  user={currentUser}
+                  tutor={currentTutor}
+                  user={currentUser!}
                   onChangePasswordRequest={() => setChangePassOpen(true)}
-                  onUpdateGym={(gymData) => updateGymMutation.mutate({ gym: { id: currentGym.id, ...gymData } })}
-                  isLoading={updateGymMutation.isPending}
+                  onUpdateTutor={(tutorData: any) => updateTutorMutation.mutate({ tutor: { id: currentTutor.id, ...tutorData } })}
+                  isLoading={updateTutorMutation.isPending}
                 />
               ) : <Navigate to="/" replace />
         } />
       </Routes>
 
       {/* Subscription Expired / Suspended Block - Global Overlay */}
-      {(currentUser.role === UserRole.GYM_OWNER || currentUser.role === UserRole.TRAINER) && currentGym && (
+      {(currentUser.role === UserRole.TUTOR || currentUser.role === UserRole.ASSISTANT) && currentTutor && (
         (() => {
           const today = new Date().toISOString().split('T')[0];
-          // Use currentGym data which is fresh from the API
-          const isExpired = currentGym.subscriptionEndDate && currentGym.subscriptionEndDate < today;
-          const isInactive = currentGym.status !== GymStatus.ACTIVE;
+          // Use currentTutor data which is fresh from the API
+          const isExpired = currentTutor.subscriptionEndDate && currentTutor.subscriptionEndDate < today;
+          const isInactive = currentTutor.status !== TutorStatus.ACTIVE;
 
           if (isInactive || isExpired) {
             return (
@@ -484,12 +481,12 @@ const MainApp: React.FC = () => {
                   </div>
                   <h2 className="text-2xl font-black text-slate-900 mb-2">Subscription Expired</h2>
                   <p className="text-slate-500 mb-8 leading-relaxed">
-                    Your gym's subscription plan is currently Expired.
+                    Your tutor subscription plan is currently Expired.
                     Access to the dashboard has been restricted.
                   </p>
                   <div className="bg-slate-50 rounded-2xl p-4 mb-8 border border-slate-100">
                     <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Contact Administrator</p>
-                    <a href="tel:+919676675576" className="text-lg font-black text-brand-600 hover:underline">+91 96766 75576</a>
+                    <a href="tel:+919676675576" className="text-lg font-black text-yellow-600 hover:underline">+91 96766 75576</a>
                   </div>
                   <button
                     onClick={handleLogout}
@@ -505,9 +502,9 @@ const MainApp: React.FC = () => {
         })()
       )}
 
-      {(gymsLoading || membersLoading || staffLoading || paymentsLoading) && (
+      {(tutorsLoading || studentsLoading || staffLoading || paymentsLoading) && (
         <div className="fixed bottom-4 right-4 bg-white px-4 py-2 rounded-full shadow-lg border border-slate-100 flex items-center space-x-2 animate-pulse-subtle">
-          <div className="w-2 h-2 bg-brand rounded-full"></div>
+          <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
           <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Syncing...</span>
         </div>
       )}

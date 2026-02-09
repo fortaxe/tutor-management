@@ -1,32 +1,30 @@
-import React, { useState } from 'react';
-import { Member, PaymentMode } from '../types';
+import { useState } from 'react';
+import { Student, PaymentMode } from '../types';
 import Input from './Input';
 import Button from './Button';
-import BorderButton from './BorderButton';
 import SummaryCard from './SummaryCard';
-import MemberAvatar from './MemberAvatar';
+import StudentAvatar from './StudentAvatar';
 
 interface CollectBalanceFormProps {
-    member: Member;
+    student: Student;
     onSubmit: (amount: number, paymentMode: PaymentMode) => void;
     onCancel: () => void;
     isLoading?: boolean;
 }
 
-const CollectBalanceForm: React.FC<CollectBalanceFormProps> = ({ member, onSubmit, onCancel, isLoading = false }) => {
+const CollectBalanceForm: React.FC<CollectBalanceFormProps> = ({ student, onSubmit, onCancel, isLoading = false }) => {
     const [amount, setAmount] = useState('');
     const [paymentMode, setPaymentMode] = useState<PaymentMode>(PaymentMode.CASH);
     const enteringAmount = Number(amount) || 0;
-    const currentPaid = member.paidAmount + enteringAmount;
-    const currentDue = Math.max(0, member.feesAmount - currentPaid);
+    const currentPaid = student.paidAmount + enteringAmount;
+    const currentDue = Math.max(0, student.feesAmount - currentPaid);
 
-    // Add Member Info Display
-    const renderMemberInfo = () => (
+    const renderStudentInfo = () => (
         <div className="flex items-center gap-3 p-2 bg-slate-50 rounded-main border border-slate-100 mb-5">
-            <MemberAvatar member={member} />
+            <StudentAvatar student={student} />
             <div>
-                <h3 className="font-bold font-grotesk text-slate-900 leading-tight">{member.name}</h3>
-                <p className="text-sm font-semibold text-slate-500 font-geist">{member.phone}</p>
+                <h3 className="font-bold font-grotesk text-slate-900 leading-tight">{student.name}</h3>
+                <p className="text-sm font-semibold text-slate-500 font-geist">Parent: {student.parentName}</p>
             </div>
         </div>
     );
@@ -42,17 +40,17 @@ const CollectBalanceForm: React.FC<CollectBalanceFormProps> = ({ member, onSubmi
     return (
         <form onSubmit={handleSubmit} className="h-full flex flex-col">
             <div className="flex-1 overflow-y-auto no-scrollbar space-y-5">
-                {renderMemberInfo()}
+                {renderStudentInfo()}
 
                 <SummaryCard
                     variant="slate"
                     items={[
-                        { label: 'Original Fee', value: `₹${member.feesAmount}` },
-                        { label: 'Total Paid', value: `₹${currentPaid}`, color: 'text-[#22C55E]' },
+                        { label: 'Original Fee', value: `₹${student.feesAmount}` },
+                        { label: 'Total Paid', value: `₹${currentPaid}`, color: 'text-green-600' },
                         {
                             label: currentDue > 0 ? 'Remaining Due' : 'Status',
                             value: currentDue > 0 ? `₹${currentDue}` : 'SETTLED',
-                            color: currentDue > 0 ? 'text-[#EF4444]' : 'text-[#22C55E]'
+                            color: currentDue > 0 ? 'text-red-500' : 'text-green-600'
                         }
                     ]}
                 />
@@ -73,22 +71,20 @@ const CollectBalanceForm: React.FC<CollectBalanceFormProps> = ({ member, onSubmi
                         Payment Method
                     </label>
                     <div className="grid grid-cols-2 gap-2 mt-2">
-                        <BorderButton
+                        <button
                             type="button"
-                            variant="outline"
-                            className={`h-[46px] ${paymentMode === PaymentMode.CASH ? 'bg-white border-[#22C55E] text-[#22C55E]' : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#9CA3AF]'}`}
+                            className={`h-[46px] rounded-lg border font-bold ${paymentMode === PaymentMode.CASH ? 'border-yellow-400 bg-yellow-50 text-black' : 'border-gray-200 text-gray-400'}`}
                             onClick={() => setPaymentMode(PaymentMode.CASH)}
                         >
                             Cash
-                        </BorderButton>
-                        <BorderButton
+                        </button>
+                        <button
                             type="button"
-                            variant="outline"
-                            className={`h-[46px] ${paymentMode === PaymentMode.UPI ? 'bg-white border-[#22C55E] text-[#22C55E]' : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#9CA3AF]'}`}
+                            className={`h-[46px] rounded-lg border font-bold ${paymentMode === PaymentMode.UPI ? 'border-yellow-400 bg-yellow-50 text-black' : 'border-gray-200 text-gray-400'}`}
                             onClick={() => setPaymentMode(PaymentMode.UPI)}
                         >
-                            UPI / CARD
-                        </BorderButton>
+                            UPI / Online
+                        </button>
                     </div>
                 </div>
             </div>
@@ -97,7 +93,7 @@ const CollectBalanceForm: React.FC<CollectBalanceFormProps> = ({ member, onSubmi
                 <Button type="button" onClick={onCancel} variant="secondary" className="flex-1 max-w-[120px]" disabled={isLoading}>
                     Cancel
                 </Button>
-                <Button type="submit" className="flex-1 " isLoading={isLoading}>
+                <Button type="submit" className="flex-1" isLoading={isLoading}>
                     Collect Payment
                 </Button>
             </div>

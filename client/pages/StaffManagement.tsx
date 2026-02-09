@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { User, Gym, UserRole } from '../types';
+import { User, Tutor, UserRole } from '../types';
 import PlusIcon from '../components/icons/PlusIcon';
 import TrashIcon from '../components/icons/TrashIcon';
 import EditIcon from '../components/icons/EditIcon';
@@ -9,14 +8,14 @@ import Badge from '../components/Badge';
 import ExclamationTriangleIcon from '../components/icons/ExclamationTriangleIcon';
 
 interface StaffManagementProps {
-  gym: Gym;
+  tutor: Tutor;
   staff: User[];
-  onAddTrainer: (trainerData: Omit<User, 'id' | 'role'>) => void;
-  onUpdateTrainer: (trainer: User) => void;
+  onAddAssistant: (staffData: Omit<User, 'id' | 'role'>) => void;
+  onUpdateAssistant: (staff: User) => void;
   onDeleteUser: (userId: string) => void;
 }
 
-const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrainer, onUpdateTrainer, onDeleteUser }) => {
+const StaffManagement: React.FC<StaffManagementProps> = ({ tutor, staff, onAddAssistant, onUpdateAssistant, onDeleteUser }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState<User | null>(null);
@@ -52,18 +51,18 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
     }
 
     if (editingStaff) {
-      onUpdateTrainer({
+      onUpdateAssistant({
         ...editingStaff,
         name: formData.name,
         phone: formData.phone,
         password: formData.password.trim() || editingStaff.password,
       });
     } else {
-      onAddTrainer({
+      onAddAssistant({
         name: formData.name,
         phone: formData.phone,
         password: formData.password,
-        gymId: gym.id
+        tutorId: tutor.id
       });
     }
 
@@ -83,11 +82,11 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
       <div className="flex justify-between items-center">
         <div>
           <h3 className="text-sm font-black text-slate-950 uppercase tracking-[0.2em] mb-1">Team Roster</h3>
-          <p className="text-xs text-slate-400 font-bold">Manage credentials for your trainers and staff.</p>
+          <p className="text-xs text-slate-400 font-bold">Manage credentials for your assistants and staff.</p>
         </div>
         <button
           onClick={() => handleOpenModal()}
-          className="flex items-center px-6 py-3.5 bg-brand text-charcoal rounded-2xl font-black uppercase tracking-widest hover:bg-brand-400 transition-all shadow-xl shadow-brand/20 active:scale-95 text-[10px]"
+          className="flex items-center px-6 py-3.5 bg-yellow-400 text-black rounded-2xl font-black uppercase tracking-widest hover:bg-yellow-500 transition-all shadow-xl shadow-yellow-400/20 active:scale-95 text-[10px]"
         >
           <PlusIcon className="w-4 h-4 mr-2" /> Add Staff Account
         </button>
@@ -95,16 +94,16 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {staff.map(member => (
-          <div key={member._id || member.id} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 group hover:shadow-xl hover:shadow-brand/5 transition-all">
+          <div key={member._id || member.id} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 group hover:shadow-xl hover:shadow-yellow-400/5 transition-all">
             <div className="flex justify-between items-start mb-4">
-              <div className="h-12 w-12 rounded-2xl bg-slate-50 flex items-center justify-center text-xl shadow-inner group-hover:bg-brand/10 transition-colors">
-                {member.role === UserRole.GYM_OWNER ? '👑' : '🛡️'}
+              <div className="h-12 w-12 rounded-2xl bg-slate-50 flex items-center justify-center text-xl shadow-inner group-hover:bg-yellow-400/10 transition-colors">
+                {member.role === UserRole.TUTOR ? '👑' : '🛡️'}
               </div>
               <div className="flex flex-col items-end">
-                {member.role === UserRole.GYM_OWNER ? (
-                  <Badge color="blue">Owner</Badge>
+                {member.role === UserRole.TUTOR ? (
+                  <Badge color="blue">Primary</Badge>
                 ) : (
-                  <Badge color="gray">Trainer</Badge>
+                  <Badge color="gray">Staff</Badge>
                 )}
               </div>
             </div>
@@ -118,11 +117,11 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
             </div>
 
             <div className="flex justify-end items-center pt-4 border-t border-slate-50">
-              {member.role !== UserRole.GYM_OWNER && (
+              {member.role !== UserRole.TUTOR && (
                 <div className="flex space-x-2">
                   <button
                     onClick={() => handleOpenModal(member)}
-                    className="p-2 text-slate-400 hover:text-brand hover:bg-brand/5 rounded-xl transition-all flex items-center gap-1 text-[10px] font-bold uppercase"
+                    className="p-2 text-slate-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-xl transition-all flex items-center gap-1 text-[10px] font-bold uppercase"
                     title="Edit Credentials"
                   >
                     <EditIcon className="w-4 h-4" /> Edit
@@ -136,7 +135,7 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
                   </button>
                 </div>
               )}
-              {member.role === UserRole.GYM_OWNER && (
+              {member.role === UserRole.TUTOR && (
                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest italic">Primary Account</span>
               )}
             </div>
@@ -146,11 +145,11 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
 
       <Modal isOpen={isModalOpen} onClose={handleCloseModals} title={editingStaff ? "Edit Staff Account" : "Create Staff Account"}>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="bg-brand/5 p-4 rounded-2xl border border-brand/10 mb-2">
-            <p className="text-xs text-brand-800 font-medium leading-relaxed italic">
+          <div className="bg-yellow-400/5 p-4 rounded-2xl border border-yellow-400/10 mb-2">
+            <p className="text-xs text-slate-600 font-medium leading-relaxed italic">
               {editingStaff
                 ? "Update login phone number or reset the staff member's password. Leave password blank if you don't want to change it."
-                : "Add professional staff members to help manage client registrations and renewals. They will not be able to see your earnings."}
+                : "Add professional staff members to help manage student registrations and renewals. They will not be able to see your earnings."}
             </p>
           </div>
 
@@ -161,7 +160,7 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand focus:outline-none font-bold text-slate-900"
+              className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-yellow-400 focus:outline-none font-bold text-slate-900"
               placeholder="e.g. John Doe"
             />
           </div>
@@ -174,7 +173,7 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
               maxLength={10}
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '') })}
-              className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand focus:outline-none font-bold text-slate-900"
+              className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-yellow-400 focus:outline-none font-bold text-slate-900"
               placeholder="10-digit login number"
             />
           </div>
@@ -188,8 +187,8 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
               required={!editingStaff}
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand focus:outline-none text-slate-900 font-bold"
-              placeholder={editingStaff ? "Enter new password if resetting" : "e.g. TrainerPass123"}
+              className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-yellow-400 focus:outline-none text-slate-900 font-bold"
+              placeholder={editingStaff ? "Enter new password if resetting" : "e.g. StaffPass123"}
             />
           </div>
 
@@ -203,7 +202,7 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
             </button>
             <button
               type="submit"
-              className="flex-1 py-4 bg-brand text-charcoal rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-brand/20 hover:scale-[1.02] active:scale-95 transition-all"
+              className="flex-1 py-4 bg-yellow-400 text-black rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-yellow-400/20 hover:scale-[1.02] active:scale-95 transition-all"
             >
               {editingStaff ? "Update Credentials" : "Create Account"}
             </button>
@@ -222,7 +221,7 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ gym, staff, onAddTrai
           </div>
           <h4 className="text-lg font-black text-slate-900 mb-2">Delete Staff Account?</h4>
           <p className="text-sm text-slate-500 mb-8 px-4 leading-relaxed">
-            Removing the account for <span className="font-bold text-slate-900">{editingStaff?.phone}</span> will immediately revoke their access to this gym dashboard.
+            Removing the account for <span className="font-bold text-slate-900">{editingStaff?.phone}</span> will immediately revoke their access to this tutor dashboard.
           </p>
           <div className="flex gap-4">
             <button

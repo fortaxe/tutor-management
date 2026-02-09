@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { User, UserRole } from '../types';
 import DashboardSidebar from './DashboardSidebar';
-import BorderButton from './BorderButton';
 import Button from './Button';
 import { useDispatch } from 'react-redux';
 import { openAddMemberModal } from '../store/uiSlice';
@@ -14,8 +13,8 @@ interface DashboardLayoutProps {
   pageTitle: string;
   onOpenChangePass: () => void;
   children: React.ReactNode;
-  gymName?: string;
-  gymLogo?: string;
+  tutorName?: string;
+  tutorLogo?: string;
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({
@@ -24,18 +23,19 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   pageTitle,
   onOpenChangePass,
   children,
-  gymName,
-  gymLogo
+  tutorName,
+  tutorLogo
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const dispatch = useDispatch();
 
   const location = useLocation();
-  const activeView = location.pathname === '/' ? 'dashboard' : location.pathname.substring(1);
+  const path = location.pathname.substring(1) || 'dashboard';
+  const activeView = path.split('/')[0] || 'dashboard';
 
   return (
-    <div className="h-screen bg-slate-50 flex flex-col lg:flex-row overflow-hidden bg-[#F4F7FB]">
+    <div className="h-screen bg-slate-50 flex flex-col lg:flex-row overflow-hidden">
       <DashboardSidebar
         user={user}
         isSidebarOpen={isSidebarOpen}
@@ -43,88 +43,86 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         onLogout={onLogout}
         onChangePasswordRequest={onOpenChangePass}
         isCollapsed={isCollapsed}
-        gymName={gymName}
-        gymLogo={gymLogo}
+        tutorName={tutorName}
+        tutorLogo={tutorLogo}
       />
 
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-charcoal/80 z-30 lg:hidden transition-opacity backdrop-blur-md"
+          className="fixed inset-0 bg-black/60 z-30 lg:hidden transition-opacity backdrop-blur-sm"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden pl-0 lg:pl-[32px] pb-[10px] md:py-5 pr-0 lg:pr-5">
-        <div className="lg:hidden flex  bg-black md:bg-transparent items-center justify-between px-4 md:px-5 py-[10px] md:pb-5">
-          <div className='flex  items-center gap-2 md:gap-3'>
-            <div>
-              <img src={gymLogo || "/profile.png"} alt="" className="size-[36px] rounded-main border-main object-cover" />
-            </div>
-            <span className="text-[16px] leading-[22px] text-white font-semibold">{pageTitle}</span>
+        <div className="lg:hidden flex bg-black items-center justify-between px-4 py-3">
+          <div className='flex items-center gap-3'>
+            <img src={tutorLogo || "/profile.png"} alt="Logo" className="w-8 h-8 rounded-lg border border-slate-700 object-cover" />
+            <span className="text-sm font-black text-yellow-400 uppercase tracking-widest">{pageTitle}</span>
           </div>
 
-          <MenuIcon
-            className='text-white md:text-black cursor-pointer'
-            onClick={() => setIsSidebarOpen(true)}
-          />
+          <button onClick={() => setIsSidebarOpen(true)}>
+            <MenuIcon className='text-yellow-400 w-6 h-6' />
+          </button>
         </div>
 
-        <header className="hidden lg:flex justify-between items-start sticky top-0 z-10 ">
-          <div className="flex flex-col items-start ">
-            <div className='flex flex-row gap-[10px]'>
-              <img
-                src='/icons/toggle.svg'
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                className="size-[26px] cursor-pointer"
-              />
-              <h2 className="primary-descripiton uppercase font-grotesk font-bold ">
-                Dashboard / <span className='text-black'>
-                  {activeView === 'dashboard' ? 'Members' :
-                    activeView === 'staff' ? 'Staff' :
+        <header className="hidden lg:flex justify-between items-center sticky top-0 z-10 mb-6 px-1">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="p-1 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              <img src='/icons/toggle.svg' alt="Toggle" className="w-6 h-6" />
+            </button>
+            <div className="flex flex-col">
+              <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                {tutorName} / <span className='text-black'>
+                  {activeView === 'dashboard' ? 'Students' :
+                    activeView === 'staff' ? 'Assistant' :
                       activeView === 'earnings' ? 'Earnings' :
-                        activeView === 'profile' ? "Owner's Profile" : 'Overview'}
+                        activeView === 'profile' ? "Tutor Profile" : 'Overview'}
                 </span>
               </h2>
             </div>
           </div>
 
-          <div className="hidden sm:block pb-[10px] ">
-            {(user.role === UserRole.GYM_OWNER || user.role === UserRole.TRAINER) ? (
+          <div className="flex items-center gap-3">
+            {(user.role === UserRole.TUTOR || user.role === UserRole.ASSISTANT) ? (
               activeView === 'dashboard' ? (
                 <Button
                   onClick={() => dispatch(openAddMemberModal())}
-                  className="uppercase"
+                  className="bg-yellow-400 text-black border-none hover:bg-yellow-500 font-black px-6 rounded-xl shadow-lg shadow-yellow-100 uppercase tracking-widest text-[11px]"
                 >
-                  <img src="/icons/plus.svg" alt="" className="w-5 h-5 mr-2" /> ADD MEMBER
+                  {/* <img src="/icons/plus.svg" alt="" className="w-4 h-4 mr-2" />  */}
+                  ADD STUDENT
                 </Button>
               ) : (
-                user.role === UserRole.GYM_OWNER && activeView === 'profile' && (
-                  <div className='flex gap-[5px]'>
-                    <Button
-                      variant="secondary"
-                      className='border border-[#22C55E] text-[#22C55E]'
-                      onClick={onOpenChangePass}
-                    >
-                      Change Password
-                    </Button>
-                  </div>
+                user.role === UserRole.TUTOR && activeView === 'profile' && (
+                  <Button
+                    onClick={onOpenChangePass}
+                    className="bg-black text-white border-none hover:bg-slate-800 font-bold px-6 rounded-xl shadow-lg shadow-slate-200 uppercase tracking-widest text-[11px]"
+                  >
+                    Change Password
+                  </Button>
                 )
               )
             ) : (
-              <BorderButton variant="green">
-                {user.role === UserRole.SUPER_ADMIN ? 'Platform Administrator' : 'Staff Trainer'}
-              </BorderButton>
+              <div className="px-4 py-2 bg-black rounded-xl border border-slate-800">
+                <span className="text-[10px] font-black text-yellow-400 uppercase tracking-[0.2em]">
+                  {user.role === UserRole.SUPER_ADMIN ? 'PLATFORM ADMIN' : 'ASSISTANT'}
+                </span>
+              </div>
             )}
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto md:px-5 lg:px-0 no-scrollbar">
-          <div className='pt-4 md:pt-[20px] pb-5'>
-            <h2 className="hidden md:block text-[32px] leading-[32px] font-semibold text-black">
+        <main className="flex-1 overflow-y-auto md:px-5 lg:px-1 no-scrollbar">
+          <div className='pb-6'>
+            <h1 className="hidden md:block text-3xl font-black text-slate-900 tracking-tight">
               {pageTitle}
-            </h2>
+            </h1>
           </div>
-          <div className="">
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
             {children}
           </div>
         </main>

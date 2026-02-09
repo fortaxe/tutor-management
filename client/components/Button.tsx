@@ -23,7 +23,7 @@ const Button: React.FC<ButtonProps> = ({
     const baseStyles = 'h-[46px] flex items-center justify-center rounded-main leading-[20px] px-5  md:leading-[24px] text-[14px] md:text-[16px] transition-all disabled:opacity-70 disabled:cursor-not-allowed uppercase font-grotesk font-bold';
 
     const variants = {
-        primary: 'primary-bg-green hover:bg-[#16A34A] active:bg-[#15803D] text-white',
+        primary: 'primary-bg-yellow hover:bg-[#EAB308] active:bg-[#CA8A04] text-black shadow-lg shadow-yellow-400/10',
         secondary: 'bg-[#F8FAFC] border-main hover:bg-slate-100 text-[16px] leading-[22px] text-[#9CA3AF]'
     };
 
@@ -50,7 +50,7 @@ const Button: React.FC<ButtonProps> = ({
         >
             {isLoading ? (
                 <div className="flex items-center justify-center gap-2">
-                    <Spinner className={variant === 'primary' ? 'text-white' : 'text-current'} />
+                    <Spinner className={variant === 'primary' ? 'text-black' : 'text-current'} />
                 </div>
             ) : (
                 children

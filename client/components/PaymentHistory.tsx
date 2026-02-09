@@ -8,7 +8,7 @@ interface PaymentHistoryProps {
 
 const PaymentHistory: React.FC<PaymentHistoryProps> = ({ history }) => {
   if (history.length === 0) {
-    return <div className="text-center py-6 text-gray-500 italic">No payment records found for this gym.</div>;
+    return <div className="text-center py-6 text-slate-500 italic font-medium">No payment records found for this tutor.</div>;
   }
 
   return (

@@ -1,32 +1,28 @@
-import React, { useState } from 'react';
-import { useMembershipDuration } from '../hooks/useMembershipDuration';
-import { Member, MemberType, PaymentStatus, PaymentMode } from '../types';
+import { useState } from 'react';
+import { Student, StudentType, PaymentStatus, PaymentMode } from '../types';
 import Input from './Input';
 import Button from './Button';
-import BorderButton from './BorderButton';
-import Select from './Select';
-
 import DateInput from './DateInput';
 import { getPlanDates } from '@/lib/utils';
 import { SubmitArrowIcon } from './icons/FormIcons';
-import MemberAvatar from './MemberAvatar';
+import StudentAvatar from './StudentAvatar';
 
 interface RenewPlanFormProps {
-    member: Member;
+    student: Student;
     onSubmit: (renewalData: {
         planStart: string;
-        planDurationDays: number;
+        planDurationMonths: number;
         feesAmount: number;
         paidAmount: number;
         feesStatus: PaymentStatus;
-        memberType: MemberType;
+        studentType: StudentType;
         paymentMode: PaymentMode;
     }) => void;
     onCancel: () => void;
     isLoading?: boolean;
 }
 
-const RenewPlanForm: React.FC<RenewPlanFormProps> = ({ member, onSubmit, onCancel, isLoading = false }) => {
+const RenewPlanForm: React.FC<RenewPlanFormProps> = ({ student, onSubmit, onCancel, isLoading = false }) => {
     const formatDate = (date: Date) => {
         const d = new Date(date);
         let month = '' + (d.getMonth() + 1);
@@ -40,49 +36,35 @@ const RenewPlanForm: React.FC<RenewPlanFormProps> = ({ member, onSubmit, onCance
     };
 
     const getSuggestedStart = () => {
-        const { endDate, remainingDays } = getPlanDates(member);
+        const { endDate, remainingDays } = getPlanDates(student);
 
-        // If expired (remainingDays < 0), start from today
         if (remainingDays < 0) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             return today;
         }
 
-        // If active, start from the next day after expiry to avoid overlap
         const nextDay = new Date(endDate);
         nextDay.setDate(endDate.getDate() + 1);
         return nextDay;
     };
 
     const [formData, setFormData] = useState({
-        type: member.memberType,
+        type: StudentType.SUBSCRIPTION,
         startDate: formatDate(getSuggestedStart()),
-        duration: member.memberType === MemberType.DAY_PASS ? 0 : 29,
+        durationMonths: 1,
         fee: '',
         paid: '',
         paymentMode: PaymentMode.CASH,
-    });
-
-    const {
-        isCustomRenewal,
-        customMonths,
-        handleDurationChange,
-        handleCustomMonthChange
-    } = useMembershipDuration(formData.duration, (newDuration) => {
-        setFormData(prev => ({ ...prev, duration: newDuration }));
     });
 
     const calculateEndDate = () => {
         if (!formData.startDate) return '';
         const start = new Date(formData.startDate);
         const end = new Date(start);
-        end.setDate(start.getDate() + (Number(formData.duration) || 0));
+        end.setDate(start.getDate() + (Number(formData.durationMonths) * 30) - 1);
         return end.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
     };
-
-
-
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -95,56 +77,30 @@ const RenewPlanForm: React.FC<RenewPlanFormProps> = ({ member, onSubmit, onCance
 
         onSubmit({
             planStart: formData.startDate,
-            planDurationDays: formData.duration,
+            planDurationMonths: formData.durationMonths,
             feesAmount,
             paidAmount,
             feesStatus,
-            memberType: formData.type,
+            studentType: formData.type,
             paymentMode: formData.paymentMode
         });
     };
 
     return (
         <form onSubmit={handleSubmit} className="h-full flex flex-col">
-            <div className="flex-1 overflow-y-auto no-scrollbar space-y-5">
+            <div className="flex-1 overflow-y-auto no-scrollbar space-y-6">
 
-
-                <div className="flex gap-2">
-                    <Button
-                        type="button"
-                        onClick={() => setFormData({
-                            ...formData,
-                            type: MemberType.SUBSCRIPTION,
-                            duration: 29
-                        })}
-                        className={`flex-1 transition-colors ${formData.type === MemberType.SUBSCRIPTION ? '!primary-bg-green !text-white' : '!bg-white !text-[#9CA3AF] border-main hover:!bg-slate-50'}`}
-                    >
-                        SUBSCRIPTION
-                    </Button>
-                    <Button
-                        type="button"
-                        onClick={() => setFormData({
-                            ...formData,
-                            type: MemberType.DAY_PASS,
-                            duration: 0
-                        })}
-                        className={`flex-1 transition-colors ${formData.type === MemberType.DAY_PASS ? '!primary-bg-green !text-white' : '!bg-white !text-[#9CA3AF] border-main hover:!bg-slate-50'}`}
-                    >
-                        DAY PASS
-                    </Button>
-                </div>
-
-                <div className="flex items-center gap-3 p-2 bg-slate-50 rounded-main border border-slate-100">
-                    <MemberAvatar member={member} />
+                <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 group">
+                    <StudentAvatar student={student} />
                     <div>
-                        <h3 className="font-bold font-grotesk text-slate-900 leading-tight">{member.name}</h3>
-                        <p className="text-sm font-semibold text-slate-500 font-geist">{member.phone}</p>
+                        <h3 className="font-extrabold text-slate-900 group-hover:text-black transition-colors">{student.name}</h3>
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Parent: {student.parentName}</p>
                     </div>
                 </div>
 
-                <div className="space-y-[15px]">
+                <div className="space-y-4">
                     <DateInput
-                        label="Starts From"
+                        label="RENEW FROM"
                         name="startDate"
                         value={formData.startDate}
                         onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
@@ -152,107 +108,72 @@ const RenewPlanForm: React.FC<RenewPlanFormProps> = ({ member, onSubmit, onCance
                     />
 
                     <div className="space-y-1">
-                        {formData.type === MemberType.DAY_PASS ? (
+                        <div className="space-y-3">
                             <Input
-                                label="Duration (Days)"
+                                label="DURATION (MONTHS)"
                                 type="number"
                                 min="1"
-                                value={formData.duration + 1}
-                                onChange={(e) => setFormData({ ...formData, duration: Math.max(0, Number(e.target.value) - 1) })}
-                                endContent={<span className="text-[10px] font-black text-slate-400 uppercase">Days</span>}
+                                value={formData.durationMonths}
+                                onChange={(e) => setFormData(prev => ({ ...prev, durationMonths: Number(e.target.value) }))}
                                 required
                             />
-                        ) : (
-                            <div>
-                                <Select
-                                    label="Duration (Days)"
-                                    value={isCustomRenewal ? 'custom' : formData.duration}
-                                    onChange={handleDurationChange}
-                                    required
-                                >
-                                    <option value={29}>Monthly (30 Days)</option>
-                                    <option value={89}>Quarterly (90 Days)</option>
-                                    <option value={179}>Half Yearly (180 Days)</option>
-                                    <option value={364}>Yearly (365 Days)</option>
-                                    <option value="custom">Custom</option>
-                                </Select>
-                                {isCustomRenewal && (
-                                    <div className="mt-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                                        <Input
-                                            label="Months (Max 16)"
-                                            type="number"
-                                            min="1"
-                                            max="16"
-                                            value={customMonths}
-                                            onChange={handleCustomMonthChange}
-                                            placeholder="Enter months..."
-                                            required
-                                        />
-                                        <div className="text-right text-[10px] font-black text-slate-400 mt-1 mr-2">
-                                            ≈ {formData.duration + 1} Days Validity
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                        <p className="orange-text-color text-[14px] leading-[20px] font-semibold">
-                            *Ends On {calculateEndDate()}
+                        </div>
+                        <p className="text-[10px] font-black text-yellow-600 uppercase tracking-widest mt-2 ml-1">
+                            * NEW EXPIRY: {calculateEndDate()}
                         </p>
                     </div>
 
                     <Input
-                        label="Total Fee"
+                        label="TOTAL FEES"
                         value={formData.fee}
                         onChange={(e) => setFormData({ ...formData, fee: e.target.value.replace(/\D/g, '') })}
                         placeholder="0"
                         inputMode="numeric"
                         required
-                        startContent={<span className="secondary-color font-bold">₹</span>}
+                        startContent={<span className="text-slate-400 font-bold">₹</span>}
                     />
 
                     <Input
-                        label="Paid Today"
+                        label="PAID TODAY"
                         value={formData.paid}
                         onChange={(e) => setFormData({ ...formData, paid: e.target.value.replace(/\D/g, '') })}
                         placeholder="0"
                         inputMode="numeric"
                         required
-                        startContent={<span className="secondary-color font-bold">₹</span>}
+                        startContent={<span className="text-slate-400 font-bold">₹</span>}
                     />
 
-                    <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                        <label className="block text-xs font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">
-                            Payment Method
+                    <div className="space-y-2">
+                        <label className="block text-xs font-black text-slate-600 uppercase tracking-widest ml-1">
+                            PAYMENT MODE
                         </label>
-                        <div className="grid grid-cols-2 gap-2 mt-2">
-                            <BorderButton
+                        <div className="grid grid-cols-2 gap-3 mt-2">
+                            <button
                                 type="button"
-                                variant="outline"
-                                className={`h-[46px] ${formData.paymentMode === PaymentMode.CASH ? 'bg-white border-[#22C55E] text-[#22C55E]' : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#9CA3AF]'}`}
+                                className={`h-[52px] rounded-xl border-2 font-black uppercase text-[10px] tracking-widest transition-all ${formData.paymentMode === PaymentMode.CASH ? 'border-yellow-400 bg-yellow-50 text-black shadow-lg shadow-yellow-100' : 'border-slate-100 bg-slate-50 text-slate-400'}`}
                                 onClick={() => setFormData(p => ({ ...p, paymentMode: PaymentMode.CASH }))}
                             >
                                 Cash
-                            </BorderButton>
-                            <BorderButton
+                            </button>
+                            <button
                                 type="button"
-                                variant="outline"
-                                className={`h-[46px] ${formData.paymentMode === PaymentMode.UPI ? 'bg-white border-[#22C55E] text-[#22C55E]' : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#9CA3AF]'}`}
+                                className={`h-[52px] rounded-xl border-2 font-black uppercase text-[10px] tracking-widest transition-all ${formData.paymentMode === PaymentMode.UPI ? 'border-yellow-400 bg-yellow-50 text-black shadow-lg shadow-yellow-100' : 'border-slate-100 bg-slate-50 text-slate-400'}`}
                                 onClick={() => setFormData(p => ({ ...p, paymentMode: PaymentMode.UPI }))}
                             >
-                                UPI / CARD
-                            </BorderButton>
+                                UPI / Online
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="flex gap-2 pt-5 mt-auto">
-                <Button type="button" onClick={onCancel} variant="secondary" className="flex-1 max-w-[120px]" disabled={isLoading}>
+            <div className="flex gap-3 pt-6 mt-auto border-t border-slate-100">
+                <Button type="button" onClick={onCancel} className="flex-1 !bg-slate-100 !text-slate-500 hover:!bg-slate-200 border-none rounded-xl font-bold" disabled={isLoading}>
                     Cancel
                 </Button>
-                <Button type="submit" className="flex-1" isLoading={isLoading}>
-                    Confirm Plan
-                    <SubmitArrowIcon className="ml-[5px]" stroke="white" />
+                <Button type="submit" className="flex-[2] bg-yellow-400 text-black hover:bg-yellow-500 border-none rounded-xl font-black uppercase tracking-widest shadow-xl shadow-yellow-100" isLoading={isLoading}>
+                    CONFIRM RENEWAL
+                    <SubmitArrowIcon className="ml-2" stroke="currentColor" />
                 </Button>
             </div>
         </form >

@@ -4,9 +4,10 @@ import { ChevronDownSmallIcon } from './icons/FormIcons';
 interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
     label?: string;
     required?: boolean;
+    error?: string;
 }
 
-const Select: React.FC<SelectProps> = ({ label, required, children, className = '', ...props }) => {
+const Select: React.FC<SelectProps> = ({ label, required, error, children, className = '', ...props }) => {
     return (
         <div className="space-y-[10px] w-full">
             {label && (
@@ -16,7 +17,7 @@ const Select: React.FC<SelectProps> = ({ label, required, children, className = 
             )}
             <div className="relative">
                 <select
-                    className={`h-[48px] rounded-main border border-[#E2E8F0] bg-[#F8FAFC] w-full px-[15px] outline-none appearance-none text-black focus:border-brand font-grotesk font-bold transition-all ${className}`}
+                    className={`h-[48px] rounded-main border ${error ? 'border-red-500' : 'border-[#E2E8F0]'} bg-[#F8FAFC] w-full px-[15px] outline-none appearance-none text-black focus:border-brand font-grotesk font-bold transition-all ${className}`}
                     {...props}
                 >
                     {children}
@@ -25,6 +26,7 @@ const Select: React.FC<SelectProps> = ({ label, required, children, className = 
                     <ChevronDownSmallIcon stroke="#000000" />
                 </div>
             </div>
+            {error && <p className="text-[11px] font-bold text-red-500 uppercase tracking-widest mt-1">{error}</p>}
         </div>
     );
 };

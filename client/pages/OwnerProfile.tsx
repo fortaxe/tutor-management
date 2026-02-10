@@ -174,7 +174,7 @@ const OwnerProfile: React.FC<OwnerProfileProps> = ({ tutor, user, onUpdateTutor,
             <div className="flex justify-center pb-10">
                 <Button
                     onClick={() => onUpdateTutor?.(tutorDetails)}
-                    className="w-full md:w-auto px-10 bg-black text-yellow-400 font-bold hover:bg-slate-900"
+                    className="w-full md:w-auto px-10 "
                     isLoading={isLoading}
                 >
                     SAVE PROFILE

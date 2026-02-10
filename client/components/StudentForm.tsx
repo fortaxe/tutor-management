@@ -535,10 +535,10 @@ const StudentForm: React.FC<StudentFormProps> = ({ student, initialType = Studen
             </div>
           ) : (
             <div className="flex gap-2">
-              <Button type="button" onClick={() => setStep(1)} variant="secondary" className="flex-1" disabled={isLoading}>
+              <Button type="button" onClick={() => setStep(1)} variant="secondary" className="shrink-0" disabled={isLoading}>
                 <ArrowLeftIcon className="mr-2 w-4 h-4" /> Back
               </Button>
-              <Button type="submit" className="flex-1" isLoading={isLoading}>
+              <Button type="submit" className="flex-1 whitespace-nowrap" isLoading={isLoading}>
                 Register Student
                 <SubmitArrowIcon className="ml-2" stroke="currentColor" />
               </Button>

@@ -340,8 +340,8 @@ export const generateInvoice = async (tutor: Tutor, student: Student, customDate
     else doc.setFont('helvetica', 'bold');
 
     const pBy = "POWERED BY ";
-    const tutorTxt = "TUTOR ";
-    const proTxt = "PRO";
+    const tutorTxt = "Fees";
+    const proTxt = "Stack";
     const totalFooterWidth = doc.getTextWidth(pBy + tutorTxt + proTxt);
     let currentFX = (pageWidth - totalFooterWidth) / 2;
     const footerY = pageHeight - 10;

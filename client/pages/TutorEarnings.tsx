@@ -208,7 +208,13 @@ const TutorEarnings: React.FC<TutorEarningsProps> = ({ tutor, students, payments
       headerClassName: "table-th pl-5 pr-10",
       className: "w-1 py-5 pl-5 pr-10 whitespace-nowrap",
       render: (item) => (
-        <span className="font-semibold">{new Date(item.paymentDate).toLocaleDateString()}</span>
+        <span className="font-semibold">
+          {new Date(item.paymentDate).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })}
+        </span>
       )
     },
     {
@@ -333,7 +339,13 @@ const TutorEarnings: React.FC<TutorEarningsProps> = ({ tutor, students, payments
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <h4 className="font-bold text-slate-900">{p.studentName}</h4>
-                    <p className="text-xs text-slate-500">{new Date(p.paymentDate).toLocaleDateString()}</p>
+                    <p className="text-xs text-slate-500">
+                      {new Date(p.paymentDate).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </p>
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-slate-900">₹{p.amount.toLocaleString()}</p>

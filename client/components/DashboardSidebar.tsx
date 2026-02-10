@@ -76,12 +76,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             ${isCollapsed ? 'w-[90px]' : 'w-72'} bg-black text-white h-full lg:min-h-screen p-6 flex flex-col justify-between shadow-2xl transition-all duration-300
         `}>
             <div className="space-y-8">
-                <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center' : ''}`}>
-                    <div className="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center shadow-lg shadow-yellow-400/20">
-                        <span className="text-black font-black text-xl">T</span>
-                    </div>
-                    {!isCollapsed && <span className="text-lg font-black tracking-tighter uppercase italic">Tutor Pro</span>}
-                </div>
+
 
                 <nav className="space-y-2">
                     {navItems.map(item => (

@@ -1,7 +1,4 @@
 import React, { useState } from 'react';
-
-
-import Button from '../components/Button';
 import LoginCard from '@/components/login-card';
 
 interface LoginProps {
@@ -44,7 +41,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, backendError }) => {
       {/* Hero Banner - Left Side (50%) */}
       <div className="absolute inset-0 w-full h-full lg:relative lg:w-1/2 bg-black flex flex-col justify-between px-4 pb-4 pt-6 lg:p-[50px] z-0">
         <div className="absolute inset-0 z-0">
-          <img src="/images/hero.png" alt="Gym Background" className="w-full h-full object-cover " />
+          <img src="/images/hero.jpg" alt="Gym Background" className="w-full h-full object-cover " />
 
         </div>
 
@@ -88,7 +85,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, backendError }) => {
       <div className="relative w-full lg:w-1/2 h-full flex flex-col justify-center items-center p-4 lg:p-[25px] bg-transparent lg:bg-[#F8FAFC]">
         {/* Top Left */}
         <div className="absolute top-4 lg:top-[25px] left-4 lg:left-[25px]">
-          <span className="text-white lg:text-black font-semibold text-[18px] lg:text-[24px] leading-[22px] lg:leading-[24px] " >Gym <span className="text-brand-500">Stack</span></span>
+          <span className="text-white lg:text-black font-semibold text-[18px] lg:text-[24px] leading-[22px] lg:leading-[24px] " >Fees <span className="text-brand-500">Stack</span></span>
         </div>
 
         {/* Top Right */}
